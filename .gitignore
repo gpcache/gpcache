@@ -1,32 +1,19 @@
-# Prerequisites
-*.d
+# Typical build directories
+/build*/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Emacs save files
+*~
 
-# Precompiled Headers
-*.gch
-*.pch
+# Vim save files
+.*.sw?
+.*.un~
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# Visual Studio settings and build output
+/.vs/
+/out/build/
 
-# Fortran module files
-*.mod
-*.smod
+# Visual Studio Code settings
+/.vscode/
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# macOS custom attributes
+.DS_Store/
