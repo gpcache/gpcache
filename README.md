@@ -23,3 +23,21 @@ Preconditions:
 
 ## Current state
 - Proof of concept written in python, but actual tool shall be written in C++
+
+
+## Build gpcache from source
+Demonstrating with an in source build, although that is not really encouraged.
+Not sure I'm using conan correctly here, but hey... "it works on my machine".
+
+#### Prerequisites:
+Conan
+`pip3 install conan`
+
+#### Getting and compiling gpcache
+```
+git clone https://github.com/gpcache/gpcache.git
+cd gpcache
+mkdir build
+conan install .. # installs all dependencies like fmt
+conan build ..
+```

@@ -42,4 +42,8 @@ if(ENABLE_TESTING)
   endif()
 endif()
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
 add_executable(gpcache main.cpp)
+target_link_libraries(gpcache ${CONAN_LIBS})
