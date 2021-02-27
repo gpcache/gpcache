@@ -38,6 +38,6 @@ Conan
 git clone https://github.com/gpcache/gpcache.git
 cd gpcache
 mkdir build
-conan install .. # installs all dependencies like fmt
+conan install .. --settings compiler.cppstd=20 --build=missing
 conan build ..
 ```
