@@ -41,3 +41,9 @@ mkdir build
 conan install .. --settings compiler.cppstd=20 --build=missing
 conan build ..
 ```
+
+Changing compiler:
+`conan install .. -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++`
+
+Debugging:
+`conan install .. -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -s build_type=Debug`
