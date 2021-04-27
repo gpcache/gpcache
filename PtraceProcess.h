@@ -3,7 +3,8 @@
 #ifndef __PTRACEPROCESS_H__
 #define __PTRACEPROCESS_H__
 
-#include "wrapper/Strace.h"
+#include "syscall_decoder.h"
+#include "logging.h"
 
 #include <sys/user.h> // user_regs_struct
 #include <string>
@@ -14,10 +15,10 @@ namespace gpcache
 {
   struct SysCall
   {
-    const int syscall_id;
-    const Strace::StraceSyscall syscall_info;
-    const std::optional<int> return_value;
-    //const auto syscall_arguments = Strace::get_syscall_args(regs);
+    const SyscallDataType syscall_id;
+    const SyscallInfo syscall_info;
+    const std::optional<SyscallDataType> return_value;
+    const std::vector<SyscallDataType> syscall_arguments;
   };
 
   // useless abstraction?!

@@ -45,7 +45,8 @@ conan_basic_setup(TARGETS)
 add_library(gpcache_lib
   hash.cpp
   wrapper/Posix.cpp
-  wrapper/Strace.cpp
+  logging.cpp
+  syscall_decoder.cpp
   PtraceProcess.cpp
   SyscallDelegator.cpp
 )

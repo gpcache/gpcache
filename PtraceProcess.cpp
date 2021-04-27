@@ -1,6 +1,6 @@
 #include "PtraceProcess.h"
 #include "wrapper/Posix.h"
-#include "spdlog/spdlog.h"
+#include "logging.h"
 
 #include <csignal>
 #include <functional>
@@ -65,9 +65,11 @@ namespace gpcache
   // Alternative design: setup global signal handler. Probably the code will look better than.
   static auto wait_for_signal2(const int pid, const std::vector<int> signum_to_wait_for)
   {
-    spdlog::info("wait_for_signal2 :: before waitpid");
+    LogCallstack c("wait_for_signal2");
+
+    spdlog::debug("before waitpid");
     const auto status = Posix::waitpid(pid, 0);
-    spdlog::info("wait_for_signal2 :: after waitpid"); // todo trace status
+    spdlog::debug("after waitpid"); // todo trace status
 
     using Posix::StopReason;
 
@@ -85,26 +87,42 @@ namespace gpcache
       // fallthrough
     }
 
-    spdlog::info("wait_for_signal2 :: exited");
+    spdlog::debug("exited");
   }
 
   auto PtraceProcess::restart_child_and_wait_for_next_syscall() -> SysCall
   {
-    spdlog::info("restart_child_and_wait_for_next_syscall");
+    LogCallstack c("restart_child_and_wait_for_next_syscall");
+
+    spdlog::debug("restart_child_and_wait_for_next_syscall");
     Posix::Ptrace::SYSCALL(pid);
     wait_for_signal2(pid, {SIGTRAP | 0x80});
     auto regs = Posix::Ptrace::GETREGS(pid);
 
-    const int syscall_id = static_cast<int>(Strace::get_syscall_number_from_registers(regs));
-    const Strace::StraceSyscall syscall_info = Strace::get_syscall_info_from_strace_syscallent(syscall_id);
-    const std::optional<int> return_value = (next_call == EnterExit::exit) ? std::nullopt : std::make_optional<int>(Strace::get_syscall_return_value_from_registers(regs));
-    //const auto syscall_arguments = Strace::get_syscall_args(regs);
+    const auto syscall_id = get_syscall_number_from_registers(regs);
+    const static auto syscall_map = get_syscall_map();
+    const auto syscall_info = syscall_map.at(syscall_id);
+    const auto return_value = [&]() -> std::optional<SyscallDataType> {
+      if (next_call == EnterExit::exit)
+      {
+        next_call = EnterExit::enter;
+        return std::make_optional(get_syscall_return_value_from_registers(regs));
+      }
+      else
+      {
+        next_call = EnterExit::exit;
+        return std::nullopt;
+      }
+    }();
+    const auto syscall_arguments = get_syscall_args(regs);
 
-    return SysCall{syscall_id, syscall_info, return_value};
+    return SysCall{syscall_id, syscall_info, return_value, syscall_arguments};
   }
 
   auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int
   {
+    LogCallstack c("createChildProcess");
+
     const pid_t pid = fork();
     spdlog::debug("fork() -> {}", pid);
 

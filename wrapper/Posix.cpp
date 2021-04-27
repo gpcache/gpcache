@@ -10,7 +10,9 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fmt/format.h>
-#include "spdlog/spdlog.h"
+#include "logging.h"
+
+using gpcache::get_callstack;
 
 static auto readable_ptrace_request(const enum __ptrace_request request) -> std::string
 {
@@ -84,6 +86,7 @@ namespace Posix
 
     auto PEEKTEXT(const int pid, const uint8_t *const begin, const size_t count) -> std::string
     {
+      gpcache::LogCallstack c("PEEKTEXT");
       std::string result;
       result.reserve(count);
       //result.resize(count);
@@ -99,6 +102,7 @@ namespace Posix
 
     auto GETREGS(const int pid) -> user_regs_struct
     {
+      gpcache::LogCallstack c("GETREGS");
       user_regs_struct regs;
       call_ptrace(PTRACE_GETREGS, pid, 0, &regs);
       return regs;
@@ -106,16 +110,19 @@ namespace Posix
 
     auto TRACEME() -> void
     {
+      gpcache::LogCallstack c("TRACEME");
       call_ptrace(PTRACE_TRACEME, 0, nullptr, 0);
     }
 
     auto SYSCALL(const int pid, const int signal) -> void
     {
+      gpcache::LogCallstack c("SYSCALL");
       call_ptrace(PTRACE_SYSCALL, pid, nullptr, signal);
     }
 
     auto SETOPTIONS(const int pid, const int options) -> void
     {
+      gpcache::LogCallstack c("SETOPTIONS");
       call_ptrace(PTRACE_SETOPTIONS, pid, nullptr, options);
     }
   } // namespace Ptrace
