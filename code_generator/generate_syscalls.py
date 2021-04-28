@@ -92,58 +92,146 @@ def download_and_parse_syscall_params() -> SyscallNameToParams:
     return syscalls
 
 
-def write_pretty_cpp_code(
+def write_string_array(
+        file,
         syscall_number_to_name: SyscallNumberToName,
         syscall_name_to_params: SyscallNameToParams):
-    for syscall_number, syscall_name in syscall_number_to_name.items():
-        s = (
-            f'syscall_params[{syscall_number}] = ' +
-            '{' +
-            f' "{syscall_name}", ' +
-            '{'
+    with open(file, 'w') as writer:
+        for syscall_number, syscall_name in syscall_number_to_name.items():
+            s = (
+                f'syscall_params[{syscall_number}] = ' +
+                '{' +
+                f' "{syscall_name}", ' +
+                '{'
+            )
+
+            cpp_params = []
+            if syscall_name in syscall_name_to_params:
+                for p in syscall_name_to_params.get(syscall_name):
+                    cpp_params.append('{' + f'"{p[0]}", "{p[1]}"' + '}')
+                s += ', '.join(cpp_params) + '}};\n'
+            else:
+                s += '}}; // parameters unknown\n'
+            writer.write(s)
+
+
+def write_interface(file, syscall_name_to_params: SyscallNameToParams):
+    with open(file, 'w') as writer:
+        writer.write(f"// Generated via {__file__}\n")
+        writer.write("#include <linux/aio_abi.h>\n")
+        writer.write("#include <sys/user.h>\n")
+        writer.write("#include <unistd.h>\n")
+        writer.write("#include <cstdint>\n")
+        writer.write("#include <sys/epoll.h>\n")
+        writer.write("#include <sys/stat.h>\n")
+        writer.write("#include <fcntl.h>\n")
+        writer.write("#include <signal.h>\n")
+        writer.write("#include <mqueue.h>\n")
+        # writer.write("#include <keyutils.h>") - requires libkeyutils-dev
+        writer.write("#include <sys/uio.h>\n")
+        # writer.write("#include <sys/capability.h>") - requires libcap-dev
+        writer.write(
+            "using SyscallDataType = decltype(user_regs_struct{}.rax);\n")
+
+        writer.write("\nclass OnSyscall\n{\n")
+        for name, params in syscall_name_to_params.items():
+            cpp_params: List[str] = []
+            for p in params:
+                cpp_params.append(f"{p[0]} {p[1]}")
+            cpp_params.append("SyscallDataType return_value")
+            cpp_params: str = ', '.join(cpp_params)
+
+            writer.write(
+                f'  virtual auto {name}({cpp_params}) -> void = 0;\n')
+        writer.write("};\n")
+
+
+def write_event(file, syscall_name_to_params: SyscallNameToParams):
+    with open(file, 'w') as writer:
+        writer.write(f"// Generated via {__file__}\n")
+        writer.write("#include <variant>\n")
+        writer.write("#include <linux/aio_abi.h>\n")
+        writer.write("#include <sys/user.h>\n")
+        writer.write("#include <unistd.h>\n")
+        writer.write("#include <cstdint>\n")
+        writer.write("#include <sys/epoll.h>\n")
+        writer.write("#include <sys/stat.h>\n")
+        writer.write("#include <fcntl.h>\n")
+        writer.write("#include <signal.h>\n")
+        writer.write("#include <mqueue.h>\n")
+        # writer.write("#include <keyutils.h>") - requires libkeyutils-dev
+        writer.write("#include <sys/uio.h>\n")
+        # writer.write("#include <sys/capability.h>") - requires libcap-dev
+
+        writer.write(
+            "\n"
+            "namespace gpcache {\n"
+            "\n"
+            "  using SyscallDataType = decltype(user_regs_struct{}.rax);\n"
+            "\n"
         )
 
-        cpp_params = []
-        if syscall_name in syscall_name_to_params:
-            for p in syscall_name_to_params.get(syscall_name):
-                cpp_params.append('{' + f'"{p[0]}", "{p[1]}"' + '}')
-            s += ', '.join(cpp_params) + '}};'
-        else:
-            s += '}}; // parameters unknown'
-        print(s)
+        for name, params in syscall_name_to_params.items():
+            writer.write(f"  struct Event_{name}\n"
+                         "  {\n")
+            for p in params:
+                var_name = p[1]
+                if not var_name:
+                    var_name = "unnamed"
+                writer.write(f"    {p[0]} {var_name};\n")
+            writer.write("    SyscallDataType return_value;\n"
+                         "  };\n\n")
+
+        writer.write(
+            "  using SyscallEvent = std::variant<\n    " +
+            ",\n    ".join(
+                f"Event_{name}" for name in syscall_name_to_params.keys()) +
+            "\n  >;\n")
+
+        writer.write("} // namespace\n")
 
 
-def write_interface(syscall_name_to_params: SyscallNameToParams):
-    print(f"// Generated via {__file__}")
-    print("#include <linux/aio_abi.h>")
-    print("#include <sys/user.h>")
-    print("#include <unistd.h>")
-    print("#include <cstdint>")
-    print("#include <sys/epoll.h>")
-    print("#include <sys/stat.h>")
-    print("#include <fcntl.h>")
-    print("#include <signal.h>")
-    print("#include <mqueue.h>")
-    # print("#include <keyutils.h>") - requires libkeyutils-dev
-    print("#include <sys/uio.h>")
-    # print("#include <sys/capability.h>") - requires libcap-dev
-    print("using SyscallDataType = decltype(user_regs_struct{}.rax);")
+def write_interface_caller(
+        file, interface_file,
+        syscall_number_to_name: SyscallNumberToName,
+        syscall_name_to_params: SyscallNameToParams):
+    with open(file, 'w') as writer:
+        writer.write(f"#include <{interface_file}>\n")
+        writer.write(
+            "auto createSyscallEvent(OnSyscall& handler, SyscallDataType syscall_id) -> SyscallEvent\n"
+            "{\n"
+            "  switch(syscall_id) {\n")
 
-    print("\nclass OnSyscall\n{")
-    for name, params in syscall_name_to_params.items():
-        cpp_params: List[str] = []
-        for p in params:
-            cpp_params.append(f"{p[0]} {p[1]}")
-        cpp_params.append("SyscallDataType return_value")
-        cpp_params: str = ', '.join(cpp_params)
+        for syscall_number, syscall_name in syscall_number_to_name.items():
+            writer.write(f"    case {syscall_number}:\n")
 
-        print(
-            f'  virtual auto {name}({cpp_params}) -> void = 0;')
-    print("};")
+            cpp_params = []
+            if syscall_name in syscall_name_to_params:
+                for i, p in enumerate(
+                        syscall_name_to_params.get(syscall_name)):
+                    value = "{}; // value of " + str(i)
+                    writer.write(f'    {p[0]} {p[1]} = {value}\n')
+                    cpp_params.append(p[1])
+
+            writer.write(
+                f"    handler.{syscall_name}({', '.join(cpp_params)});\n"
+                "break;\n")
+
+        writer.write("  }\n")
+        writer.write("}\n")
 
 
 if __name__ == "__main__":
     syscall_number_to_name = download_and_parse_syscall_numbers()
     syscall_name_to_params = download_and_parse_syscall_params()
-    #write_pretty_cpp_code(syscall_number_to_name, syscall_name_to_params)
-    write_interface(syscall_name_to_params)
+    write_string_array(
+        '../syscall_params_generated.inc.h',
+        syscall_number_to_name,
+        syscall_name_to_params)
+    write_interface('../OnSyscall.h', syscall_name_to_params)
+    write_event('../SyscallEvent.h', syscall_name_to_params)
+    write_interface_caller(
+        '../DelegateOnSyscall.cpp',
+        'OnSyscall.h',
+        syscall_number_to_name,
+        syscall_name_to_params)
