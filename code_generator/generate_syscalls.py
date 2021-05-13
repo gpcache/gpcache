@@ -50,6 +50,9 @@ def download_and_parse_syscall_numbers() -> Syscalls:
 
         syscalls[syscall_id] = Syscall(syscall_id, syscall_name, [])
 
+        if(syscall_name == 'ni_syscall'):
+            syscalls[syscall_id].supported = False
+
     return syscalls
 
 
@@ -65,17 +68,15 @@ def fix_type(cpptype: str) -> Tuple[str, bool]:
     cpptype = cpptype.replace("rwf_t", "int")
 
     unsupported = (
-        "cap_user_header_t",
-        "cap_user_data_t",
-        "key_serial_t",
-        "mountpoint",
-        "enum landlock_rule_type",
-        "__aio_sigset",
-        "io_uring_params")
+        "cap_user_header_t cap_user_data_t key_serial_t mountpoint "
+        "landlock_rule_type __aio_sigset io_uring_params stat pollfd "
+        "sigaction __kernel_timeval __kernel_itimerval shmid_ds user_msghdr "
+        "rusage utsname msgbuf msqid_ds sembuf linux_dirent rlimit sysinfo "
+        "tms utimbuf sched_param __kernel_timex kexec_segment "
+        "robust_list_head perf_event_attr".split(" "))
     for u in unsupported:
         if u in cpptype:
             supported = False
-            cpptype = cpptype.replace(u, "int /* unsupported */")
 
     cpptype = cpptype.replace("struct", "")  # this is not C
     cpptype = cpptype.replace("  ", " ")
@@ -167,11 +168,25 @@ def write_event(file, syscalls: Syscalls):
             "\n"
             "  using SyscallDataType = decltype(user_regs_struct{}.rax);\n"
             "\n"
+            "  struct Event_Unsupported\n"
+            "  {\n"
+            "    SyscallDataType syscall_id;\n"
+            "    SyscallDataType arg1;\n"
+            "    SyscallDataType arg2;\n"
+            "    SyscallDataType arg3;\n"
+            "    SyscallDataType arg4;\n"
+            "    SyscallDataType arg5;\n"
+            "    SyscallDataType arg6;\n"
+            "  };\n"
+            "\n"
         )
 
         for syscall in filter(lambda sc: sc.supported, syscalls.values()):
-            writer.write(f"  struct Event_{syscall.name}\n"
-                         "  {\n")
+            writer.write(
+                f"  struct Event_{syscall.name}\n"
+                "  {\n"
+                f"    static SyscallDataType constexpr syscall_id = {syscall.id};\n")
+
             for pos, param in enumerate(syscall.params):
                 var_name = param.name
                 if not var_name:
@@ -181,7 +196,9 @@ def write_event(file, syscalls: Syscalls):
                          "  };\n\n")
 
         writer.write(
-            "  using SyscallEvent = std::variant<\n    " +
+            "  using SyscallEvent = std::variant<\n"
+            "    Event_Unsupported,\n"
+            "    " +
             ",\n    ".join(
                 f"Event_{syscall.name}" for syscall in filter(
                     lambda sc: sc.supported,
@@ -199,7 +216,7 @@ def write_create_event(
         syscalls: Syscalls):
 
     def cast(var_type: str) -> str:
-        if '*' in var_type and '/*' not in var_type:
+        if var_type == 'timer_t' or ('*' in var_type and '/*' not in var_type):
             return f"reinterpret_cast<{var_type}>"
         return f"static_cast<{var_type}>"
 
@@ -210,7 +227,7 @@ def write_create_event(
             "namespace gpcache\n"
             "{\n"
             "\n"
-            "  auto createEvent(SyscallDataType syscall_id, SyscallDataType arg1, SyscallDataType arg2, SyscallDataType arg3, SyscallDataType arg4, SyscallDataType arg5, SyscallDataType arg6) --> SyscallEvent\n"
+            "  auto createEvent(SyscallDataType syscall_id, SyscallDataType arg1, SyscallDataType arg2, SyscallDataType arg3, SyscallDataType arg4, SyscallDataType arg5, SyscallDataType arg6) -> SyscallEvent\n"
             "  {\n"
             "    switch (syscall_id)\n"
             "    {\n"
@@ -219,8 +236,8 @@ def write_create_event(
         for syscall in filter(lambda sc: sc.supported, syscalls.values()):
             s = (
                 f'    case {syscall.id}: \n'
-                '    {\n'
-                f"      Event_{syscall.name}" " e{};\n"
+                f"      return Event_{syscall.name}\n"
+                '      {\n'
             )
 
             for pos, param in enumerate(syscall.params):
@@ -229,18 +246,28 @@ def write_create_event(
                     var_name = f"unnamed{pos}"
 
                 s += (
-                    f"      e.{var_name} = "
-                    f"{cast(param.cpptype)}(arg{pos+1});\n"
+                    f"      .{var_name} = "
+                    f"{cast(param.cpptype)}(arg{pos+1}),\n"
                 )
 
             s += (
-                "      return e;\n"
-                "    }\n"
+                "      };\n"
             )
             writer.write(s)
 
         writer.write(
-            "  }\n"
+            "    } // switch\n"
+            "\n"
+            "    Event_Unsupported e;\n"
+            "    e.syscall_id = syscall_id;\n"
+            "    e.arg1 = arg1;\n"
+            "    e.arg2 = arg2;\n"
+            "    e.arg3 = arg3;\n"
+            "    e.arg4 = arg4;\n"
+            "    e.arg5 = arg5;\n"
+            "    e.arg6 = arg6;\n"
+            "    return e;\n"
+            "  } // function\n"
             "\n"
             "} // namespace\n"
             ""
@@ -255,5 +282,5 @@ if __name__ == "__main__":
     write_event(repository_path / 'SyscallEvent.h', syscalls)
     write_create_event(
         repository_path / 'SyscallEventCreator.cpp',
-        'SyscallEvent.h',
+        'SyscallEventCreator.h',
         syscalls)
