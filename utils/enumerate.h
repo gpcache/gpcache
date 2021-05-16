@@ -1,4 +1,5 @@
-//#include <concepts>
+#pragma once
+
 #include <ranges>
 
 // stripped down version of http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2164r4.pdf

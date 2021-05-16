@@ -5,8 +5,7 @@
 # llvm minimum version: 3.13.4
 # There is no special significance of this list,
 # it's just to get an idea about what others use.
-# Update: cmake is provided by conan. There is no need in supporting older versions.
-cmake_minimum_required(VERSION 3.20.0)
+cmake_minimum_required(VERSION 3.16.3)
 
 project(gpcache
   DESCRIPTION "a general purpose cache"
@@ -45,11 +44,9 @@ conan_basic_setup(TARGETS)
 add_library(gpcache_lib
   hash.cpp
   wrapper/Posix.cpp
-  logging.cpp
   syscall_decoder.cpp
   PtraceProcess.cpp
-  SyscallDelegator.cpp
-  SyscallEventCreator.cpp
+  SyscallMap.cpp
 )
 target_include_directories(gpcache_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gpcache_lib ${CONAN_TARGETS})

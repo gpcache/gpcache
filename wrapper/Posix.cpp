@@ -10,9 +10,23 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fmt/format.h>
-#include "logging.h"
+#include <bit>
 
-using gpcache::get_callstack;
+#include <spdlog/spdlog.h>
+
+// Code from https://stackoverflow.com/questions/58320316/stdbit-cast-with-stdarray
+// Need from https://en.cppreference.com/w/cpp/compiler_support
+template <class Dest, class Source>
+inline Dest bit_cast(Source const &source)
+{
+  static_assert(sizeof(Dest) == sizeof(Source));
+  static_assert(std::is_trivially_copyable<Dest>::value);
+  static_assert(std::is_trivially_copyable<Source>::value);
+
+  Dest dest;
+  std::memcpy(&dest, &source, sizeof(dest));
+  return dest;
+}
 
 static auto readable_ptrace_request(const enum __ptrace_request request) -> std::string
 {
@@ -24,8 +38,9 @@ static auto readable_ptrace_request(const enum __ptrace_request request) -> std:
     return "PTRACE_SYSCALL";
   case PTRACE_SETOPTIONS:
     return "PTRACE_SETOPTIONS";
+  default:
+    return std::to_string(request);
   }
-  return std::to_string(request);
 }
 
 static auto call_ptrace(const enum __ptrace_request request, const int pid, const auto addr, const auto data)
@@ -86,7 +101,6 @@ namespace Posix
 
     auto PEEKTEXT(const int pid, const uint8_t *const begin, const size_t count) -> std::string
     {
-      gpcache::LogCallstack c("PEEKTEXT");
       std::string result;
       result.reserve(count);
       //result.resize(count);
@@ -100,9 +114,32 @@ namespace Posix
       return result;
     }
 
+    auto PEEKTEXT_string(int const pid, char const *const begin) -> std::string
+    {
+      std::string result;
+
+      constexpr auto maximum = 1024 * 1024;
+      bool end_of_string = false;
+      for (size_t pos_in_string = 0; pos_in_string < maximum && !end_of_string; pos_in_string += sizeof(intptr_t))
+      {
+        const long data = PEEKTEXT(pid, reinterpret_cast<uint8_t const *>(begin) + pos_in_string);
+        auto chars = bit_cast<std::array<char, sizeof(data)>>(data);
+        for (const char c : chars)
+        {
+          result += c;
+          if (c == '\0')
+          {
+            end_of_string = true;
+            break;
+          }
+        }
+      }
+
+      return result;
+    }
+
     auto GETREGS(const int pid) -> user_regs_struct
     {
-      gpcache::LogCallstack c("GETREGS");
       user_regs_struct regs;
       call_ptrace(PTRACE_GETREGS, pid, 0, &regs);
       return regs;
@@ -110,19 +147,16 @@ namespace Posix
 
     auto TRACEME() -> void
     {
-      gpcache::LogCallstack c("TRACEME");
       call_ptrace(PTRACE_TRACEME, 0, nullptr, 0);
     }
 
     auto SYSCALL(const int pid, const int signal) -> void
     {
-      gpcache::LogCallstack c("SYSCALL");
       call_ptrace(PTRACE_SYSCALL, pid, nullptr, signal);
     }
 
     auto SETOPTIONS(const int pid, const int options) -> void
     {
-      gpcache::LogCallstack c("SETOPTIONS");
       call_ptrace(PTRACE_SETOPTIONS, pid, nullptr, options);
     }
   } // namespace Ptrace

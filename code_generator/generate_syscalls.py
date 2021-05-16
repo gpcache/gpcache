@@ -56,16 +56,16 @@ def download_and_parse_syscall_numbers() -> Syscalls:
     return syscalls
 
 
-def fix_type(cpptype: str) -> Tuple[str, bool]:
+def autofix(param: Param) -> Tuple[Param, bool]:
     supported = True
 
-    cpptype = cpptype.replace("__user", "")
-    cpptype = cpptype.replace("old_", "")
-    cpptype = cpptype.replace("u64", "uint64_t")
-    cpptype = cpptype.replace("u32", "uint32_t")
-    cpptype = cpptype.replace("umode_t", "mode_t")
-    cpptype = cpptype.replace("qid_t", "int")
-    cpptype = cpptype.replace("rwf_t", "int")
+    param.cpptype = param.cpptype.replace("__user", "")
+    param.cpptype = param.cpptype.replace("old_", "")
+    param.cpptype = param.cpptype.replace("u64", "uint64_t")
+    param.cpptype = param.cpptype.replace("u32", "uint32_t")
+    param.cpptype = param.cpptype.replace("umode_t", "mode_t")
+    param.cpptype = param.cpptype.replace("qid_t", "int")
+    param.cpptype = param.cpptype.replace("rwf_t", "int")
 
     unsupported = (
         "cap_user_header_t cap_user_data_t key_serial_t mountpoint "
@@ -73,14 +73,18 @@ def fix_type(cpptype: str) -> Tuple[str, bool]:
         "sigaction __kernel_timeval __kernel_itimerval shmid_ds user_msghdr "
         "rusage utsname msgbuf msqid_ds sembuf linux_dirent rlimit sysinfo "
         "tms utimbuf sched_param __kernel_timex kexec_segment "
-        "robust_list_head perf_event_attr".split(" "))
+        "robust_list_head perf_event_attr iocb".split(" "))
     for u in unsupported:
-        if u in cpptype:
+        if u in param.cpptype:
             supported = False
 
-    cpptype = cpptype.replace("struct", "")  # this is not C
-    cpptype = cpptype.replace("  ", " ")
-    return (cpptype, supported)
+    param.cpptype = param.cpptype.replace("struct", "")  # this is not C
+    param.cpptype = param.cpptype.replace("  ", " ")
+
+    if param.name == "sigmask":
+        param.name = "SignMask"
+
+    return (param, supported)
 
 
 def parse_param(s: str) -> Tuple[bool, Param]:
@@ -101,7 +105,7 @@ def parse_param(s: str) -> Tuple[bool, Param]:
             param.cpptype = match.group('type')
             param.name = match.group('name')
 
-    param.cpptype, supported = fix_type(param.cpptype)
+    param, supported = autofix(param)
     return supported, param
 
 
@@ -195,15 +199,70 @@ def write_event(file, syscalls: Syscalls):
             writer.write("    SyscallDataType return_value;\n"
                          "  };\n\n")
 
+        for syscall in filter(lambda sc: not sc.supported, syscalls.values()):
+            writer.write(f"  // Unsupported: {syscall}\n")
+
+        writer.write("} // namespace\n")
+
+
+def cast(var_type: str) -> str:
+    if var_type == 'timer_t' or ('*' in var_type and '/*' not in var_type):
+        return f"reinterpret_cast<{var_type}>"
+    # if var_type != 'unsigned long':
+    return f"static_cast<{var_type}>"
+    # return ""
+
+
+def write_event_wrapper(file, syscalls: Syscalls):
+    with open(file, 'w') as writer:
+        writer.write(f"// Generated via {__file__}\n")
+        for x in (
+            "variant linux/aio_abi.h sys/user.h unistd.h cstdint "
+                "sys/epoll.h sys/stat.h fcntl.h signal.h mqueue.h "
+                "sys/socket.h linux/time_types.h sys/uio.h").split(' '):
+            writer.write(f"#include <{x}>\n")
+        # writer.write("#include <keyutils.h>") - requires libkeyutils-dev
+        # writer.write("#include <sys/capability.h>") - requires libcap-dev
+
         writer.write(
-            "  using SyscallEvent = std::variant<\n"
-            "    Event_Unsupported,\n"
-            "    " +
-            ",\n    ".join(
-                f"Event_{syscall.name}" for syscall in filter(
-                    lambda sc: sc.supported,
-                    syscalls.values())) +
-            "\n  >;\n")
+            "\n"
+            "namespace gpcache {\n"
+            "\n"
+            "  using SyscallDataType = decltype(user_regs_struct{}.rax);\n"
+            "\n"
+            "  struct Syscall_Args\n"
+            "  {\n"
+            "    SyscallDataType Arg0;\n"
+            "    SyscallDataType Arg1;\n"
+            "    SyscallDataType Arg2;\n"
+            "    SyscallDataType Arg3;\n"
+            "    SyscallDataType Arg4;\n"
+            "    SyscallDataType Arg5;\n"
+            "    SyscallDataType return_value;\n"
+            "  };\n"
+            "\n"
+        )
+
+        for syscall in filter(lambda sc: sc.supported, syscalls.values()):
+            writer.write(
+                f"  struct Syscall_{syscall.name} : public Syscall_Args\n"
+                "  {\n"
+                f"    Syscall_{syscall.name}(Syscall_Args args) : "
+                "Syscall_Args(args) {}\n"
+                "\n"
+                f"    static SyscallDataType constexpr syscall_id = {syscall.id};\n"
+                "\n")
+
+            for pos, param in enumerate(syscall.params):
+                if param.name:
+                    writer.write(
+                        f"    auto {param.name}() const -> {param.cpptype}\n"
+                        "    {\n"
+                        f"       return {cast(param.cpptype)}(Arg{pos});\n"
+                        "    }\n"
+                        "\n"
+                    )
+            writer.write("  };\n\n")
 
         for syscall in filter(lambda sc: not sc.supported, syscalls.values()):
             writer.write(f"  // Unsupported: {syscall}\n")
@@ -215,11 +274,6 @@ def write_create_event(
         file, interface_file,
         syscalls: Syscalls):
 
-    def cast(var_type: str) -> str:
-        if var_type == 'timer_t' or ('*' in var_type and '/*' not in var_type):
-            return f"reinterpret_cast<{var_type}>"
-        return f"static_cast<{var_type}>"
-
     with open(file, 'w') as writer:
         writer.write(
             f"#include <{interface_file}>\n"
@@ -227,6 +281,15 @@ def write_create_event(
             "namespace gpcache\n"
             "{\n"
             "\n"
+            "  // This variant compiles for ~42 seconds on my PC\n"
+            "  using SyscallEvent = std::variant<\n"
+            "    Event_Unsupported,\n"
+            "    " +
+            ",\n    ".join(
+                f"Event_{syscall.name}" for syscall in filter(
+                    lambda sc: sc.supported,
+                    syscalls.values())) +
+            "\n  >;\n"
             "  auto createEvent(SyscallDataType syscall_id, SyscallDataType arg1, SyscallDataType arg2, SyscallDataType arg3, SyscallDataType arg4, SyscallDataType arg5, SyscallDataType arg6) -> SyscallEvent\n"
             "  {\n"
             "    switch (syscall_id)\n"
@@ -274,6 +337,49 @@ def write_create_event(
         )
 
 
+def write_map(
+        file, interface_file,
+        syscalls: Syscalls):
+
+    with open(file, 'w') as writer:
+        writer.write(
+            f"#include <{interface_file}>\n"
+            "\n"
+            "namespace gpcache\n"
+            "{\n"
+            "\n"
+            "  auto create_syscall_map() -> std::map<SyscallDataType, SyscallInfo> const {\n"
+            "    thread_local static auto map = std::map<SyscallDataType, SyscallInfo>();\n"
+            "    if(map.empty())\n"
+            "    {\n"
+            "\n")
+
+        for syscall in syscalls.values():
+            params = []
+            for pos, param in enumerate(syscall.params):
+                var_name = param.name
+                if not var_name:
+                    var_name = f"unnamed{pos}"
+
+                params.append(
+                    "{\"" + param.cpptype + "\", \"" + var_name + "\"}"
+                )
+
+            writer.write(
+                f"      map[{syscall.id}] = SyscallInfo"
+                "{" + f".syscall_id = {syscall.id}, .name = \"{syscall.name}\", .params = "
+                "{ " + ", ".join(params) + "}};\n")
+
+        writer.write(
+            "    } // map.empty\n"
+            "    return map;\n"
+            "  } // create_syscall_map\n"
+            "\n"
+            "} // namespace\n"
+            ""
+        )
+
+
 if __name__ == "__main__":
     repository_path = Path(os.path.dirname(__file__)).parent
 
@@ -284,3 +390,5 @@ if __name__ == "__main__":
         repository_path / 'SyscallEventCreator.cpp',
         'SyscallEventCreator.h',
         syscalls)
+    write_event_wrapper(repository_path / 'SyscallWrappers.h', syscalls)
+    write_map(repository_path / 'SyscallMap.cpp', 'SyscallMap.h', syscalls)

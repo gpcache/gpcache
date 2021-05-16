@@ -1,4 +1,4 @@
-// Generated via code_generator/generate_syscalls.py
+// Generated via ../code_generator/generate_syscalls.py
 #include <variant>
 #include <linux/aio_abi.h>
 #include <sys/user.h>
@@ -1326,24 +1326,6 @@ namespace gpcache {
     SyscallDataType return_value;
   };
 
-  struct Event_io_submit
-  {
-    static SyscallDataType constexpr syscall_id = 209;
-    aio_context_t unnamed0;
-    long unnamed1;
-     iocb * * unnamed2;
-    SyscallDataType return_value;
-  };
-
-  struct Event_io_cancel
-  {
-    static SyscallDataType constexpr syscall_id = 210;
-    aio_context_t ctx_id;
-     iocb * iocb;
-     io_event * result;
-    SyscallDataType return_value;
-  };
-
   struct Event_lookup_dcookie
   {
     static SyscallDataType constexpr syscall_id = 212;
@@ -1844,7 +1826,7 @@ namespace gpcache {
      epoll_event * events;
     int maxevents;
     int timeout;
-    const sigset_t * sigmask;
+    const sigset_t * SignMask;
     size_t sigsetsize;
     SyscallDataType return_value;
   };
@@ -1992,238 +1974,6 @@ namespace gpcache {
     SyscallDataType return_value;
   };
 
-  using SyscallEvent = std::variant<
-    Event_Unsupported,
-    Event_read,
-    Event_write,
-    Event_open,
-    Event_close,
-    Event_lseek,
-    Event_mmap,
-    Event_mprotect,
-    Event_munmap,
-    Event_brk,
-    Event_rt_sigprocmask,
-    Event_ioctl,
-    Event_pread64,
-    Event_pwrite64,
-    Event_readv,
-    Event_writev,
-    Event_access,
-    Event_pipe,
-    Event_sched_yield,
-    Event_mremap,
-    Event_msync,
-    Event_mincore,
-    Event_madvise,
-    Event_shmget,
-    Event_shmat,
-    Event_dup,
-    Event_dup2,
-    Event_pause,
-    Event_nanosleep,
-    Event_alarm,
-    Event_getpid,
-    Event_sendfile64,
-    Event_socket,
-    Event_connect,
-    Event_accept,
-    Event_sendto,
-    Event_recvfrom,
-    Event_shutdown,
-    Event_bind,
-    Event_listen,
-    Event_getsockname,
-    Event_getpeername,
-    Event_socketpair,
-    Event_setsockopt,
-    Event_getsockopt,
-    Event_exit,
-    Event_kill,
-    Event_semget,
-    Event_semctl,
-    Event_shmdt,
-    Event_msgget,
-    Event_fcntl,
-    Event_flock,
-    Event_fsync,
-    Event_fdatasync,
-    Event_truncate,
-    Event_ftruncate,
-    Event_getcwd,
-    Event_chdir,
-    Event_fchdir,
-    Event_rename,
-    Event_mkdir,
-    Event_rmdir,
-    Event_creat,
-    Event_link,
-    Event_unlink,
-    Event_symlink,
-    Event_readlink,
-    Event_chmod,
-    Event_fchmod,
-    Event_chown,
-    Event_fchown,
-    Event_lchown,
-    Event_umask,
-    Event_ptrace,
-    Event_getuid,
-    Event_syslog,
-    Event_getgid,
-    Event_setuid,
-    Event_setgid,
-    Event_geteuid,
-    Event_getegid,
-    Event_setpgid,
-    Event_getppid,
-    Event_getpgrp,
-    Event_setsid,
-    Event_setreuid,
-    Event_setregid,
-    Event_getgroups,
-    Event_setgroups,
-    Event_setresuid,
-    Event_getresuid,
-    Event_setresgid,
-    Event_getresgid,
-    Event_getpgid,
-    Event_setfsuid,
-    Event_setfsgid,
-    Event_getsid,
-    Event_rt_sigpending,
-    Event_rt_sigtimedwait,
-    Event_rt_sigqueueinfo,
-    Event_rt_sigsuspend,
-    Event_mknod,
-    Event_personality,
-    Event_sysfs,
-    Event_getpriority,
-    Event_setpriority,
-    Event_sched_getscheduler,
-    Event_sched_get_priority_max,
-    Event_sched_get_priority_min,
-    Event_sched_rr_get_interval,
-    Event_mlock,
-    Event_munlock,
-    Event_mlockall,
-    Event_munlockall,
-    Event_vhangup,
-    Event_modify_ldt,
-    Event_pivot_root,
-    Event_sysctl,
-    Event_prctl,
-    Event_arch_prctl,
-    Event_chroot,
-    Event_sync,
-    Event_acct,
-    Event_mount,
-    Event_umount,
-    Event_swapon,
-    Event_swapoff,
-    Event_reboot,
-    Event_sethostname,
-    Event_setdomainname,
-    Event_ioperm,
-    Event_init_module,
-    Event_delete_module,
-    Event_quotactl,
-    Event_nfsservctl,
-    Event_gettid,
-    Event_readahead,
-    Event_setxattr,
-    Event_lsetxattr,
-    Event_fsetxattr,
-    Event_getxattr,
-    Event_lgetxattr,
-    Event_fgetxattr,
-    Event_listxattr,
-    Event_llistxattr,
-    Event_flistxattr,
-    Event_removexattr,
-    Event_lremovexattr,
-    Event_fremovexattr,
-    Event_tkill,
-    Event_time,
-    Event_futex,
-    Event_sched_setaffinity,
-    Event_sched_getaffinity,
-    Event_io_setup,
-    Event_io_destroy,
-    Event_io_getevents,
-    Event_io_submit,
-    Event_io_cancel,
-    Event_lookup_dcookie,
-    Event_epoll_create,
-    Event_remap_file_pages,
-    Event_set_tid_address,
-    Event_restart_syscall,
-    Event_fadvise64,
-    Event_timer_create,
-    Event_timer_settime,
-    Event_timer_gettime,
-    Event_timer_getoverrun,
-    Event_timer_delete,
-    Event_clock_settime,
-    Event_clock_gettime,
-    Event_clock_getres,
-    Event_clock_nanosleep,
-    Event_exit_group,
-    Event_epoll_wait,
-    Event_epoll_ctl,
-    Event_tgkill,
-    Event_mbind,
-    Event_set_mempolicy,
-    Event_get_mempolicy,
-    Event_mq_open,
-    Event_mq_unlink,
-    Event_mq_timedsend,
-    Event_mq_timedreceive,
-    Event_mq_notify,
-    Event_mq_getsetattr,
-    Event_keyctl,
-    Event_ioprio_set,
-    Event_ioprio_get,
-    Event_inotify_init,
-    Event_inotify_add_watch,
-    Event_inotify_rm_watch,
-    Event_migrate_pages,
-    Event_openat,
-    Event_mkdirat,
-    Event_mknodat,
-    Event_fchownat,
-    Event_unlinkat,
-    Event_renameat,
-    Event_linkat,
-    Event_symlinkat,
-    Event_readlinkat,
-    Event_fchmodat,
-    Event_faccessat,
-    Event_pselect6,
-    Event_splice,
-    Event_tee,
-    Event_sync_file_range,
-    Event_vmsplice,
-    Event_move_pages,
-    Event_utimensat,
-    Event_epoll_pwait,
-    Event_signalfd,
-    Event_timerfd_create,
-    Event_eventfd,
-    Event_fallocate,
-    Event_timerfd_settime,
-    Event_timerfd_gettime,
-    Event_accept4,
-    Event_signalfd4,
-    Event_eventfd2,
-    Event_epoll_create1,
-    Event_dup3,
-    Event_pipe2,
-    Event_inotify_init1,
-    Event_preadv,
-    Event_pwritev,
-    Event_rt_tgsigqueueinfo
-  >;
   // Unsupported: Syscall(id=4, name='newstat', params=[Param(cpptype='const char *', name='filename'), Param(cpptype=' stat *', name='statbuf')], supported=False)
   // Unsupported: Syscall(id=5, name='newfstat', params=[Param(cpptype='unsigned int', name='fd'), Param(cpptype=' stat *', name='statbuf')], supported=False)
   // Unsupported: Syscall(id=6, name='newlstat', params=[Param(cpptype='const char *', name='filename'), Param(cpptype=' stat *', name='statbuf')], supported=False)
@@ -2269,6 +2019,8 @@ namespace gpcache {
   // Unsupported: Syscall(id=184, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=185, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=205, name='ni_syscall', params=[], supported=False)
+  // Unsupported: Syscall(id=209, name='io_submit', params=[Param(cpptype='aio_context_t', name=''), Param(cpptype='long', name=''), Param(cpptype=' iocb * *', name='')], supported=False)
+  // Unsupported: Syscall(id=210, name='io_cancel', params=[Param(cpptype='aio_context_t', name='ctx_id'), Param(cpptype=' iocb *', name='iocb'), Param(cpptype=' io_event *', name='result')], supported=False)
   // Unsupported: Syscall(id=211, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=214, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=215, name='ni_syscall', params=[], supported=False)

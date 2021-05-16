@@ -33,11 +33,4 @@ namespace gpcache
 #endif
   }
 
-  auto get_syscall_map() -> std::map<SyscallDataType, SyscallInfo>
-  {
-    std::map<SyscallDataType, SyscallInfo> syscall_params;
-#include "syscall_params_generated.inc.h"
-    return syscall_params;
-  }
-
 }

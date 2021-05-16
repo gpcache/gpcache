@@ -1,6 +1,5 @@
 #include "PtraceProcess.h"
 #include "wrapper/Posix.h"
-#include "logging.h"
 
 #include <csignal>
 #include <functional>
@@ -9,12 +8,9 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
-template <class C, class T>
-auto contains(const C &v, const T &x)
-    -> decltype(end(v), true)
-{
-  return end(v) != std::find(begin(v), end(v), x);
-}
+#include <spdlog/spdlog.h>
+
+#include "utils/Utils.h"
 
 namespace gpcache
 {
@@ -65,8 +61,6 @@ namespace gpcache
   // Alternative design: setup global signal handler. Probably the code will look better than.
   static auto wait_for_signal2(const int pid, const std::vector<int> signum_to_wait_for)
   {
-    LogCallstack c("wait_for_signal2");
-
     spdlog::debug("before waitpid");
     const auto status = Posix::waitpid(pid, 0);
     spdlog::debug("after waitpid"); // todo trace status
@@ -92,15 +86,13 @@ namespace gpcache
 
   auto PtraceProcess::restart_child_and_wait_for_next_syscall() -> SysCall
   {
-    LogCallstack c("restart_child_and_wait_for_next_syscall");
-
     spdlog::debug("restart_child_and_wait_for_next_syscall");
     Posix::Ptrace::SYSCALL(pid);
     wait_for_signal2(pid, {SIGTRAP | 0x80});
     auto regs = Posix::Ptrace::GETREGS(pid);
 
     const auto syscall_id = get_syscall_number_from_registers(regs);
-    const static auto syscall_map = get_syscall_map();
+    const static auto syscall_map = create_syscall_map();
     const auto syscall_info = syscall_map.at(syscall_id);
     const auto return_value = [&]() -> std::optional<SyscallDataType> {
       if (next_call == EnterExit::exit)
@@ -121,8 +113,6 @@ namespace gpcache
 
   auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int
   {
-    LogCallstack c("createChildProcess");
-
     const pid_t pid = fork();
     spdlog::debug("fork() -> {}", pid);
 

@@ -1,40 +1,17 @@
 #include "PtraceProcess.h"
 #include "syscall_decoder.h"
-#include "enumerate.h"
-#include "join.h"
+#include "utils/enumerate.h"
+#include "utils/join.h"
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #define CATCH_CONFIG_MAIN // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch2/catch.hpp"
-#include "logging.h"
-#include "spdlog/pattern_formatter.h"
+#include "spdlog/spdlog.h"
 
 using namespace gpcache;
 
-class my_formatter_flag : public spdlog::custom_flag_formatter
-{
-public:
-  void format(const spdlog::details::log_msg &, const std::tm &, spdlog::memory_buf_t &dest) override
-  {
-    std::string some_txt = get_callstack();
-    dest.append(some_txt.data(), some_txt.data() + some_txt.size());
-  }
-
-  std::unique_ptr<custom_flag_formatter> clone() const override
-  {
-    return spdlog::details::make_unique<my_formatter_flag>();
-  }
-};
-
 TEST_CASE("Starting Sub Process", "test1")
 {
-  LogCallstack("test1");
-  //spdlog::set_level(spdlog::level::debug);
-
-  auto formatter = std::make_unique<spdlog::pattern_formatter>();
-  formatter->add_flag<my_formatter_flag>('*').set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] [%*] %v");
-  spdlog::set_formatter(std::move(formatter));
-
   // true has probably the smallest possible amount of syscalls.
   PtraceProcess p = createChildProcess("true", {});
   spdlog::debug("after createChildProcess");
