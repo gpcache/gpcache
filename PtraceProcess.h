@@ -63,7 +63,8 @@ namespace gpcache
 
     auto get_pid() const { return pid; }
 
-    auto restart_child_and_wait_for_next_syscall() -> SysCall;
+    /// @return empty if process has existed
+    auto restart_child_and_wait_for_next_syscall() -> std::optional<SysCall>;
 
   private:
     pid_t pid;

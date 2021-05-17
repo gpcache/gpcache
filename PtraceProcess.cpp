@@ -27,7 +27,7 @@ namespace gpcache
 
   // Note: this will pause all other signal handlers while waiting
   // Alternative design: setup global signal handler. Probably the code will look better than.
-  static auto wait_for_signal(const int signum_to_wait_for, auto call_once_ready)
+  [[deprecated("Use wait_for_signal2")]] static auto wait_for_signal(const int signum_to_wait_for, auto call_once_ready)
   {
     // Setup receiving of signal:
     global_signum_to_wait_for = signum_to_wait_for;
@@ -57,9 +57,8 @@ namespace gpcache
     std::signal(SIGINT, old_signal_handler);
   }
 
-  // Note: this will pause all other signal handlers while waiting
-  // Alternative design: setup global signal handler. Probably the code will look better than.
-  static auto wait_for_signal2(const int pid, const std::vector<int> signum_to_wait_for)
+  /// @returns false if process has already exited
+  [[nodiscard]] static auto wait_for_signal2(const int pid, const std::vector<int> signum_to_wait_for) -> bool
   {
     spdlog::debug("before waitpid");
     const auto status = Posix::waitpid(pid, 0);
@@ -72,7 +71,7 @@ namespace gpcache
     case StopReason::ProcessState::RUNNING:
       throw "Child is running";
     case StopReason::ProcessState::EXITED:
-      throw "Child has already exited";
+      return false;
     case StopReason::ProcessState::EXITED_BECAUSE_OF_SIGNAL:
       throw "Child has already exited because of signal";
     case StopReason::ProcessState::STOPPED_BECAUSE_OF_SIGNAL:
@@ -81,14 +80,17 @@ namespace gpcache
       // fallthrough
     }
 
-    spdlog::debug("exited");
+    return true;
   }
 
-  auto PtraceProcess::restart_child_and_wait_for_next_syscall() -> SysCall
+  auto PtraceProcess::restart_child_and_wait_for_next_syscall() -> std::optional<SysCall>
   {
     spdlog::debug("restart_child_and_wait_for_next_syscall");
     Posix::Ptrace::SYSCALL(pid);
-    wait_for_signal2(pid, {SIGTRAP | 0x80});
+    auto still_running = wait_for_signal2(pid, {SIGTRAP | 0x80});
+    if (!still_running)
+      return {};
+
     auto regs = Posix::Ptrace::GETREGS(pid);
 
     const auto syscall_id = get_syscall_number_from_registers(regs);
@@ -111,7 +113,7 @@ namespace gpcache
     return SysCall{syscall_id, syscall_info, return_value, syscall_arguments};
   }
 
-  auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int
+  [[nodiscard]] auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int
   {
     const pid_t pid = fork();
     spdlog::debug("fork() -> {}", pid);
