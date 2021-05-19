@@ -42,11 +42,9 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
 add_library(gpcache_lib
-  hash.cpp
-  wrapper/Posix.cpp
-  syscall_decoder.cpp
-  PtraceProcess.cpp
-  SyscallMap.cpp
+  wrappers/hash.cpp
+  wrappers/posix.cpp
+  wrappers/ptrace.cpp
 )
 target_include_directories(gpcache_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gpcache_lib ${CONAN_TARGETS})
