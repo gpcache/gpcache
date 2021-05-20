@@ -23,7 +23,10 @@ Preconditions:
 
 ## Current state
 - Proof of concept written in python, but actual tool shall be written in C++
+- C++ implementation has passed the proof of concept (as expected), but has not yet catched up with the python version
 
+### Why C++
+Main trigger was stats. I was not able to figure out how to use stats result in python and had to issue a manual stats. Therefore a new syscall. Besides performance problems this results in asynchronities since sometimes differnt values will be cached than actually used by the to-be-cached-tool.
 
 ## Build gpcache from source
 Demonstrating with an in source build, although that is not really encouraged.
@@ -33,17 +36,24 @@ Not sure I'm using conan correctly here, but hey... "it works on my machine".
 Conan
 `pip3 install conan`
 
+Why Conan?
+C++ lacks a package manager. Currently/finally some have appeared.
+It's not clear yet (to me) which one is the best.
+However as I do need to get started and not using a package manager is not an option, let's use conan for now.
+
 #### Getting and compiling gpcache
 ```
 git clone https://github.com/gpcache/gpcache.git
-cd gpcache
-mkdir build
-conan install .. --settings compiler.cppstd=20 --build=missing
-conan build ..
+mkdir gpcache_build
+cd gpcache_build
+conan install ../gpcache --settings compiler.cppstd=20 --build=missing
+
+You'll need to run the first build via conan, afterwards you can use make/ninja.
+conan build ../gpcache
 ```
 
 Changing compiler:
-`conan install .. -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++`
+`conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++`
 
 Debugging:
-`conan install .. -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -s build_type=Debug`
+`conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug`

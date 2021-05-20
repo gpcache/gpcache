@@ -1,8 +1,9 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
-namespace posix
+namespace Posix
 {
 
   struct StopReason
@@ -19,5 +20,5 @@ namespace posix
     std::optional<int> exit_status;
   };
   auto waitpid(int pid, int options) -> StopReason;
-
+  [[nodiscard]] auto wait_for_signal2(int pid, std::vector<int> signum_to_wait_for) -> bool;
 }

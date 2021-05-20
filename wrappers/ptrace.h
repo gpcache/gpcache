@@ -4,13 +4,14 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <map>
 #include <sys/user.h> // user_regs_struct
 
-#include <fmt/fmt.h>         // good dependency?
+#include <fmt/format.h>      // good dependency?
 #include "utils/enumerate.h" // good dependency?
 
 // ptrace is more than a simple function, each possible parameter has a separate wrapper.
-namespace ptrace
+namespace Ptrace
 {
   using SyscallDataType = decltype(user_regs_struct{}.rax);
   using Syscall_Args = std::array<SyscallDataType, 6>;
@@ -109,6 +110,8 @@ namespace ptrace
   auto get_syscall_number_from_registers(const user_regs_struct &regs) -> SyscallDataType;
   auto get_syscall_return_value_from_registers(const user_regs_struct &regs) -> SyscallDataType;
 
-  auto get_syscall_args(const user_regs_struct &regs) -> std::vector<SyscallDataType>;
-};
-}
+  auto get_syscall_args(const user_regs_struct &regs) -> std::array<SyscallDataType, 6>;
+
+  auto create_syscall_map() -> std::map<SyscallDataType, SyscallInfo> const;
+
+} // namespace ptrace

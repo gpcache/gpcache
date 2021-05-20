@@ -10,11 +10,10 @@
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #include "spdlog/pattern_formatter.h"
-#include "SyscallWrappers.h"
 #include "wrappers/hash.h"
 #include "wrappers/posix.h"
 #include "wrappers/ptrace.h"
-#include "wrappers/ptrace_linux_x64/SyscallMap.h"
+#include "wrappers/ptrace/SyscallWrappers.h"
 #include <any>
 #include <variant>
 #include "utils/Utils.h"
@@ -29,7 +28,7 @@ namespace gpcache
 {
   auto cache_execution(std::string const program, std::vector<std::string> const arguments) -> Inputs
   {
-    PtraceProcess p = createChildProcess(program, arguments);
+    Ptrace::PtraceProcess p = Ptrace::createChildProcess(program, arguments);
     spdlog::debug("after createChildProcess");
 
     std::vector ignore = {Syscall_brk::syscall_id, Syscall_arch_prctl::syscall_id};
@@ -45,23 +44,14 @@ namespace gpcache
       // Since gpcache does not modify syscalls, just monitoring the exists is sufficient
       if (syscall->return_value)
       {
-        // temp?
-        Syscall_Args syscall_args{syscall->syscall_arguments[0],
-                                  syscall->syscall_arguments[1],
-                                  syscall->syscall_arguments[2],
-                                  syscall->syscall_arguments[3],
-                                  syscall->syscall_arguments[4],
-                                  syscall->syscall_arguments[5],
-                                  syscall->return_value.value()};
-
-        if (!contains(ignore, syscall->syscall_id))
+        if (!contains(ignore, syscall->info.syscall_id))
         {
-          switch (syscall->syscall_id)
+          switch (syscall->info.syscall_id)
           {
           case Syscall_access::syscall_id:
           {
-            auto syscall_access = static_cast<Syscall_access>(syscall_args);
-            std::string filename = Posix::Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
+            auto syscall_access = static_cast<Syscall_access>(syscall->arguments);
+            std::string filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
             inputs.actions.push_back(AccessAction{filename, syscall_access.mode(), syscall->return_value.value()});
             break;
           }

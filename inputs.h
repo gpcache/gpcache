@@ -12,11 +12,9 @@ struct AccessAction
 template <>
 struct fmt::formatter<AccessAction>
 {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+  constexpr auto parse(auto &ctx) { return ctx.begin(); }
 
-  template <typename FormatContext>
-  auto format(AccessAction const &action, FormatContext &ctx)
+  auto format(AccessAction const &action, auto &ctx)
   {
     return fmt::format_to(ctx.out(), "access({}, {}) -> {}", action.filename, action.mode, action.result);
   }

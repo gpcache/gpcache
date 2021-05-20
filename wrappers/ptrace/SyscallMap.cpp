@@ -1,6 +1,6 @@
 #include "../ptrace.h"
 
-namespace Ptrace
+namespace gpcache
 {
 
   auto create_syscall_map() -> std::map<SyscallDataType, SyscallInfo> const

@@ -217,7 +217,7 @@ def write_event_wrapper(file, syscalls: Syscalls):
     with open(file, 'w') as writer:
         writer.write(f"// Generated via {__file__}\n")
         for x in (
-            "variant linux/aio_abi.h sys/user.h unistd.h cstdint "
+            "array variant linux/aio_abi.h sys/user.h unistd.h cstdint "
                 "sys/epoll.h sys/stat.h fcntl.h signal.h mqueue.h "
                 "sys/socket.h linux/time_types.h sys/uio.h").split(' '):
             writer.write(f"#include <{x}>\n")
@@ -229,17 +229,8 @@ def write_event_wrapper(file, syscalls: Syscalls):
             "namespace gpcache {\n"
             "\n"
             "  using SyscallDataType = decltype(user_regs_struct{}.rax);\n"
+            "  using Syscall_Args = std::array<SyscallDataType, 6>;\n"
             "\n"
-            "  struct Syscall_Args\n"
-            "  {\n"
-            "    SyscallDataType Arg0;\n"
-            "    SyscallDataType Arg1;\n"
-            "    SyscallDataType Arg2;\n"
-            "    SyscallDataType Arg3;\n"
-            "    SyscallDataType Arg4;\n"
-            "    SyscallDataType Arg5;\n"
-            "    SyscallDataType return_value;\n"
-            "  };\n"
             "\n"
         )
 
@@ -258,10 +249,9 @@ def write_event_wrapper(file, syscalls: Syscalls):
                     writer.write(
                         f"    auto {param.name}() const -> {param.cpptype}\n"
                         "    {\n"
-                        f"       return {cast(param.cpptype)}(Arg{pos});\n"
+                        f"       return {cast(param.cpptype)}(operator[]({pos}));\n"
                         "    }\n"
-                        "\n"
-                    )
+                        "\n")
             writer.write("  };\n\n")
 
         for syscall in filter(lambda sc: not sc.supported, syscalls.values()):
@@ -385,10 +375,16 @@ if __name__ == "__main__":
 
     syscalls = download_and_parse_syscall_numbers()
     download_and_parse_syscall_params(syscalls)
-    write_event(repository_path / 'SyscallEvent.h', syscalls)
+    write_event(repository_path / 'old_obsolete' / 'SyscallEvent.h', syscalls)
     write_create_event(
-        repository_path / 'SyscallEventCreator.cpp',
+        repository_path / 'old_obsolete' / 'SyscallEventCreator.cpp',
         'SyscallEventCreator.h',
         syscalls)
-    write_event_wrapper(repository_path / 'SyscallWrappers.h', syscalls)
-    write_map(repository_path / 'SyscallMap.cpp', 'SyscallMap.h', syscalls)
+    write_event_wrapper(
+        repository_path /
+        'wrappers' /
+        'ptrace' /
+        'SyscallWrappers.h',
+        syscalls)
+    write_map(repository_path / 'wrappers' /
+              'ptrace' / 'SyscallMap.cpp', 'SyscallMap.h', syscalls)

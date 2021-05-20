@@ -1,4 +1,4 @@
-// Generated via ../code_generator/generate_syscalls.py
+// Generated via ../gpcache/code_generator/generate_syscalls.py
 #include <variant>
 #include <linux/aio_abi.h>
 #include <sys/user.h>

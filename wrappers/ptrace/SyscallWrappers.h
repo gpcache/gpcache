@@ -1,4 +1,5 @@
-// Generated via ../code_generator/generate_syscalls.py
+// Generated via ../gpcache/code_generator/generate_syscalls.py
+#include <array>
 #include <variant>
 #include <linux/aio_abi.h>
 #include <sys/user.h>
@@ -34,17 +35,17 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto buf() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto count() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
    };
 
@@ -56,17 +57,17 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg2);
+         return static_cast<mode_t>(operator[](2));
       }
    };
 
@@ -78,7 +79,7 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -90,17 +91,17 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto offset() const -> off_t
       {
-         return static_cast<off_t>(Arg1);
+         return static_cast<off_t>(operator[](1));
       }
 
       auto whence() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg2);
+         return static_cast<unsigned int>(operator[](2));
       }
    };
 
@@ -112,32 +113,32 @@ namespace gpcache
 
       auto addr() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto prot() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto flags() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto fd() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
 
       auto pgoff() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg5);
+         return static_cast<unsigned long>(operator[](5));
       }
    };
 
@@ -149,17 +150,17 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
 
       auto prot() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
    };
 
@@ -171,12 +172,12 @@ namespace gpcache
 
       auto addr() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
    };
 
@@ -188,7 +189,7 @@ namespace gpcache
 
       auto brk() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
    };
 
@@ -200,22 +201,22 @@ namespace gpcache
 
       auto how() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto set() const -> sigset_t *
       {
-         return reinterpret_cast<sigset_t *>(Arg1);
+         return reinterpret_cast<sigset_t *>(operator[](1));
       }
 
       auto oset() const -> sigset_t *
       {
-         return reinterpret_cast<sigset_t *>(Arg2);
+         return reinterpret_cast<sigset_t *>(operator[](2));
       }
 
       auto sigsetsize() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
    };
 
@@ -227,17 +228,17 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto cmd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
 
       auto arg() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
    };
 
@@ -249,22 +250,22 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto buf() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto count() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
 
       auto pos() const -> loff_t
       {
-         return static_cast<loff_t>(Arg3);
+         return static_cast<loff_t>(operator[](3));
       }
    };
 
@@ -276,22 +277,22 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto buf() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto count() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
 
       auto pos() const -> loff_t
       {
-         return static_cast<loff_t>(Arg3);
+         return static_cast<loff_t>(operator[](3));
       }
    };
 
@@ -303,17 +304,17 @@ namespace gpcache
 
       auto fd() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto vec() const -> const iovec *
       {
-         return reinterpret_cast<const iovec *>(Arg1);
+         return reinterpret_cast<const iovec *>(operator[](1));
       }
 
       auto vlen() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
    };
 
@@ -325,17 +326,17 @@ namespace gpcache
 
       auto fd() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto vec() const -> const iovec *
       {
-         return reinterpret_cast<const iovec *>(Arg1);
+         return reinterpret_cast<const iovec *>(operator[](1));
       }
 
       auto vlen() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
    };
 
@@ -347,12 +348,12 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto mode() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -364,7 +365,7 @@ namespace gpcache
 
       auto fildes() const -> int *
       {
-         return reinterpret_cast<int *>(Arg0);
+         return reinterpret_cast<int *>(operator[](0));
       }
    };
 
@@ -383,27 +384,27 @@ namespace gpcache
 
       auto addr() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto old_len() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto new_len() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto flags() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto new_addr() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
    };
 
@@ -415,17 +416,17 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -437,17 +438,17 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
 
       auto vec() const -> unsigned char *
       {
-         return reinterpret_cast<unsigned char *>(Arg2);
+         return reinterpret_cast<unsigned char *>(operator[](2));
       }
    };
 
@@ -459,17 +460,17 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
 
       auto behavior() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -481,17 +482,17 @@ namespace gpcache
 
       auto key() const -> key_t
       {
-         return static_cast<key_t>(Arg0);
+         return static_cast<key_t>(operator[](0));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
 
       auto flag() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -503,17 +504,17 @@ namespace gpcache
 
       auto shmid() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto shmaddr() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto shmflg() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -525,7 +526,7 @@ namespace gpcache
 
       auto fildes() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -537,12 +538,12 @@ namespace gpcache
 
       auto oldfd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto newfd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
    };
 
@@ -561,12 +562,12 @@ namespace gpcache
 
       auto rqtp() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg0);
+         return reinterpret_cast<__kernel_timespec *>(operator[](0));
       }
 
       auto rmtp() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg1);
+         return reinterpret_cast<__kernel_timespec *>(operator[](1));
       }
    };
 
@@ -578,7 +579,7 @@ namespace gpcache
 
       auto seconds() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -597,22 +598,22 @@ namespace gpcache
 
       auto out_fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto in_fd() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto offset() const -> loff_t *
       {
-         return reinterpret_cast<loff_t *>(Arg2);
+         return reinterpret_cast<loff_t *>(operator[](2));
       }
 
       auto count() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
    };
 
@@ -701,27 +702,27 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto level() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto optname() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto optval() const -> char *
       {
-         return reinterpret_cast<char *>(Arg3);
+         return reinterpret_cast<char *>(operator[](3));
       }
 
       auto optlen() const -> int
       {
-         return static_cast<int>(Arg4);
+         return static_cast<int>(operator[](4));
       }
    };
 
@@ -733,27 +734,27 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto level() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto optname() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto optval() const -> char *
       {
-         return reinterpret_cast<char *>(Arg3);
+         return reinterpret_cast<char *>(operator[](3));
       }
 
       auto optlen() const -> int *
       {
-         return reinterpret_cast<int *>(Arg4);
+         return reinterpret_cast<int *>(operator[](4));
       }
    };
 
@@ -765,7 +766,7 @@ namespace gpcache
 
       auto error_code() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -777,12 +778,12 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto sig() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -794,17 +795,17 @@ namespace gpcache
 
       auto key() const -> key_t
       {
-         return static_cast<key_t>(Arg0);
+         return static_cast<key_t>(operator[](0));
       }
 
       auto nsems() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto semflg() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -816,22 +817,22 @@ namespace gpcache
 
       auto semid() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto semnum() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto cmd() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto arg() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
    };
 
@@ -843,7 +844,7 @@ namespace gpcache
 
       auto shmaddr() const -> char *
       {
-         return reinterpret_cast<char *>(Arg0);
+         return reinterpret_cast<char *>(operator[](0));
       }
    };
 
@@ -855,12 +856,12 @@ namespace gpcache
 
       auto key() const -> key_t
       {
-         return static_cast<key_t>(Arg0);
+         return static_cast<key_t>(operator[](0));
       }
 
       auto msgflg() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -872,17 +873,17 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto cmd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
 
       auto arg() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
    };
 
@@ -894,12 +895,12 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto cmd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
    };
 
@@ -911,7 +912,7 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -923,7 +924,7 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -935,12 +936,12 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto length() const -> long
       {
-         return static_cast<long>(Arg1);
+         return static_cast<long>(operator[](1));
       }
    };
 
@@ -952,12 +953,12 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto length() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
    };
 
@@ -969,12 +970,12 @@ namespace gpcache
 
       auto buf() const -> char *
       {
-         return reinterpret_cast<char *>(Arg0);
+         return reinterpret_cast<char *>(operator[](0));
       }
 
       auto size() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
    };
 
@@ -986,7 +987,7 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
    };
 
@@ -998,7 +999,7 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -1010,12 +1011,12 @@ namespace gpcache
 
       auto oldname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto newname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
    };
 
@@ -1027,12 +1028,12 @@ namespace gpcache
 
       auto pathname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg1);
+         return static_cast<mode_t>(operator[](1));
       }
    };
 
@@ -1044,7 +1045,7 @@ namespace gpcache
 
       auto pathname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
    };
 
@@ -1056,12 +1057,12 @@ namespace gpcache
 
       auto pathname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg1);
+         return static_cast<mode_t>(operator[](1));
       }
    };
 
@@ -1073,12 +1074,12 @@ namespace gpcache
 
       auto oldname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto newname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
    };
 
@@ -1090,7 +1091,7 @@ namespace gpcache
 
       auto pathname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
    };
 
@@ -1102,12 +1103,12 @@ namespace gpcache
 
       auto old() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto linkpath() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
    };
 
@@ -1119,17 +1120,17 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto buf() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto bufsiz() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -1141,12 +1142,12 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg1);
+         return static_cast<mode_t>(operator[](1));
       }
    };
 
@@ -1158,12 +1159,12 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg1);
+         return static_cast<mode_t>(operator[](1));
       }
    };
 
@@ -1175,17 +1176,17 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto user() const -> uid_t
       {
-         return static_cast<uid_t>(Arg1);
+         return static_cast<uid_t>(operator[](1));
       }
 
       auto group() const -> gid_t
       {
-         return static_cast<gid_t>(Arg2);
+         return static_cast<gid_t>(operator[](2));
       }
    };
 
@@ -1197,17 +1198,17 @@ namespace gpcache
 
       auto fd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto user() const -> uid_t
       {
-         return static_cast<uid_t>(Arg1);
+         return static_cast<uid_t>(operator[](1));
       }
 
       auto group() const -> gid_t
       {
-         return static_cast<gid_t>(Arg2);
+         return static_cast<gid_t>(operator[](2));
       }
    };
 
@@ -1219,17 +1220,17 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto user() const -> uid_t
       {
-         return static_cast<uid_t>(Arg1);
+         return static_cast<uid_t>(operator[](1));
       }
 
       auto group() const -> gid_t
       {
-         return static_cast<gid_t>(Arg2);
+         return static_cast<gid_t>(operator[](2));
       }
    };
 
@@ -1241,7 +1242,7 @@ namespace gpcache
 
       auto mask() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -1253,22 +1254,22 @@ namespace gpcache
 
       auto request() const -> long
       {
-         return static_cast<long>(Arg0);
+         return static_cast<long>(operator[](0));
       }
 
       auto pid() const -> long
       {
-         return static_cast<long>(Arg1);
+         return static_cast<long>(operator[](1));
       }
 
       auto addr() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto data() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
    };
 
@@ -1287,17 +1288,17 @@ namespace gpcache
 
       auto type() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto buf() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto len() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -1316,7 +1317,7 @@ namespace gpcache
 
       auto uid() const -> uid_t
       {
-         return static_cast<uid_t>(Arg0);
+         return static_cast<uid_t>(operator[](0));
       }
    };
 
@@ -1328,7 +1329,7 @@ namespace gpcache
 
       auto gid() const -> gid_t
       {
-         return static_cast<gid_t>(Arg0);
+         return static_cast<gid_t>(operator[](0));
       }
    };
 
@@ -1354,12 +1355,12 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto pgid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg1);
+         return static_cast<pid_t>(operator[](1));
       }
    };
 
@@ -1392,12 +1393,12 @@ namespace gpcache
 
       auto ruid() const -> uid_t
       {
-         return static_cast<uid_t>(Arg0);
+         return static_cast<uid_t>(operator[](0));
       }
 
       auto euid() const -> uid_t
       {
-         return static_cast<uid_t>(Arg1);
+         return static_cast<uid_t>(operator[](1));
       }
    };
 
@@ -1409,12 +1410,12 @@ namespace gpcache
 
       auto rgid() const -> gid_t
       {
-         return static_cast<gid_t>(Arg0);
+         return static_cast<gid_t>(operator[](0));
       }
 
       auto egid() const -> gid_t
       {
-         return static_cast<gid_t>(Arg1);
+         return static_cast<gid_t>(operator[](1));
       }
    };
 
@@ -1426,12 +1427,12 @@ namespace gpcache
 
       auto gidsetsize() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto grouplist() const -> gid_t *
       {
-         return reinterpret_cast<gid_t *>(Arg1);
+         return reinterpret_cast<gid_t *>(operator[](1));
       }
    };
 
@@ -1443,12 +1444,12 @@ namespace gpcache
 
       auto gidsetsize() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto grouplist() const -> gid_t *
       {
-         return reinterpret_cast<gid_t *>(Arg1);
+         return reinterpret_cast<gid_t *>(operator[](1));
       }
    };
 
@@ -1460,17 +1461,17 @@ namespace gpcache
 
       auto ruid() const -> uid_t
       {
-         return static_cast<uid_t>(Arg0);
+         return static_cast<uid_t>(operator[](0));
       }
 
       auto euid() const -> uid_t
       {
-         return static_cast<uid_t>(Arg1);
+         return static_cast<uid_t>(operator[](1));
       }
 
       auto suid() const -> uid_t
       {
-         return static_cast<uid_t>(Arg2);
+         return static_cast<uid_t>(operator[](2));
       }
    };
 
@@ -1482,17 +1483,17 @@ namespace gpcache
 
       auto ruid() const -> uid_t *
       {
-         return reinterpret_cast<uid_t *>(Arg0);
+         return reinterpret_cast<uid_t *>(operator[](0));
       }
 
       auto euid() const -> uid_t *
       {
-         return reinterpret_cast<uid_t *>(Arg1);
+         return reinterpret_cast<uid_t *>(operator[](1));
       }
 
       auto suid() const -> uid_t *
       {
-         return reinterpret_cast<uid_t *>(Arg2);
+         return reinterpret_cast<uid_t *>(operator[](2));
       }
    };
 
@@ -1504,17 +1505,17 @@ namespace gpcache
 
       auto rgid() const -> gid_t
       {
-         return static_cast<gid_t>(Arg0);
+         return static_cast<gid_t>(operator[](0));
       }
 
       auto egid() const -> gid_t
       {
-         return static_cast<gid_t>(Arg1);
+         return static_cast<gid_t>(operator[](1));
       }
 
       auto sgid() const -> gid_t
       {
-         return static_cast<gid_t>(Arg2);
+         return static_cast<gid_t>(operator[](2));
       }
    };
 
@@ -1526,17 +1527,17 @@ namespace gpcache
 
       auto rgid() const -> gid_t *
       {
-         return reinterpret_cast<gid_t *>(Arg0);
+         return reinterpret_cast<gid_t *>(operator[](0));
       }
 
       auto egid() const -> gid_t *
       {
-         return reinterpret_cast<gid_t *>(Arg1);
+         return reinterpret_cast<gid_t *>(operator[](1));
       }
 
       auto sgid() const -> gid_t *
       {
-         return reinterpret_cast<gid_t *>(Arg2);
+         return reinterpret_cast<gid_t *>(operator[](2));
       }
    };
 
@@ -1548,7 +1549,7 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
    };
 
@@ -1560,7 +1561,7 @@ namespace gpcache
 
       auto uid() const -> uid_t
       {
-         return static_cast<uid_t>(Arg0);
+         return static_cast<uid_t>(operator[](0));
       }
    };
 
@@ -1572,7 +1573,7 @@ namespace gpcache
 
       auto gid() const -> gid_t
       {
-         return static_cast<gid_t>(Arg0);
+         return static_cast<gid_t>(operator[](0));
       }
    };
 
@@ -1584,7 +1585,7 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
    };
 
@@ -1596,12 +1597,12 @@ namespace gpcache
 
       auto set() const -> sigset_t *
       {
-         return reinterpret_cast<sigset_t *>(Arg0);
+         return reinterpret_cast<sigset_t *>(operator[](0));
       }
 
       auto sigsetsize() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
    };
 
@@ -1613,22 +1614,22 @@ namespace gpcache
 
       auto uthese() const -> const sigset_t *
       {
-         return reinterpret_cast<const sigset_t *>(Arg0);
+         return reinterpret_cast<const sigset_t *>(operator[](0));
       }
 
       auto uinfo() const -> siginfo_t *
       {
-         return reinterpret_cast<siginfo_t *>(Arg1);
+         return reinterpret_cast<siginfo_t *>(operator[](1));
       }
 
       auto uts() const -> const __kernel_timespec *
       {
-         return reinterpret_cast<const __kernel_timespec *>(Arg2);
+         return reinterpret_cast<const __kernel_timespec *>(operator[](2));
       }
 
       auto sigsetsize() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
    };
 
@@ -1640,17 +1641,17 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto sig() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto uinfo() const -> siginfo_t *
       {
-         return reinterpret_cast<siginfo_t *>(Arg2);
+         return reinterpret_cast<siginfo_t *>(operator[](2));
       }
    };
 
@@ -1662,12 +1663,12 @@ namespace gpcache
 
       auto unewset() const -> sigset_t *
       {
-         return reinterpret_cast<sigset_t *>(Arg0);
+         return reinterpret_cast<sigset_t *>(operator[](0));
       }
 
       auto sigsetsize() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
    };
 
@@ -1679,17 +1680,17 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg1);
+         return static_cast<mode_t>(operator[](1));
       }
 
       auto dev() const -> unsigned
       {
-         return static_cast<unsigned>(Arg2);
+         return static_cast<unsigned>(operator[](2));
       }
    };
 
@@ -1701,7 +1702,7 @@ namespace gpcache
 
       auto personality() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -1713,17 +1714,17 @@ namespace gpcache
 
       auto option() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto arg1() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto arg2() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
    };
 
@@ -1735,12 +1736,12 @@ namespace gpcache
 
       auto which() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto who() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -1752,17 +1753,17 @@ namespace gpcache
 
       auto which() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto who() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto niceval() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -1774,7 +1775,7 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
    };
 
@@ -1786,7 +1787,7 @@ namespace gpcache
 
       auto policy() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -1798,7 +1799,7 @@ namespace gpcache
 
       auto policy() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -1810,12 +1811,12 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto interval() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg1);
+         return reinterpret_cast<__kernel_timespec *>(operator[](1));
       }
    };
 
@@ -1827,12 +1828,12 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
    };
 
@@ -1844,12 +1845,12 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg1);
+         return static_cast<size_t>(operator[](1));
       }
    };
 
@@ -1861,7 +1862,7 @@ namespace gpcache
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -1894,12 +1895,12 @@ namespace gpcache
 
       auto new_root() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto put_old() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
    };
 
@@ -1918,27 +1919,27 @@ namespace gpcache
 
       auto option() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto arg2() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto arg3() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto arg4() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto arg5() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
    };
 
@@ -1957,7 +1958,7 @@ namespace gpcache
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
    };
 
@@ -1976,7 +1977,7 @@ namespace gpcache
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
    };
 
@@ -1988,27 +1989,27 @@ namespace gpcache
 
       auto dev_name() const -> char *
       {
-         return reinterpret_cast<char *>(Arg0);
+         return reinterpret_cast<char *>(operator[](0));
       }
 
       auto dir_name() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto type() const -> char *
       {
-         return reinterpret_cast<char *>(Arg2);
+         return reinterpret_cast<char *>(operator[](2));
       }
 
       auto flags() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto data() const -> void *
       {
-         return reinterpret_cast<void *>(Arg4);
+         return reinterpret_cast<void *>(operator[](4));
       }
    };
 
@@ -2020,12 +2021,12 @@ namespace gpcache
 
       auto name() const -> char *
       {
-         return reinterpret_cast<char *>(Arg0);
+         return reinterpret_cast<char *>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -2037,12 +2038,12 @@ namespace gpcache
 
       auto specialfile() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto swap_flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -2054,7 +2055,7 @@ namespace gpcache
 
       auto specialfile() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
    };
 
@@ -2066,22 +2067,22 @@ namespace gpcache
 
       auto magic1() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto magic2() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto cmd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg2);
+         return static_cast<unsigned int>(operator[](2));
       }
 
       auto arg() const -> void *
       {
-         return reinterpret_cast<void *>(Arg3);
+         return reinterpret_cast<void *>(operator[](3));
       }
    };
 
@@ -2093,12 +2094,12 @@ namespace gpcache
 
       auto name() const -> char *
       {
-         return reinterpret_cast<char *>(Arg0);
+         return reinterpret_cast<char *>(operator[](0));
       }
 
       auto len() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -2110,12 +2111,12 @@ namespace gpcache
 
       auto name() const -> char *
       {
-         return reinterpret_cast<char *>(Arg0);
+         return reinterpret_cast<char *>(operator[](0));
       }
 
       auto len() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -2127,17 +2128,17 @@ namespace gpcache
 
       auto from() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto num() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto on() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -2149,17 +2150,17 @@ namespace gpcache
 
       auto umod() const -> void *
       {
-         return reinterpret_cast<void *>(Arg0);
+         return reinterpret_cast<void *>(operator[](0));
       }
 
       auto len() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto uargs() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg2);
+         return reinterpret_cast<const char *>(operator[](2));
       }
    };
 
@@ -2171,12 +2172,12 @@ namespace gpcache
 
       auto name_user() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto flags() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
    };
 
@@ -2188,22 +2189,22 @@ namespace gpcache
 
       auto cmd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto special() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto id() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto addr() const -> void *
       {
-         return reinterpret_cast<void *>(Arg3);
+         return reinterpret_cast<void *>(operator[](3));
       }
    };
 
@@ -2229,17 +2230,17 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto offset() const -> loff_t
       {
-         return static_cast<loff_t>(Arg1);
+         return static_cast<loff_t>(operator[](1));
       }
 
       auto count() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
    };
 
@@ -2251,27 +2252,27 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto value() const -> const void *
       {
-         return reinterpret_cast<const void *>(Arg2);
+         return reinterpret_cast<const void *>(operator[](2));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg4);
+         return static_cast<int>(operator[](4));
       }
    };
 
@@ -2283,27 +2284,27 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto value() const -> const void *
       {
-         return reinterpret_cast<const void *>(Arg2);
+         return reinterpret_cast<const void *>(operator[](2));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg4);
+         return static_cast<int>(operator[](4));
       }
    };
 
@@ -2315,27 +2316,27 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto value() const -> const void *
       {
-         return reinterpret_cast<const void *>(Arg2);
+         return reinterpret_cast<const void *>(operator[](2));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg4);
+         return static_cast<int>(operator[](4));
       }
    };
 
@@ -2347,22 +2348,22 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto value() const -> void *
       {
-         return reinterpret_cast<void *>(Arg2);
+         return reinterpret_cast<void *>(operator[](2));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
    };
 
@@ -2374,22 +2375,22 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto value() const -> void *
       {
-         return reinterpret_cast<void *>(Arg2);
+         return reinterpret_cast<void *>(operator[](2));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
    };
 
@@ -2401,22 +2402,22 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto value() const -> void *
       {
-         return reinterpret_cast<void *>(Arg2);
+         return reinterpret_cast<void *>(operator[](2));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg3);
+         return static_cast<size_t>(operator[](3));
       }
    };
 
@@ -2428,17 +2429,17 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto list() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
    };
 
@@ -2450,17 +2451,17 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto list() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
    };
 
@@ -2472,17 +2473,17 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto list() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto size() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
    };
 
@@ -2494,12 +2495,12 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
    };
 
@@ -2511,12 +2512,12 @@ namespace gpcache
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
    };
 
@@ -2528,12 +2529,12 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
    };
 
@@ -2545,12 +2546,12 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto sig() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -2562,7 +2563,7 @@ namespace gpcache
 
       auto tloc() const -> __kernel_time_t *
       {
-         return reinterpret_cast<__kernel_time_t *>(Arg0);
+         return reinterpret_cast<__kernel_time_t *>(operator[](0));
       }
    };
 
@@ -2574,32 +2575,32 @@ namespace gpcache
 
       auto uaddr() const -> uint32_t *
       {
-         return reinterpret_cast<uint32_t *>(Arg0);
+         return reinterpret_cast<uint32_t *>(operator[](0));
       }
 
       auto op() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto val() const -> uint32_t
       {
-         return static_cast<uint32_t>(Arg2);
+         return static_cast<uint32_t>(operator[](2));
       }
 
       auto utime() const -> const __kernel_timespec *
       {
-         return reinterpret_cast<const __kernel_timespec *>(Arg3);
+         return reinterpret_cast<const __kernel_timespec *>(operator[](3));
       }
 
       auto uaddr2() const -> uint32_t *
       {
-         return reinterpret_cast<uint32_t *>(Arg4);
+         return reinterpret_cast<uint32_t *>(operator[](4));
       }
 
       auto val3() const -> uint32_t
       {
-         return static_cast<uint32_t>(Arg5);
+         return static_cast<uint32_t>(operator[](5));
       }
    };
 
@@ -2611,17 +2612,17 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto len() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
 
       auto user_mask_ptr() const -> unsigned long *
       {
-         return reinterpret_cast<unsigned long *>(Arg2);
+         return reinterpret_cast<unsigned long *>(operator[](2));
       }
    };
 
@@ -2633,17 +2634,17 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto len() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
 
       auto user_mask_ptr() const -> unsigned long *
       {
-         return reinterpret_cast<unsigned long *>(Arg2);
+         return reinterpret_cast<unsigned long *>(operator[](2));
       }
    };
 
@@ -2655,12 +2656,12 @@ namespace gpcache
 
       auto nr_reqs() const -> unsigned
       {
-         return static_cast<unsigned>(Arg0);
+         return static_cast<unsigned>(operator[](0));
       }
 
       auto ctx() const -> aio_context_t *
       {
-         return reinterpret_cast<aio_context_t *>(Arg1);
+         return reinterpret_cast<aio_context_t *>(operator[](1));
       }
    };
 
@@ -2672,7 +2673,7 @@ namespace gpcache
 
       auto ctx() const -> aio_context_t
       {
-         return static_cast<aio_context_t>(Arg0);
+         return static_cast<aio_context_t>(operator[](0));
       }
    };
 
@@ -2684,27 +2685,27 @@ namespace gpcache
 
       auto ctx_id() const -> aio_context_t
       {
-         return static_cast<aio_context_t>(Arg0);
+         return static_cast<aio_context_t>(operator[](0));
       }
 
       auto min_nr() const -> long
       {
-         return static_cast<long>(Arg1);
+         return static_cast<long>(operator[](1));
       }
 
       auto nr() const -> long
       {
-         return static_cast<long>(Arg2);
+         return static_cast<long>(operator[](2));
       }
 
       auto events() const -> io_event *
       {
-         return reinterpret_cast<io_event *>(Arg3);
+         return reinterpret_cast<io_event *>(operator[](3));
       }
 
       auto timeout() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg4);
+         return reinterpret_cast<__kernel_timespec *>(operator[](4));
       }
    };
 
@@ -2716,17 +2717,17 @@ namespace gpcache
 
       auto cookie64() const -> uint64_t
       {
-         return static_cast<uint64_t>(Arg0);
+         return static_cast<uint64_t>(operator[](0));
       }
 
       auto buf() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
    };
 
@@ -2738,7 +2739,7 @@ namespace gpcache
 
       auto size() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -2750,27 +2751,27 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto size() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto prot() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto pgoff() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto flags() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
    };
 
@@ -2782,7 +2783,7 @@ namespace gpcache
 
       auto tidptr() const -> int *
       {
-         return reinterpret_cast<int *>(Arg0);
+         return reinterpret_cast<int *>(operator[](0));
       }
    };
 
@@ -2801,22 +2802,22 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto offset() const -> loff_t
       {
-         return static_cast<loff_t>(Arg1);
+         return static_cast<loff_t>(operator[](1));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
 
       auto advice() const -> int
       {
-         return static_cast<int>(Arg3);
+         return static_cast<int>(operator[](3));
       }
    };
 
@@ -2828,17 +2829,17 @@ namespace gpcache
 
       auto which_clock() const -> clockid_t
       {
-         return static_cast<clockid_t>(Arg0);
+         return static_cast<clockid_t>(operator[](0));
       }
 
       auto timer_event_spec() const -> sigevent *
       {
-         return reinterpret_cast<sigevent *>(Arg1);
+         return reinterpret_cast<sigevent *>(operator[](1));
       }
 
       auto created_timer_id() const -> timer_t *
       {
-         return reinterpret_cast<timer_t *>(Arg2);
+         return reinterpret_cast<timer_t *>(operator[](2));
       }
    };
 
@@ -2850,22 +2851,22 @@ namespace gpcache
 
       auto timer_id() const -> timer_t
       {
-         return reinterpret_cast<timer_t>(Arg0);
+         return reinterpret_cast<timer_t>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto new_setting() const -> const __kernel_itimerspec *
       {
-         return reinterpret_cast<const __kernel_itimerspec *>(Arg2);
+         return reinterpret_cast<const __kernel_itimerspec *>(operator[](2));
       }
 
       auto old_setting() const -> __kernel_itimerspec *
       {
-         return reinterpret_cast<__kernel_itimerspec *>(Arg3);
+         return reinterpret_cast<__kernel_itimerspec *>(operator[](3));
       }
    };
 
@@ -2877,12 +2878,12 @@ namespace gpcache
 
       auto timer_id() const -> timer_t
       {
-         return reinterpret_cast<timer_t>(Arg0);
+         return reinterpret_cast<timer_t>(operator[](0));
       }
 
       auto setting() const -> __kernel_itimerspec *
       {
-         return reinterpret_cast<__kernel_itimerspec *>(Arg1);
+         return reinterpret_cast<__kernel_itimerspec *>(operator[](1));
       }
    };
 
@@ -2894,7 +2895,7 @@ namespace gpcache
 
       auto timer_id() const -> timer_t
       {
-         return reinterpret_cast<timer_t>(Arg0);
+         return reinterpret_cast<timer_t>(operator[](0));
       }
    };
 
@@ -2906,7 +2907,7 @@ namespace gpcache
 
       auto timer_id() const -> timer_t
       {
-         return reinterpret_cast<timer_t>(Arg0);
+         return reinterpret_cast<timer_t>(operator[](0));
       }
    };
 
@@ -2918,12 +2919,12 @@ namespace gpcache
 
       auto which_clock() const -> clockid_t
       {
-         return static_cast<clockid_t>(Arg0);
+         return static_cast<clockid_t>(operator[](0));
       }
 
       auto tp() const -> const __kernel_timespec *
       {
-         return reinterpret_cast<const __kernel_timespec *>(Arg1);
+         return reinterpret_cast<const __kernel_timespec *>(operator[](1));
       }
    };
 
@@ -2935,12 +2936,12 @@ namespace gpcache
 
       auto which_clock() const -> clockid_t
       {
-         return static_cast<clockid_t>(Arg0);
+         return static_cast<clockid_t>(operator[](0));
       }
 
       auto tp() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg1);
+         return reinterpret_cast<__kernel_timespec *>(operator[](1));
       }
    };
 
@@ -2952,12 +2953,12 @@ namespace gpcache
 
       auto which_clock() const -> clockid_t
       {
-         return static_cast<clockid_t>(Arg0);
+         return static_cast<clockid_t>(operator[](0));
       }
 
       auto tp() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg1);
+         return reinterpret_cast<__kernel_timespec *>(operator[](1));
       }
    };
 
@@ -2969,22 +2970,22 @@ namespace gpcache
 
       auto which_clock() const -> clockid_t
       {
-         return static_cast<clockid_t>(Arg0);
+         return static_cast<clockid_t>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto rqtp() const -> const __kernel_timespec *
       {
-         return reinterpret_cast<const __kernel_timespec *>(Arg2);
+         return reinterpret_cast<const __kernel_timespec *>(operator[](2));
       }
 
       auto rmtp() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg3);
+         return reinterpret_cast<__kernel_timespec *>(operator[](3));
       }
    };
 
@@ -2996,7 +2997,7 @@ namespace gpcache
 
       auto error_code() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -3008,22 +3009,22 @@ namespace gpcache
 
       auto epfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto events() const -> epoll_event *
       {
-         return reinterpret_cast<epoll_event *>(Arg1);
+         return reinterpret_cast<epoll_event *>(operator[](1));
       }
 
       auto maxevents() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto timeout() const -> int
       {
-         return static_cast<int>(Arg3);
+         return static_cast<int>(operator[](3));
       }
    };
 
@@ -3035,22 +3036,22 @@ namespace gpcache
 
       auto epfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto op() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto event() const -> epoll_event *
       {
-         return reinterpret_cast<epoll_event *>(Arg3);
+         return reinterpret_cast<epoll_event *>(operator[](3));
       }
    };
 
@@ -3062,17 +3063,17 @@ namespace gpcache
 
       auto tgid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg1);
+         return static_cast<pid_t>(operator[](1));
       }
 
       auto sig() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -3084,32 +3085,32 @@ namespace gpcache
 
       auto start() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto len() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto mode() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto nmask() const -> const unsigned long *
       {
-         return reinterpret_cast<const unsigned long *>(Arg3);
+         return reinterpret_cast<const unsigned long *>(operator[](3));
       }
 
       auto maxnode() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
 
       auto flags() const -> unsigned
       {
-         return static_cast<unsigned>(Arg5);
+         return static_cast<unsigned>(operator[](5));
       }
    };
 
@@ -3121,17 +3122,17 @@ namespace gpcache
 
       auto mode() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto nmask() const -> const unsigned long *
       {
-         return reinterpret_cast<const unsigned long *>(Arg1);
+         return reinterpret_cast<const unsigned long *>(operator[](1));
       }
 
       auto maxnode() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
    };
 
@@ -3143,27 +3144,27 @@ namespace gpcache
 
       auto policy() const -> int *
       {
-         return reinterpret_cast<int *>(Arg0);
+         return reinterpret_cast<int *>(operator[](0));
       }
 
       auto nmask() const -> unsigned long *
       {
-         return reinterpret_cast<unsigned long *>(Arg1);
+         return reinterpret_cast<unsigned long *>(operator[](1));
       }
 
       auto maxnode() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto addr() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto flags() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
    };
 
@@ -3175,22 +3176,22 @@ namespace gpcache
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto oflag() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg2);
+         return static_cast<mode_t>(operator[](2));
       }
 
       auto attr() const -> mq_attr *
       {
-         return reinterpret_cast<mq_attr *>(Arg3);
+         return reinterpret_cast<mq_attr *>(operator[](3));
       }
    };
 
@@ -3202,7 +3203,7 @@ namespace gpcache
 
       auto name() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
    };
 
@@ -3214,27 +3215,27 @@ namespace gpcache
 
       auto mqdes() const -> mqd_t
       {
-         return static_cast<mqd_t>(Arg0);
+         return static_cast<mqd_t>(operator[](0));
       }
 
       auto msg_ptr() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto msg_len() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
 
       auto msg_prio() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg3);
+         return static_cast<unsigned int>(operator[](3));
       }
 
       auto abs_timeout() const -> const __kernel_timespec *
       {
-         return reinterpret_cast<const __kernel_timespec *>(Arg4);
+         return reinterpret_cast<const __kernel_timespec *>(operator[](4));
       }
    };
 
@@ -3246,27 +3247,27 @@ namespace gpcache
 
       auto mqdes() const -> mqd_t
       {
-         return static_cast<mqd_t>(Arg0);
+         return static_cast<mqd_t>(operator[](0));
       }
 
       auto msg_ptr() const -> char *
       {
-         return reinterpret_cast<char *>(Arg1);
+         return reinterpret_cast<char *>(operator[](1));
       }
 
       auto msg_len() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
 
       auto msg_prio() const -> unsigned int *
       {
-         return reinterpret_cast<unsigned int *>(Arg3);
+         return reinterpret_cast<unsigned int *>(operator[](3));
       }
 
       auto abs_timeout() const -> const __kernel_timespec *
       {
-         return reinterpret_cast<const __kernel_timespec *>(Arg4);
+         return reinterpret_cast<const __kernel_timespec *>(operator[](4));
       }
    };
 
@@ -3278,12 +3279,12 @@ namespace gpcache
 
       auto mqdes() const -> mqd_t
       {
-         return static_cast<mqd_t>(Arg0);
+         return static_cast<mqd_t>(operator[](0));
       }
 
       auto notification() const -> const sigevent *
       {
-         return reinterpret_cast<const sigevent *>(Arg1);
+         return reinterpret_cast<const sigevent *>(operator[](1));
       }
    };
 
@@ -3295,17 +3296,17 @@ namespace gpcache
 
       auto mqdes() const -> mqd_t
       {
-         return static_cast<mqd_t>(Arg0);
+         return static_cast<mqd_t>(operator[](0));
       }
 
       auto mqstat() const -> const mq_attr *
       {
-         return reinterpret_cast<const mq_attr *>(Arg1);
+         return reinterpret_cast<const mq_attr *>(operator[](1));
       }
 
       auto omqstat() const -> mq_attr *
       {
-         return reinterpret_cast<mq_attr *>(Arg2);
+         return reinterpret_cast<mq_attr *>(operator[](2));
       }
    };
 
@@ -3317,27 +3318,27 @@ namespace gpcache
 
       auto cmd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto arg2() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto arg3() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto arg4() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto arg5() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
    };
 
@@ -3349,17 +3350,17 @@ namespace gpcache
 
       auto which() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto who() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto ioprio() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -3371,12 +3372,12 @@ namespace gpcache
 
       auto which() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto who() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -3395,17 +3396,17 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto mask() const -> uint32_t
       {
-         return static_cast<uint32_t>(Arg2);
+         return static_cast<uint32_t>(operator[](2));
       }
    };
 
@@ -3417,12 +3418,12 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto wd() const -> __s32
       {
-         return static_cast<__s32>(Arg1);
+         return static_cast<__s32>(operator[](1));
       }
    };
 
@@ -3434,22 +3435,22 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto maxnode() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto from() const -> const unsigned long *
       {
-         return reinterpret_cast<const unsigned long *>(Arg2);
+         return reinterpret_cast<const unsigned long *>(operator[](2));
       }
 
       auto to() const -> const unsigned long *
       {
-         return reinterpret_cast<const unsigned long *>(Arg3);
+         return reinterpret_cast<const unsigned long *>(operator[](3));
       }
    };
 
@@ -3461,22 +3462,22 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg3);
+         return static_cast<mode_t>(operator[](3));
       }
    };
 
@@ -3488,17 +3489,17 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto pathname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg2);
+         return static_cast<mode_t>(operator[](2));
       }
    };
 
@@ -3510,22 +3511,22 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg2);
+         return static_cast<mode_t>(operator[](2));
       }
 
       auto dev() const -> unsigned
       {
-         return static_cast<unsigned>(Arg3);
+         return static_cast<unsigned>(operator[](3));
       }
    };
 
@@ -3537,27 +3538,27 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto user() const -> uid_t
       {
-         return static_cast<uid_t>(Arg2);
+         return static_cast<uid_t>(operator[](2));
       }
 
       auto group() const -> gid_t
       {
-         return static_cast<gid_t>(Arg3);
+         return static_cast<gid_t>(operator[](3));
       }
 
       auto flag() const -> int
       {
-         return static_cast<int>(Arg4);
+         return static_cast<int>(operator[](4));
       }
    };
 
@@ -3569,17 +3570,17 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto pathname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto flag() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -3591,22 +3592,22 @@ namespace gpcache
 
       auto olddfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto oldname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto newdfd() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto newname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg3);
+         return reinterpret_cast<const char *>(operator[](3));
       }
    };
 
@@ -3618,27 +3619,27 @@ namespace gpcache
 
       auto olddfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto oldname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto newdfd() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto newname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg3);
+         return reinterpret_cast<const char *>(operator[](3));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg4);
+         return static_cast<int>(operator[](4));
       }
    };
 
@@ -3650,17 +3651,17 @@ namespace gpcache
 
       auto oldname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg0);
+         return reinterpret_cast<const char *>(operator[](0));
       }
 
       auto newdfd() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto newname() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg2);
+         return reinterpret_cast<const char *>(operator[](2));
       }
    };
 
@@ -3672,22 +3673,22 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto path() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto buf() const -> char *
       {
-         return reinterpret_cast<char *>(Arg2);
+         return reinterpret_cast<char *>(operator[](2));
       }
 
       auto bufsiz() const -> int
       {
-         return static_cast<int>(Arg3);
+         return static_cast<int>(operator[](3));
       }
    };
 
@@ -3699,17 +3700,17 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto mode() const -> mode_t
       {
-         return static_cast<mode_t>(Arg2);
+         return static_cast<mode_t>(operator[](2));
       }
    };
 
@@ -3721,17 +3722,17 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto mode() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -3750,32 +3751,32 @@ namespace gpcache
 
       auto fd_in() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto off_in() const -> loff_t *
       {
-         return reinterpret_cast<loff_t *>(Arg1);
+         return reinterpret_cast<loff_t *>(operator[](1));
       }
 
       auto fd_out() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto off_out() const -> loff_t *
       {
-         return reinterpret_cast<loff_t *>(Arg3);
+         return reinterpret_cast<loff_t *>(operator[](3));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg4);
+         return static_cast<size_t>(operator[](4));
       }
 
       auto flags() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg5);
+         return static_cast<unsigned int>(operator[](5));
       }
    };
 
@@ -3787,22 +3788,22 @@ namespace gpcache
 
       auto fdin() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto fdout() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto len() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
 
       auto flags() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg3);
+         return static_cast<unsigned int>(operator[](3));
       }
    };
 
@@ -3814,22 +3815,22 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto offset() const -> loff_t
       {
-         return static_cast<loff_t>(Arg1);
+         return static_cast<loff_t>(operator[](1));
       }
 
       auto nbytes() const -> loff_t
       {
-         return static_cast<loff_t>(Arg2);
+         return static_cast<loff_t>(operator[](2));
       }
 
       auto flags() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg3);
+         return static_cast<unsigned int>(operator[](3));
       }
    };
 
@@ -3841,22 +3842,22 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto iov() const -> const iovec *
       {
-         return reinterpret_cast<const iovec *>(Arg1);
+         return reinterpret_cast<const iovec *>(operator[](1));
       }
 
       auto nr_segs() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto flags() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg3);
+         return static_cast<unsigned int>(operator[](3));
       }
    };
 
@@ -3868,32 +3869,32 @@ namespace gpcache
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto nr_pages() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg1);
+         return static_cast<unsigned long>(operator[](1));
       }
 
       auto pages() const -> const void **
       {
-         return reinterpret_cast<const void **>(Arg2);
+         return reinterpret_cast<const void **>(operator[](2));
       }
 
       auto nodes() const -> const int *
       {
-         return reinterpret_cast<const int *>(Arg3);
+         return reinterpret_cast<const int *>(operator[](3));
       }
 
       auto status() const -> int *
       {
-         return reinterpret_cast<int *>(Arg4);
+         return reinterpret_cast<int *>(operator[](4));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg5);
+         return static_cast<int>(operator[](5));
       }
    };
 
@@ -3905,22 +3906,22 @@ namespace gpcache
 
       auto dfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto filename() const -> const char *
       {
-         return reinterpret_cast<const char *>(Arg1);
+         return reinterpret_cast<const char *>(operator[](1));
       }
 
       auto utimes() const -> __kernel_timespec *
       {
-         return reinterpret_cast<__kernel_timespec *>(Arg2);
+         return reinterpret_cast<__kernel_timespec *>(operator[](2));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg3);
+         return static_cast<int>(operator[](3));
       }
    };
 
@@ -3932,32 +3933,32 @@ namespace gpcache
 
       auto epfd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto events() const -> epoll_event *
       {
-         return reinterpret_cast<epoll_event *>(Arg1);
+         return reinterpret_cast<epoll_event *>(operator[](1));
       }
 
       auto maxevents() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto timeout() const -> int
       {
-         return static_cast<int>(Arg3);
+         return static_cast<int>(operator[](3));
       }
 
       auto SignMask() const -> const sigset_t *
       {
-         return reinterpret_cast<const sigset_t *>(Arg4);
+         return reinterpret_cast<const sigset_t *>(operator[](4));
       }
 
       auto sigsetsize() const -> size_t
       {
-         return static_cast<size_t>(Arg5);
+         return static_cast<size_t>(operator[](5));
       }
    };
 
@@ -3969,17 +3970,17 @@ namespace gpcache
 
       auto ufd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto user_mask() const -> sigset_t *
       {
-         return reinterpret_cast<sigset_t *>(Arg1);
+         return reinterpret_cast<sigset_t *>(operator[](1));
       }
 
       auto sizemask() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
    };
 
@@ -3991,12 +3992,12 @@ namespace gpcache
 
       auto clockid() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -4008,7 +4009,7 @@ namespace gpcache
 
       auto count() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
    };
 
@@ -4020,22 +4021,22 @@ namespace gpcache
 
       auto fd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto mode() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto offset() const -> loff_t
       {
-         return static_cast<loff_t>(Arg2);
+         return static_cast<loff_t>(operator[](2));
       }
 
       auto len() const -> loff_t
       {
-         return static_cast<loff_t>(Arg3);
+         return static_cast<loff_t>(operator[](3));
       }
    };
 
@@ -4047,22 +4048,22 @@ namespace gpcache
 
       auto ufd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
 
       auto utmr() const -> const __kernel_itimerspec *
       {
-         return reinterpret_cast<const __kernel_itimerspec *>(Arg2);
+         return reinterpret_cast<const __kernel_itimerspec *>(operator[](2));
       }
 
       auto otmr() const -> __kernel_itimerspec *
       {
-         return reinterpret_cast<__kernel_itimerspec *>(Arg3);
+         return reinterpret_cast<__kernel_itimerspec *>(operator[](3));
       }
    };
 
@@ -4074,12 +4075,12 @@ namespace gpcache
 
       auto ufd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto otmr() const -> __kernel_itimerspec *
       {
-         return reinterpret_cast<__kernel_itimerspec *>(Arg1);
+         return reinterpret_cast<__kernel_itimerspec *>(operator[](1));
       }
    };
 
@@ -4098,22 +4099,22 @@ namespace gpcache
 
       auto ufd() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
 
       auto user_mask() const -> sigset_t *
       {
-         return reinterpret_cast<sigset_t *>(Arg1);
+         return reinterpret_cast<sigset_t *>(operator[](1));
       }
 
       auto sizemask() const -> size_t
       {
-         return static_cast<size_t>(Arg2);
+         return static_cast<size_t>(operator[](2));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg3);
+         return static_cast<int>(operator[](3));
       }
    };
 
@@ -4125,12 +4126,12 @@ namespace gpcache
 
       auto count() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -4142,7 +4143,7 @@ namespace gpcache
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -4154,17 +4155,17 @@ namespace gpcache
 
       auto oldfd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg0);
+         return static_cast<unsigned int>(operator[](0));
       }
 
       auto newfd() const -> unsigned int
       {
-         return static_cast<unsigned int>(Arg1);
+         return static_cast<unsigned int>(operator[](1));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
    };
 
@@ -4176,12 +4177,12 @@ namespace gpcache
 
       auto fildes() const -> int *
       {
-         return reinterpret_cast<int *>(Arg0);
+         return reinterpret_cast<int *>(operator[](0));
       }
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg1);
+         return static_cast<int>(operator[](1));
       }
    };
 
@@ -4193,7 +4194,7 @@ namespace gpcache
 
       auto flags() const -> int
       {
-         return static_cast<int>(Arg0);
+         return static_cast<int>(operator[](0));
       }
    };
 
@@ -4205,27 +4206,27 @@ namespace gpcache
 
       auto fd() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto vec() const -> const iovec *
       {
-         return reinterpret_cast<const iovec *>(Arg1);
+         return reinterpret_cast<const iovec *>(operator[](1));
       }
 
       auto vlen() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto pos_l() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto pos_h() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
    };
 
@@ -4237,27 +4238,27 @@ namespace gpcache
 
       auto fd() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg0);
+         return static_cast<unsigned long>(operator[](0));
       }
 
       auto vec() const -> const iovec *
       {
-         return reinterpret_cast<const iovec *>(Arg1);
+         return reinterpret_cast<const iovec *>(operator[](1));
       }
 
       auto vlen() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg2);
+         return static_cast<unsigned long>(operator[](2));
       }
 
       auto pos_l() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg3);
+         return static_cast<unsigned long>(operator[](3));
       }
 
       auto pos_h() const -> unsigned long
       {
-         return static_cast<unsigned long>(Arg4);
+         return static_cast<unsigned long>(operator[](4));
       }
    };
 
@@ -4269,22 +4270,22 @@ namespace gpcache
 
       auto tgid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg0);
+         return static_cast<pid_t>(operator[](0));
       }
 
       auto pid() const -> pid_t
       {
-         return static_cast<pid_t>(Arg1);
+         return static_cast<pid_t>(operator[](1));
       }
 
       auto sig() const -> int
       {
-         return static_cast<int>(Arg2);
+         return static_cast<int>(operator[](2));
       }
 
       auto uinfo() const -> siginfo_t *
       {
-         return reinterpret_cast<siginfo_t *>(Arg3);
+         return reinterpret_cast<siginfo_t *>(operator[](3));
       }
    };
 

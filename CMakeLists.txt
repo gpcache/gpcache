@@ -45,6 +45,7 @@ add_library(gpcache_lib
   wrappers/hash.cpp
   wrappers/posix.cpp
   wrappers/ptrace.cpp
+  wrappers/ptrace_linux_x64/SyscallMap.cpp
 )
 target_include_directories(gpcache_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gpcache_lib ${CONAN_TARGETS})

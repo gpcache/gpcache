@@ -14,53 +14,59 @@
 
 #include <spdlog/spdlog.h>
 
-// Code from https://stackoverflow.com/questions/58320316/stdbit-cast-with-stdarray
-// Need from https://en.cppreference.com/w/cpp/compiler_support
-template <class Dest, class Source>
-inline Dest bit_cast(Source const &source)
-{
-  static_assert(sizeof(Dest) == sizeof(Source));
-  static_assert(std::is_trivially_copyable<Dest>::value);
-  static_assert(std::is_trivially_copyable<Source>::value);
+#include "posix.h"
 
-  Dest dest;
-  std::memcpy(&dest, &source, sizeof(dest));
-  return dest;
-}
-
-static auto readable_ptrace_request(const enum __ptrace_request request) -> std::string
+namespace
 {
-  switch (request)
+  // Code from https://stackoverflow.com/questions/58320316/stdbit-cast-with-stdarray
+  // Need from https://en.cppreference.com/w/cpp/compiler_support
+  // ToDo: move to Utils?
+  template <class Dest, class Source>
+  Dest bit_cast(Source const &source)
   {
-  case PTRACE_TRACEME:
-    return "PTRACE_TRACEME";
-  case PTRACE_SYSCALL:
-    return "PTRACE_SYSCALL";
-  case PTRACE_SETOPTIONS:
-    return "PTRACE_SETOPTIONS";
-  default:
-    return std::to_string(request);
-  }
-}
+    static_assert(sizeof(Dest) == sizeof(Source));
+    static_assert(std::is_trivially_copyable<Dest>::value);
+    static_assert(std::is_trivially_copyable<Source>::value);
 
-static auto call_ptrace(const enum __ptrace_request request, const int pid, const auto addr, const auto data)
-{
-  /* TODO:
+    Dest dest;
+    std::memcpy(&dest, &source, sizeof(dest));
+    return dest;
+  }
+
+  auto readable_ptrace_request(const enum __ptrace_request request) -> std::string
+  {
+    switch (request)
+    {
+    case PTRACE_TRACEME:
+      return "PTRACE_TRACEME";
+    case PTRACE_SYSCALL:
+      return "PTRACE_SYSCALL";
+    case PTRACE_SETOPTIONS:
+      return "PTRACE_SETOPTIONS";
+    default:
+      return std::to_string(request);
+    }
+  }
+
+  auto call_ptrace(const enum __ptrace_request request, const int pid, const auto addr, const auto data)
+  {
+    /* TODO:
   On success, PTRACE_PEEK* requests return the requested data, while other requests return zero.
   On error, all requests return -1, and errno is set appropriately. Since the value returned by
   a successful PTRACE_PEEK* request may be -1, the caller must clear errno before the call, and
   then check it afterward to determine whether or not an error occurred.
   */
-  errno = 0;
-  const auto ret = ptrace(request, pid, addr, data);
+    errno = 0;
+    const auto ret = ptrace(request, pid, addr, data);
 
-  spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
+    spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
 
-  if (ret == -1 || errno) // ToDo: improve detection. E.g. PEEKTEXT may return -1
-  {
-    throw fmt::format("ptrace({}, {}, {}, {}) failed: {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
+    if (ret == -1 || errno) // ToDo: improve detection. E.g. PEEKTEXT may return -1
+    {
+      throw fmt::format("ptrace({}, {}, {}, {}) failed: {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
+    }
+    return ret;
   }
-  return ret;
 }
 
 namespace Ptrace
@@ -108,7 +114,7 @@ namespace Ptrace
 
     for (size_t pos_in_string = 0; pos_in_string < count; pos_in_string += sizeof(intptr_t))
     {
-      const long data = PEEKTEXT(pid, begin + pos_in_string);
+      const long data = Raw::PEEKTEXT(pid, begin + pos_in_string);
       std::memcpy(result.data() + pos_in_string, &data, std::max(count - pos_in_string, sizeof(intptr_t)));
     }
 
@@ -123,7 +129,7 @@ namespace Ptrace
     bool end_of_string = false;
     for (size_t pos_in_string = 0; pos_in_string < maximum && !end_of_string; pos_in_string += sizeof(intptr_t))
     {
-      const long data = PEEKTEXT(pid, reinterpret_cast<uint8_t const *>(begin) + pos_in_string);
+      const long data = Raw::PEEKTEXT(pid, reinterpret_cast<uint8_t const *>(begin) + pos_in_string);
       auto chars = bit_cast<std::array<char, sizeof(data)>>(data);
       for (const char c : chars)
       {
@@ -150,73 +156,15 @@ namespace Ptrace
   static thread_local int global_signum_to_wait_for = 0;
   static thread_local bool global_signal_arrived = false;
 
-  // Note: this will pause all other signal handlers while waiting
-  // Alternative design: setup global signal handler. Probably the code will look better than.
-  [[deprecated("Use wait_for_signal2")]] static auto wait_for_signal(const int signum_to_wait_for, auto call_once_ready)
-  {
-    // Setup receiving of signal:
-    global_signum_to_wait_for = signum_to_wait_for;
-
-    const auto old_signal_handler = std::signal(SIGINT, [](const int signum) {
-      if (signum == global_signum_to_wait_for)
-        global_signal_arrived = true;
-    });
-
-    if (old_signal_handler == SIG_ERR)
-      throw "Setting signal handler failed";
-
-    // Prepare waiting for signal:
-    auto mask_for_signal = create_signal_mask_with_one_signal(signum_to_wait_for);
-
-    // We are ready to receive signal, now call whatever will trigger it.
-    call_once_ready();
-
-    // Here the actual waiting happens (sigsuspend)
-    sigset_t oldmask;
-    sigprocmask(SIG_BLOCK, &mask_for_signal, &oldmask);
-    while (!global_signal_arrived)
-      sigsuspend(&oldmask);
-    sigprocmask(SIG_UNBLOCK, &mask_for_signal, NULL);
-
-    // Restore real signal handling
-    std::signal(SIGINT, old_signal_handler);
-  }
-
-  /// @returns false if process has already exited
-  [[nodiscard]] static auto wait_for_signal2(const int pid, const std::vector<int> signum_to_wait_for) -> bool
-  {
-    spdlog::debug("before waitpid");
-    const auto status = Posix::waitpid(pid, 0);
-    spdlog::debug("after waitpid"); // todo trace status
-
-    using Posix::StopReason;
-
-    switch (status.state)
-    {
-    case StopReason::ProcessState::RUNNING:
-      throw "Child is running";
-    case StopReason::ProcessState::EXITED:
-      return false;
-    case StopReason::ProcessState::EXITED_BECAUSE_OF_SIGNAL:
-      throw "Child has already exited because of signal";
-    case StopReason::ProcessState::STOPPED_BECAUSE_OF_SIGNAL:
-      if (!contains(signum_to_wait_for, status.signal_number))
-        throw fmt::format("Child is stopped for other signal: {}", status.signal_number.value());
-      // fallthrough
-    }
-
-    return true;
-  }
-
   auto PtraceProcess::restart_child_and_wait_for_next_syscall() -> std::optional<SysCall>
   {
     spdlog::debug("restart_child_and_wait_for_next_syscall");
-    Posix::Ptrace::SYSCALL(pid);
-    auto still_running = wait_for_signal2(pid, {SIGTRAP | 0x80});
+    Raw::SYSCALL(pid);
+    auto still_running = Posix::wait_for_signal2(pid, {SIGTRAP | 0x80});
     if (!still_running)
       return {};
 
-    auto regs = Posix::Ptrace::GETREGS(pid);
+    auto regs = Raw::GETREGS(pid);
 
     const auto syscall_id = get_syscall_number_from_registers(regs);
     const static auto syscall_map = create_syscall_map();
@@ -235,7 +183,7 @@ namespace Ptrace
     }();
     const auto syscall_arguments = get_syscall_args(regs);
 
-    return SysCall{syscall_id, syscall_info, return_value, syscall_arguments};
+    return SysCall{syscall_info, syscall_arguments, return_value};
   }
 
   [[nodiscard]] auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int
@@ -250,7 +198,7 @@ namespace Ptrace
       //wait_for_signal2(pid, {SIGTRAP, SIGSTOP});
       wait(NULL);
       spdlog::debug("main process, after wait");
-      Posix::Ptrace::SETOPTIONS(pid, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEEXEC | PTRACE_O_TRACECLONE);
+      Raw::SETOPTIONS(pid, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEEXEC | PTRACE_O_TRACECLONE);
 
       return pid;
     }
@@ -261,7 +209,7 @@ namespace Ptrace
       spdlog::debug("this is the child process");
 
       // Stpo at next syscall
-      Posix::Ptrace::TRACEME();
+      Raw::TRACEME();
 
       const std::vector<char *>
           charPtrArguments = [&program, &arguments]() {
@@ -303,7 +251,7 @@ namespace Ptrace
 #endif
   }
 
-  auto get_syscall_args(const user_regs_struct &regs) -> std::vector<SyscallDataType>
+  auto get_syscall_args(const user_regs_struct &regs) -> std::array<SyscallDataType, 6>
   {
 #if __x86_64__
     return {regs.rdi, regs.rsi, regs.rdx, regs.r10, regs.r8, regs.r9};
