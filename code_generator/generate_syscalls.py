@@ -333,9 +333,9 @@ def write_map(
 
     with open(file, 'w') as writer:
         writer.write(
-            f"#include <{interface_file}>\n"
+            f"#include \"{interface_file}\"\n"
             "\n"
-            "namespace gpcache\n"
+            "namespace Ptrace\n"
             "{\n"
             "\n"
             "  auto create_syscall_map() -> std::map<SyscallDataType, SyscallInfo> const {\n"
@@ -387,4 +387,4 @@ if __name__ == "__main__":
         'SyscallWrappers.h',
         syscalls)
     write_map(repository_path / 'wrappers' /
-              'ptrace' / 'SyscallMap.cpp', 'SyscallMap.h', syscalls)
+              'ptrace_linux_x64' / 'SyscallMap.cpp', '../ptrace.h', syscalls)
