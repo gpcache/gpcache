@@ -10,6 +10,9 @@ namespace gpcache
     Event_write,
     Event_open,
     Event_close,
+    Event_newstat,
+    Event_newfstat,
+    Event_newlstat,
     Event_lseek,
     Event_mmap,
     Event_mprotect,
@@ -109,6 +112,9 @@ namespace gpcache
     Event_rt_sigsuspend,
     Event_mknod,
     Event_personality,
+    Event_ustat,
+    Event_statfs,
+    Event_fstatfs,
     Event_sysfs,
     Event_getpriority,
     Event_setpriority,
@@ -202,6 +208,7 @@ namespace gpcache
     Event_mkdirat,
     Event_mknodat,
     Event_fchownat,
+    Event_newfstatat,
     Event_unlinkat,
     Event_renameat,
     Event_linkat,
@@ -241,6 +248,9 @@ namespace gpcache
     case 0: 
       return Event_read
       {
+      .fd = static_cast<unsigned int>(arg1),
+      .buf = reinterpret_cast<char *>(arg2),
+      .count = static_cast<size_t>(arg3),
       };
     case 1: 
       return Event_write
@@ -260,6 +270,24 @@ namespace gpcache
       return Event_close
       {
       .fd = static_cast<unsigned int>(arg1),
+      };
+    case 4: 
+      return Event_newstat
+      {
+      .filename = reinterpret_cast<const char *>(arg1),
+      .statbuf = reinterpret_cast<struct stat *>(arg2),
+      };
+    case 5: 
+      return Event_newfstat
+      {
+      .fd = static_cast<unsigned int>(arg1),
+      .statbuf = reinterpret_cast<struct stat *>(arg2),
+      };
+    case 6: 
+      return Event_newlstat
+      {
+      .filename = reinterpret_cast<const char *>(arg1),
+      .statbuf = reinterpret_cast<struct stat *>(arg2),
       };
     case 8: 
       return Event_lseek
@@ -331,14 +359,14 @@ namespace gpcache
       return Event_readv
       {
       .fd = static_cast<unsigned long>(arg1),
-      .vec = reinterpret_cast<const iovec *>(arg2),
+      .vec = reinterpret_cast<const struct iovec *>(arg2),
       .vlen = static_cast<unsigned long>(arg3),
       };
     case 20: 
       return Event_writev
       {
       .fd = static_cast<unsigned long>(arg1),
-      .vec = reinterpret_cast<const iovec *>(arg2),
+      .vec = reinterpret_cast<const struct iovec *>(arg2),
       .vlen = static_cast<unsigned long>(arg3),
       };
     case 21: 
@@ -418,8 +446,8 @@ namespace gpcache
     case 35: 
       return Event_nanosleep
       {
-      .rqtp = reinterpret_cast< __kernel_timespec *>(arg1),
-      .rmtp = reinterpret_cast< __kernel_timespec *>(arg2),
+      .rqtp = reinterpret_cast<struct __kernel_timespec *>(arg1),
+      .rmtp = reinterpret_cast<struct __kernel_timespec *>(arg2),
       };
     case 37: 
       return Event_alarm
@@ -449,14 +477,14 @@ namespace gpcache
       return Event_connect
       {
       .unnamed0 = static_cast<int>(arg1),
-      .unnamed1 = reinterpret_cast< sockaddr *>(arg2),
+      .unnamed1 = reinterpret_cast<struct sockaddr *>(arg2),
       .unnamed2 = static_cast<int>(arg3),
       };
     case 43: 
       return Event_accept
       {
       .unnamed0 = static_cast<int>(arg1),
-      .unnamed1 = reinterpret_cast< sockaddr *>(arg2),
+      .unnamed1 = reinterpret_cast<struct sockaddr *>(arg2),
       .unnamed2 = reinterpret_cast<int *>(arg3),
       };
     case 44: 
@@ -466,7 +494,7 @@ namespace gpcache
       .unnamed1 = reinterpret_cast<void *>(arg2),
       .unnamed2 = static_cast<size_t>(arg3),
       .unnamed3 = static_cast<unsigned>(arg4),
-      .unnamed4 = reinterpret_cast< sockaddr *>(arg5),
+      .unnamed4 = reinterpret_cast<struct sockaddr *>(arg5),
       .unnamed5 = static_cast<int>(arg6),
       };
     case 45: 
@@ -476,7 +504,7 @@ namespace gpcache
       .unnamed1 = reinterpret_cast<void *>(arg2),
       .unnamed2 = static_cast<size_t>(arg3),
       .unnamed3 = static_cast<unsigned>(arg4),
-      .unnamed4 = reinterpret_cast< sockaddr *>(arg5),
+      .unnamed4 = reinterpret_cast<struct sockaddr *>(arg5),
       .unnamed5 = reinterpret_cast<int *>(arg6),
       };
     case 48: 
@@ -489,7 +517,7 @@ namespace gpcache
       return Event_bind
       {
       .unnamed0 = static_cast<int>(arg1),
-      .unnamed1 = reinterpret_cast< sockaddr *>(arg2),
+      .unnamed1 = reinterpret_cast<struct sockaddr *>(arg2),
       .unnamed2 = static_cast<int>(arg3),
       };
     case 50: 
@@ -502,14 +530,14 @@ namespace gpcache
       return Event_getsockname
       {
       .unnamed0 = static_cast<int>(arg1),
-      .unnamed1 = reinterpret_cast< sockaddr *>(arg2),
+      .unnamed1 = reinterpret_cast<struct sockaddr *>(arg2),
       .unnamed2 = reinterpret_cast<int *>(arg3),
       };
     case 52: 
       return Event_getpeername
       {
       .unnamed0 = static_cast<int>(arg1),
-      .unnamed1 = reinterpret_cast< sockaddr *>(arg2),
+      .unnamed1 = reinterpret_cast<struct sockaddr *>(arg2),
       .unnamed2 = reinterpret_cast<int *>(arg3),
       };
     case 53: 
@@ -853,7 +881,7 @@ namespace gpcache
       {
       .uthese = reinterpret_cast<const sigset_t *>(arg1),
       .uinfo = reinterpret_cast<siginfo_t *>(arg2),
-      .uts = reinterpret_cast<const __kernel_timespec *>(arg3),
+      .uts = reinterpret_cast<const struct __kernel_timespec *>(arg3),
       .sigsetsize = static_cast<size_t>(arg4),
       };
     case 129: 
@@ -880,6 +908,24 @@ namespace gpcache
       return Event_personality
       {
       .personality = static_cast<unsigned int>(arg1),
+      };
+    case 136: 
+      return Event_ustat
+      {
+      .dev = static_cast<unsigned>(arg1),
+      .ubuf = reinterpret_cast<struct ustat *>(arg2),
+      };
+    case 137: 
+      return Event_statfs
+      {
+      .path = reinterpret_cast<const char *>(arg1),
+      .buf = reinterpret_cast<struct statfs *>(arg2),
+      };
+    case 138: 
+      return Event_fstatfs
+      {
+      .fd = static_cast<unsigned int>(arg1),
+      .buf = reinterpret_cast<struct statfs *>(arg2),
       };
     case 139: 
       return Event_sysfs
@@ -920,7 +966,7 @@ namespace gpcache
       return Event_sched_rr_get_interval
       {
       .pid = static_cast<pid_t>(arg1),
-      .interval = reinterpret_cast< __kernel_timespec *>(arg2),
+      .interval = reinterpret_cast<struct __kernel_timespec *>(arg2),
       };
     case 149: 
       return Event_mlock
@@ -1184,7 +1230,7 @@ namespace gpcache
       .uaddr = reinterpret_cast<uint32_t *>(arg1),
       .op = static_cast<int>(arg2),
       .val = static_cast<uint32_t>(arg3),
-      .utime = reinterpret_cast<const __kernel_timespec *>(arg4),
+      .utime = reinterpret_cast<const struct __kernel_timespec *>(arg4),
       .uaddr2 = reinterpret_cast<uint32_t *>(arg5),
       .val3 = static_cast<uint32_t>(arg6),
       };
@@ -1219,8 +1265,8 @@ namespace gpcache
       .ctx_id = static_cast<aio_context_t>(arg1),
       .min_nr = static_cast<long>(arg2),
       .nr = static_cast<long>(arg3),
-      .events = reinterpret_cast< io_event *>(arg4),
-      .timeout = reinterpret_cast< __kernel_timespec *>(arg5),
+      .events = reinterpret_cast<struct io_event *>(arg4),
+      .timeout = reinterpret_cast<struct __kernel_timespec *>(arg5),
       };
     case 212: 
       return Event_lookup_dcookie
@@ -1264,7 +1310,7 @@ namespace gpcache
       return Event_timer_create
       {
       .which_clock = static_cast<clockid_t>(arg1),
-      .timer_event_spec = reinterpret_cast< sigevent *>(arg2),
+      .timer_event_spec = reinterpret_cast<struct sigevent *>(arg2),
       .created_timer_id = reinterpret_cast<timer_t *>(arg3),
       };
     case 223: 
@@ -1272,14 +1318,14 @@ namespace gpcache
       {
       .timer_id = reinterpret_cast<timer_t>(arg1),
       .flags = static_cast<int>(arg2),
-      .new_setting = reinterpret_cast<const __kernel_itimerspec *>(arg3),
-      .old_setting = reinterpret_cast< __kernel_itimerspec *>(arg4),
+      .new_setting = reinterpret_cast<const struct __kernel_itimerspec *>(arg3),
+      .old_setting = reinterpret_cast<struct __kernel_itimerspec *>(arg4),
       };
     case 224: 
       return Event_timer_gettime
       {
       .timer_id = reinterpret_cast<timer_t>(arg1),
-      .setting = reinterpret_cast< __kernel_itimerspec *>(arg2),
+      .setting = reinterpret_cast<struct __kernel_itimerspec *>(arg2),
       };
     case 225: 
       return Event_timer_getoverrun
@@ -1295,27 +1341,27 @@ namespace gpcache
       return Event_clock_settime
       {
       .which_clock = static_cast<clockid_t>(arg1),
-      .tp = reinterpret_cast<const __kernel_timespec *>(arg2),
+      .tp = reinterpret_cast<const struct __kernel_timespec *>(arg2),
       };
     case 228: 
       return Event_clock_gettime
       {
       .which_clock = static_cast<clockid_t>(arg1),
-      .tp = reinterpret_cast< __kernel_timespec *>(arg2),
+      .tp = reinterpret_cast<struct __kernel_timespec *>(arg2),
       };
     case 229: 
       return Event_clock_getres
       {
       .which_clock = static_cast<clockid_t>(arg1),
-      .tp = reinterpret_cast< __kernel_timespec *>(arg2),
+      .tp = reinterpret_cast<struct __kernel_timespec *>(arg2),
       };
     case 230: 
       return Event_clock_nanosleep
       {
       .which_clock = static_cast<clockid_t>(arg1),
       .flags = static_cast<int>(arg2),
-      .rqtp = reinterpret_cast<const __kernel_timespec *>(arg3),
-      .rmtp = reinterpret_cast< __kernel_timespec *>(arg4),
+      .rqtp = reinterpret_cast<const struct __kernel_timespec *>(arg3),
+      .rmtp = reinterpret_cast<struct __kernel_timespec *>(arg4),
       };
     case 231: 
       return Event_exit_group
@@ -1326,7 +1372,7 @@ namespace gpcache
       return Event_epoll_wait
       {
       .epfd = static_cast<int>(arg1),
-      .events = reinterpret_cast< epoll_event *>(arg2),
+      .events = reinterpret_cast<struct epoll_event *>(arg2),
       .maxevents = static_cast<int>(arg3),
       .timeout = static_cast<int>(arg4),
       };
@@ -1336,7 +1382,7 @@ namespace gpcache
       .epfd = static_cast<int>(arg1),
       .op = static_cast<int>(arg2),
       .fd = static_cast<int>(arg3),
-      .event = reinterpret_cast< epoll_event *>(arg4),
+      .event = reinterpret_cast<struct epoll_event *>(arg4),
       };
     case 234: 
       return Event_tgkill
@@ -1377,7 +1423,7 @@ namespace gpcache
       .name = reinterpret_cast<const char *>(arg1),
       .oflag = static_cast<int>(arg2),
       .mode = static_cast<mode_t>(arg3),
-      .attr = reinterpret_cast< mq_attr *>(arg4),
+      .attr = reinterpret_cast<struct mq_attr *>(arg4),
       };
     case 241: 
       return Event_mq_unlink
@@ -1391,7 +1437,7 @@ namespace gpcache
       .msg_ptr = reinterpret_cast<const char *>(arg2),
       .msg_len = static_cast<size_t>(arg3),
       .msg_prio = static_cast<unsigned int>(arg4),
-      .abs_timeout = reinterpret_cast<const __kernel_timespec *>(arg5),
+      .abs_timeout = reinterpret_cast<const struct __kernel_timespec *>(arg5),
       };
     case 243: 
       return Event_mq_timedreceive
@@ -1400,20 +1446,20 @@ namespace gpcache
       .msg_ptr = reinterpret_cast<char *>(arg2),
       .msg_len = static_cast<size_t>(arg3),
       .msg_prio = reinterpret_cast<unsigned int *>(arg4),
-      .abs_timeout = reinterpret_cast<const __kernel_timespec *>(arg5),
+      .abs_timeout = reinterpret_cast<const struct __kernel_timespec *>(arg5),
       };
     case 244: 
       return Event_mq_notify
       {
       .mqdes = static_cast<mqd_t>(arg1),
-      .notification = reinterpret_cast<const sigevent *>(arg2),
+      .notification = reinterpret_cast<const struct sigevent *>(arg2),
       };
     case 245: 
       return Event_mq_getsetattr
       {
       .mqdes = static_cast<mqd_t>(arg1),
-      .mqstat = reinterpret_cast<const mq_attr *>(arg2),
-      .omqstat = reinterpret_cast< mq_attr *>(arg3),
+      .mqstat = reinterpret_cast<const struct mq_attr *>(arg2),
+      .omqstat = reinterpret_cast<struct mq_attr *>(arg3),
       };
     case 250: 
       return Event_keyctl
@@ -1494,6 +1540,14 @@ namespace gpcache
       .group = static_cast<gid_t>(arg4),
       .flag = static_cast<int>(arg5),
       };
+    case 262: 
+      return Event_newfstatat
+      {
+      .dfd = static_cast<int>(arg1),
+      .filename = reinterpret_cast<const char *>(arg2),
+      .statbuf = reinterpret_cast<struct stat *>(arg3),
+      .flag = static_cast<int>(arg4),
+      };
     case 263: 
       return Event_unlinkat
       {
@@ -1554,7 +1608,7 @@ namespace gpcache
       .unnamed1 = reinterpret_cast<fd_set *>(arg2),
       .unnamed2 = reinterpret_cast<fd_set *>(arg3),
       .unnamed3 = reinterpret_cast<fd_set *>(arg4),
-      .unnamed4 = reinterpret_cast< __kernel_timespec *>(arg5),
+      .unnamed4 = reinterpret_cast<struct __kernel_timespec *>(arg5),
       .unnamed5 = reinterpret_cast<void *>(arg6),
       };
     case 275: 
@@ -1587,7 +1641,7 @@ namespace gpcache
       return Event_vmsplice
       {
       .fd = static_cast<int>(arg1),
-      .iov = reinterpret_cast<const iovec *>(arg2),
+      .iov = reinterpret_cast<const struct iovec *>(arg2),
       .nr_segs = static_cast<unsigned long>(arg3),
       .flags = static_cast<unsigned int>(arg4),
       };
@@ -1606,14 +1660,14 @@ namespace gpcache
       {
       .dfd = static_cast<int>(arg1),
       .filename = reinterpret_cast<const char *>(arg2),
-      .utimes = reinterpret_cast< __kernel_timespec *>(arg3),
+      .utimes = reinterpret_cast<struct __kernel_timespec *>(arg3),
       .flags = static_cast<int>(arg4),
       };
     case 281: 
       return Event_epoll_pwait
       {
       .epfd = static_cast<int>(arg1),
-      .events = reinterpret_cast< epoll_event *>(arg2),
+      .events = reinterpret_cast<struct epoll_event *>(arg2),
       .maxevents = static_cast<int>(arg3),
       .timeout = static_cast<int>(arg4),
       .SignMask = reinterpret_cast<const sigset_t *>(arg5),
@@ -1650,20 +1704,20 @@ namespace gpcache
       {
       .ufd = static_cast<int>(arg1),
       .flags = static_cast<int>(arg2),
-      .utmr = reinterpret_cast<const __kernel_itimerspec *>(arg3),
-      .otmr = reinterpret_cast< __kernel_itimerspec *>(arg4),
+      .utmr = reinterpret_cast<const struct __kernel_itimerspec *>(arg3),
+      .otmr = reinterpret_cast<struct __kernel_itimerspec *>(arg4),
       };
     case 287: 
       return Event_timerfd_gettime
       {
       .ufd = static_cast<int>(arg1),
-      .otmr = reinterpret_cast< __kernel_itimerspec *>(arg2),
+      .otmr = reinterpret_cast<struct __kernel_itimerspec *>(arg2),
       };
     case 288: 
       return Event_accept4
       {
       .unnamed0 = static_cast<int>(arg1),
-      .unnamed1 = reinterpret_cast< sockaddr *>(arg2),
+      .unnamed1 = reinterpret_cast<struct sockaddr *>(arg2),
       .unnamed2 = reinterpret_cast<int *>(arg3),
       .unnamed3 = static_cast<int>(arg4),
       };
@@ -1708,7 +1762,7 @@ namespace gpcache
       return Event_preadv
       {
       .fd = static_cast<unsigned long>(arg1),
-      .vec = reinterpret_cast<const iovec *>(arg2),
+      .vec = reinterpret_cast<const struct iovec *>(arg2),
       .vlen = static_cast<unsigned long>(arg3),
       .pos_l = static_cast<unsigned long>(arg4),
       .pos_h = static_cast<unsigned long>(arg5),
@@ -1717,7 +1771,7 @@ namespace gpcache
       return Event_pwritev
       {
       .fd = static_cast<unsigned long>(arg1),
-      .vec = reinterpret_cast<const iovec *>(arg2),
+      .vec = reinterpret_cast<const struct iovec *>(arg2),
       .vlen = static_cast<unsigned long>(arg3),
       .pos_l = static_cast<unsigned long>(arg4),
       .pos_h = static_cast<unsigned long>(arg5),

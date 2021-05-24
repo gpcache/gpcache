@@ -1,7 +1,7 @@
 # At the time of writing this the supported/required versions are:
 # Ubuntu 18.04: 3.10.2
 # Ubuntu 20.04: 3.16.3
-# Visual Studio: 3.14
+# Visual Studio: 3.19 (since 16.9.0 in March 2021)
 # llvm minimum version: 3.13.4
 # There is no special significance of this list,
 # it's just to get an idea about what others use.
@@ -29,6 +29,13 @@ set(CMAKE_CXX_EXTENSIONS NO)
 
 # Always export compile_commands.json since it's useful for some tools.
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
+# ToDo
+option(ASAN "Enable ASAN" TRUE)
+if(ASAN)
+  add_compile_options(-fsanitize=address)
+  add_link_options(-fsanitize=address)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

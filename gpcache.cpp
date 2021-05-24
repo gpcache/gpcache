@@ -16,6 +16,7 @@
 #include "wrappers/ptrace/SyscallWrappers.h"
 #include <any>
 #include <variant>
+#include <set>
 #include "utils/Utils.h"
 #include <spdlog/spdlog.h>
 #include "inputs.h"
@@ -26,42 +27,247 @@ ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
 
 namespace gpcache
 {
+  class FiledescriptorManager
+  {
+  private:
+    enum class State
+    {
+      open,
+      closed
+    };
+    struct FiledescriptorData
+    {
+      int fd;
+      std::string filename;
+      State state;
+      std::vector<std::string> source;
+    };
+    std::map<int, FiledescriptorData> fds;
+
+    // Sounds like this should be in fmt
+    auto dump_data(auto const level, FiledescriptorData const &data) const -> void
+    {
+      spdlog::log(level, "file descriptor fd: {}", data.fd);
+      spdlog::log(level, "file descriptor filename: {}", data.filename);
+      spdlog::log(level, "file descriptor state: {}", data.state);
+      for (auto const &src : data.source)
+        spdlog::log(level, "file descriptor source: {}", src);
+    }
+
+  public:
+    FiledescriptorManager()
+    {
+      fds[0] = {.fd = 0, .filename = "0", .state = State::open, .source = {"default"}};
+      fds[1] = {.fd = 1, .filename = "1", .state = State::open, .source = {"default"}};
+      fds[2] = {.fd = 2, .filename = "2", .state = State::open, .source = {"default"}};
+    }
+
+    auto dump(auto const level, int const fd) const -> void
+    {
+      if (auto entry = fds.find(fd); entry != fds.end())
+      {
+        dump_data(level, entry->second);
+      }
+      else
+      {
+        spdlog::log(level, "{} has not been touched", fd);
+      }
+    }
+
+    auto dump(spdlog::level::level_enum const level) const -> void
+    {
+      for (auto const &[key, state] : fds)
+      {
+        spdlog::log(level, "-----------");
+        dump_data(level, state);
+      }
+    }
+
+    auto get_path(int const fd) const -> std::filesystem::path
+    {
+      if (auto entry = fds.find(fd); entry != fds.end() && entry->second.state == State::open)
+      {
+        return entry->second.filename;
+      }
+      else
+      {
+        // ToDo cache invalid syscall?
+        spdlog::warn("get_path of file descriptor {}", fd);
+        dump(spdlog::level::warn);
+        throw std::runtime_error("invalid get_path");
+      }
+    }
+
+    auto open(int fd, std::string file, std::string source) -> void
+    {
+      FiledescriptorData new_entry = {
+          .fd = fd,
+          .filename = file,
+          .state = State::open,
+          .source = {"open via " + source}};
+
+      if (auto entry = fds.find(fd); entry != fds.end())
+      {
+        if (entry->second.state == State::open)
+        {
+          // ToDo
+          spdlog::warn("double open of file descriptor {}", fd);
+          dump_data(spdlog::level::warn, new_entry);
+          dump(spdlog::level::warn, fd);
+        }
+        else
+        {
+          entry->second.filename = file;
+          entry->second.source.push_back("open via " + source);
+          entry->second.state = State::open;
+        }
+      }
+      else
+      {
+        fds.insert({fd, new_entry});
+      }
+    }
+
+    auto close(int fd, std::string source) -> void
+    {
+      if (auto entry = fds.find(fd); entry != fds.end())
+      {
+        auto &data = entry->second;
+        if (data.state == State::closed)
+        {
+          throw std::runtime_error(fmt::format("closing closed fd {} from {}", fd, source));
+        }
+        else
+        {
+          data.state = State::closed;
+          data.source.push_back("closed via " + source);
+        }
+      }
+      else
+      {
+        throw std::runtime_error(fmt::format("closing unknown fd {} from {}", fd, source));
+      }
+    }
+  };
+
   auto cache_execution(std::string const program, std::vector<std::string> const arguments) -> Inputs
   {
     Ptrace::PtraceProcess p = Ptrace::createChildProcess(program, arguments);
     spdlog::debug("after createChildProcess");
 
-    std::vector ignore = {Syscall_brk::syscall_id, Syscall_arch_prctl::syscall_id};
+    std::set ignore = {Syscall_brk::syscall_id, Syscall_arch_prctl::syscall_id};
 
     Inputs inputs;
+    FiledescriptorManager fds;
 
     while (true)
     {
       auto syscall = p.restart_child_and_wait_for_next_syscall();
       if (!syscall)
+      {
+        // child has exited
+        // ToDo: exit code
+        spdlog::debug("!syscall");
         break;
+      }
 
       // Since gpcache does not modify syscalls, just monitoring the exists is sufficient
-      if (syscall->return_value)
+      if (!syscall->return_value)
       {
-        if (!contains(ignore, syscall->info.syscall_id))
-        {
-          switch (syscall->info.syscall_id)
-          {
-          case Syscall_access::syscall_id:
-          {
-            auto syscall_access = static_cast<Syscall_access>(syscall->arguments);
-            std::string filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
-            inputs.actions.push_back(AccessAction{filename, syscall_access.mode(), syscall->return_value.value()});
-            break;
-          }
+        spdlog::debug("!return");
+        continue;
+      }
 
-          default:
-            fmt::print("Unsupported syscall {}", syscall_to_string(p.get_pid(), *syscall));
-            break;
+      auto const syscall_str = syscall_to_string(p.get_pid(), *syscall);
+      spdlog::debug("Handling syscall... {}", syscall_str);
+
+      bool supported = false;
+
+      if (contains(ignore, syscall->info.syscall_id))
+      {
+        supported = true;
+      }
+      else if (syscall->info.syscall_id == Syscall_access::syscall_id)
+      {
+        auto syscall_access = static_cast<Syscall_access>(syscall->arguments);
+        std::string filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
+        inputs.actions.push_back(AccessAction{filename, syscall_access.mode(), syscall->return_value.value()});
+        supported = true;
+      }
+      else if (syscall->info.syscall_id == Syscall_openat::syscall_id)
+      {
+        auto const syscall_openat = static_cast<Syscall_openat>(syscall->arguments);
+        spdlog::debug("loc {}", __LINE__);
+
+        const std::filesystem::path path = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_openat.filename());
+        if (path.is_absolute())
+        {
+          int fd = syscall->return_value.value();
+          inputs.actions.push_back(OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0});
+          fds.open(fd, path, syscall_str);
+          fds.dump(spdlog::level::debug);
+          supported = true;
+        }
+        else
+        {
+          auto const dirfd = syscall_openat.dfd();
+          if (dirfd == AT_FDCWD)
+          {
+            // open relative to CWD
+          }
+          else
+          {
+            // open relative to dirfd
           }
         }
       }
+      else if (syscall->info.syscall_id == Syscall_close::syscall_id)
+      {
+        auto const syscall_close = static_cast<Syscall_close>(syscall->arguments);
+        fds.close(syscall_close.fd(), "close via " + syscall_str);
+        fds.dump(spdlog::level::debug);
+        supported = true;
+      }
+      else if (syscall->info.syscall_id == Syscall_newfstat::syscall_id)
+      {
+        // This is fstat, fo rsome reason called newfstat.
+        // Using wrong field in parser?!
+        auto const syscall_fstat = static_cast<Syscall_newfstat>(syscall->arguments);
+        struct stat s;
+        // ToDo: Ptrace::PEEKTEXT<struct stat>
+        auto data = Ptrace::PEEKTEXT(p.get_pid(),
+                                     reinterpret_cast<uint8_t *>(syscall_fstat.statbuf()),
+                                     sizeof(struct stat));
+        memcpy(&s, data.c_str(), sizeof(struct stat));
+
+        auto path = fds.get_path(syscall_fstat.fd());
+
+        FstatAction fstat{path, s, syscall->return_value.value() == 0, 0};
+        inputs.actions.push_back(fstat);
+        supported = true;
+      }
+      else if (syscall->info.syscall_id == Syscall_read::syscall_id)
+      {
+        auto const syscall_read = static_cast<Syscall_close>(syscall->arguments);
+        // In theory only the actually read parts of the file...
+        FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
+        inputs.actions.push_back(hash);
+        supported = true;
+      }
+      else if (syscall->info.syscall_id == Syscall_pread64::syscall_id)
+      {
+        auto const syscall_read = static_cast<Syscall_pread64>(syscall->arguments);
+        // In theory only the actually read parts of the file...
+        FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
+        inputs.actions.push_back(hash);
+        supported = true;
+      }
+
+      spdlog::debug("printing syscall...");
+      if (!supported)
+        spdlog::warn("Unsupported syscall {}", syscall_str);
+      else
+        spdlog::info("Supported syscall {}", syscall_str);
     }
 
     return inputs;
@@ -81,7 +287,13 @@ int main(int argc, char **argv)
   for (auto param : params)
     std::cout << fmt::format("* {}\n", param);
 
-  // later form args:
+  bool const verbose_flag = absl::GetFlag(FLAGS_verbose);
+  if (verbose_flag)
+    spdlog::set_level(spdlog::level::debug);
+  else
+    spdlog::set_level(spdlog::level::info);
+
+  // later from args:
   try
   {
     auto inputs = gpcache::cache_execution("true", {});

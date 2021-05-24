@@ -69,7 +69,7 @@ def autofix(param: Param) -> Tuple[Param, bool]:
 
     unsupported = (
         "cap_user_header_t cap_user_data_t key_serial_t mountpoint "
-        "landlock_rule_type __aio_sigset io_uring_params stat pollfd "
+        "landlock_rule_type __aio_sigset io_uring_params pollfd "
         "sigaction __kernel_timeval __kernel_itimerval shmid_ds user_msghdr "
         "rusage utsname msgbuf msqid_ds sembuf linux_dirent rlimit sysinfo "
         "tms utimbuf sched_param __kernel_timex kexec_segment "
@@ -78,7 +78,6 @@ def autofix(param: Param) -> Tuple[Param, bool]:
         if u in param.cpptype:
             supported = False
 
-    param.cpptype = param.cpptype.replace("struct", "")  # this is not C
     param.cpptype = param.cpptype.replace("  ", " ")
 
     if param.name == "sigmask":
@@ -127,17 +126,20 @@ def download_and_parse_syscall_params(syscalls: Syscalls) -> None:
 
     for syscall_match in re.finditer(syscall_pattern, source):
         syscall_name = syscall_match["syscall"]
-
         # fix strange alias
         if(syscall_name == 'mmap_pgoff'):
             syscall_name = 'mmap'
 
-        syscall_id = next((
-            syscall_id for syscall_id,
-            syscall in syscalls.items() if syscall.name == syscall_name), None)
-        if not syscall_id:
+        def find_syscall_by_name(syscalls: Syscalls, syscall_name: str):
+            for syscall in syscalls.values():
+                if syscall.name == syscall_name:
+                    return syscall.id
+            return None
+
+        syscall_id = find_syscall_by_name(syscalls, syscall_name)
+        if syscall_id is None:
             # raise RuntimeError("Unknown syscall " + syscall_name)
-            logging.debug("Unknown syscall " + syscall_name)
+            logging.warning("Unknown syscall " + syscall_name)
             continue
 
         syscall = syscalls[syscall_id]

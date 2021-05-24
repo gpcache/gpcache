@@ -51,7 +51,6 @@ namespace Ptrace
   auto PEEKTEXT(int pid, const uint8_t *const begin, size_t count) -> std::string;
   auto PEEKTEXT_string(int pid, char const *begin) -> std::string;
 
-  // ToDo: convert to fmt
   inline auto syscall_to_string(pid_t const p, SysCall const &syscall)
   {
     const std::string params = [&]() {
@@ -74,10 +73,11 @@ namespace Ptrace
       return params;
     }();
 
-    return fmt::format("{} ({}) with ({}) --> {} = {}\n",
+    return fmt::format("{} ({}) with ({}) --> {} = {}",
                        syscall.info.name, syscall.info.syscall_id,
-                       params, syscall.return_value.value(),
-                       static_cast<int64_t>(syscall.return_value.value()));
+                       params,
+                       syscall.return_value.value(),
+                       -syscall.return_value.value());
   }
 
   // sounds like this could be a co_routine, but let's see what else we need here

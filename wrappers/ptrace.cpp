@@ -57,9 +57,19 @@ namespace
   then check it afterward to determine whether or not an error occurred.
   */
     errno = 0;
+    // ToDo: explain_ptrace_or_die
     const auto ret = ptrace(request, pid, addr, data);
 
-    spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
+    // wow this is terrible
+    if constexpr (std::is_pointer_v<decltype(addr)>)
+      if constexpr (std::is_pointer_v<decltype(data)>)
+        spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, reinterpret_cast<void const *>(addr), reinterpret_cast<void *>(data), ret, ::strerror(errno));
+      else
+        spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, reinterpret_cast<void const *>(addr), data, ret, ::strerror(errno));
+    else if constexpr (std::is_pointer_v<decltype(data)>)
+      spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
+    else
+      spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, data, ret, ::strerror(errno));
 
     if (ret == -1 || errno) // ToDo: improve detection. E.g. PEEKTEXT may return -1
     {
@@ -109,13 +119,12 @@ namespace Ptrace
   auto PEEKTEXT(const int pid, const uint8_t *const begin, const size_t count) -> std::string
   {
     std::string result;
-    result.reserve(count);
-    //result.resize(count);
+    result.reserve(count + sizeof(intptr_t));
 
     for (size_t pos_in_string = 0; pos_in_string < count; pos_in_string += sizeof(intptr_t))
     {
       const long data = Raw::PEEKTEXT(pid, begin + pos_in_string);
-      std::memcpy(result.data() + pos_in_string, &data, std::max(count - pos_in_string, sizeof(intptr_t)));
+      std::memcpy(result.data() + pos_in_string, &data, std::min(count - pos_in_string, sizeof(intptr_t)));
     }
 
     return result;
@@ -177,6 +186,9 @@ namespace Ptrace
       }
       else
       {
+        auto const val = get_syscall_return_value_from_registers(regs);
+        if (-val != ENOSYS)
+          spdlog::warn("entering syscall with return code: {} = {}", val, -val);
         next_call = EnterExit::exit;
         return std::nullopt;
       }

@@ -31,6 +31,9 @@ namespace gpcache {
   struct Event_read
   {
     static SyscallDataType constexpr syscall_id = 0;
+    unsigned int fd;
+    char * buf;
+    size_t count;
     SyscallDataType return_value;
   };
 
@@ -56,6 +59,30 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 3;
     unsigned int fd;
+    SyscallDataType return_value;
+  };
+
+  struct Event_newstat
+  {
+    static SyscallDataType constexpr syscall_id = 4;
+    const char * filename;
+    struct stat * statbuf;
+    SyscallDataType return_value;
+  };
+
+  struct Event_newfstat
+  {
+    static SyscallDataType constexpr syscall_id = 5;
+    unsigned int fd;
+    struct stat * statbuf;
+    SyscallDataType return_value;
+  };
+
+  struct Event_newlstat
+  {
+    static SyscallDataType constexpr syscall_id = 6;
+    const char * filename;
+    struct stat * statbuf;
     SyscallDataType return_value;
   };
 
@@ -147,7 +174,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 19;
     unsigned long fd;
-    const iovec * vec;
+    const struct iovec * vec;
     unsigned long vlen;
     SyscallDataType return_value;
   };
@@ -156,7 +183,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 20;
     unsigned long fd;
-    const iovec * vec;
+    const struct iovec * vec;
     unsigned long vlen;
     SyscallDataType return_value;
   };
@@ -262,8 +289,8 @@ namespace gpcache {
   struct Event_nanosleep
   {
     static SyscallDataType constexpr syscall_id = 35;
-     __kernel_timespec * rqtp;
-     __kernel_timespec * rmtp;
+    struct __kernel_timespec * rqtp;
+    struct __kernel_timespec * rmtp;
     SyscallDataType return_value;
   };
 
@@ -303,7 +330,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 42;
     int unnamed0;
-     sockaddr * unnamed1;
+    struct sockaddr * unnamed1;
     int unnamed2;
     SyscallDataType return_value;
   };
@@ -312,7 +339,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 43;
     int unnamed0;
-     sockaddr * unnamed1;
+    struct sockaddr * unnamed1;
     int * unnamed2;
     SyscallDataType return_value;
   };
@@ -324,7 +351,7 @@ namespace gpcache {
     void * unnamed1;
     size_t unnamed2;
     unsigned unnamed3;
-     sockaddr * unnamed4;
+    struct sockaddr * unnamed4;
     int unnamed5;
     SyscallDataType return_value;
   };
@@ -336,7 +363,7 @@ namespace gpcache {
     void * unnamed1;
     size_t unnamed2;
     unsigned unnamed3;
-     sockaddr * unnamed4;
+    struct sockaddr * unnamed4;
     int * unnamed5;
     SyscallDataType return_value;
   };
@@ -353,7 +380,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 49;
     int unnamed0;
-     sockaddr * unnamed1;
+    struct sockaddr * unnamed1;
     int unnamed2;
     SyscallDataType return_value;
   };
@@ -370,7 +397,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 51;
     int unnamed0;
-     sockaddr * unnamed1;
+    struct sockaddr * unnamed1;
     int * unnamed2;
     SyscallDataType return_value;
   };
@@ -379,7 +406,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 52;
     int unnamed0;
-     sockaddr * unnamed1;
+    struct sockaddr * unnamed1;
     int * unnamed2;
     SyscallDataType return_value;
   };
@@ -839,7 +866,7 @@ namespace gpcache {
     static SyscallDataType constexpr syscall_id = 128;
     const sigset_t * uthese;
     siginfo_t * uinfo;
-    const __kernel_timespec * uts;
+    const struct __kernel_timespec * uts;
     size_t sigsetsize;
     SyscallDataType return_value;
   };
@@ -874,6 +901,30 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 135;
     unsigned int personality;
+    SyscallDataType return_value;
+  };
+
+  struct Event_ustat
+  {
+    static SyscallDataType constexpr syscall_id = 136;
+    unsigned dev;
+    struct ustat * ubuf;
+    SyscallDataType return_value;
+  };
+
+  struct Event_statfs
+  {
+    static SyscallDataType constexpr syscall_id = 137;
+    const char * path;
+    struct statfs * buf;
+    SyscallDataType return_value;
+  };
+
+  struct Event_fstatfs
+  {
+    static SyscallDataType constexpr syscall_id = 138;
+    unsigned int fd;
+    struct statfs * buf;
     SyscallDataType return_value;
   };
 
@@ -928,7 +979,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 148;
     pid_t pid;
-     __kernel_timespec * interval;
+    struct __kernel_timespec * interval;
     SyscallDataType return_value;
   };
 
@@ -1276,7 +1327,7 @@ namespace gpcache {
     uint32_t * uaddr;
     int op;
     uint32_t val;
-    const __kernel_timespec * utime;
+    const struct __kernel_timespec * utime;
     uint32_t * uaddr2;
     uint32_t val3;
     SyscallDataType return_value;
@@ -1321,8 +1372,8 @@ namespace gpcache {
     aio_context_t ctx_id;
     long min_nr;
     long nr;
-     io_event * events;
-     __kernel_timespec * timeout;
+    struct io_event * events;
+    struct __kernel_timespec * timeout;
     SyscallDataType return_value;
   };
 
@@ -1380,7 +1431,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 222;
     clockid_t which_clock;
-     sigevent * timer_event_spec;
+    struct sigevent * timer_event_spec;
     timer_t * created_timer_id;
     SyscallDataType return_value;
   };
@@ -1390,8 +1441,8 @@ namespace gpcache {
     static SyscallDataType constexpr syscall_id = 223;
     timer_t timer_id;
     int flags;
-    const __kernel_itimerspec * new_setting;
-     __kernel_itimerspec * old_setting;
+    const struct __kernel_itimerspec * new_setting;
+    struct __kernel_itimerspec * old_setting;
     SyscallDataType return_value;
   };
 
@@ -1399,7 +1450,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 224;
     timer_t timer_id;
-     __kernel_itimerspec * setting;
+    struct __kernel_itimerspec * setting;
     SyscallDataType return_value;
   };
 
@@ -1421,7 +1472,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 227;
     clockid_t which_clock;
-    const __kernel_timespec * tp;
+    const struct __kernel_timespec * tp;
     SyscallDataType return_value;
   };
 
@@ -1429,7 +1480,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 228;
     clockid_t which_clock;
-     __kernel_timespec * tp;
+    struct __kernel_timespec * tp;
     SyscallDataType return_value;
   };
 
@@ -1437,7 +1488,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 229;
     clockid_t which_clock;
-     __kernel_timespec * tp;
+    struct __kernel_timespec * tp;
     SyscallDataType return_value;
   };
 
@@ -1446,8 +1497,8 @@ namespace gpcache {
     static SyscallDataType constexpr syscall_id = 230;
     clockid_t which_clock;
     int flags;
-    const __kernel_timespec * rqtp;
-     __kernel_timespec * rmtp;
+    const struct __kernel_timespec * rqtp;
+    struct __kernel_timespec * rmtp;
     SyscallDataType return_value;
   };
 
@@ -1462,7 +1513,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 232;
     int epfd;
-     epoll_event * events;
+    struct epoll_event * events;
     int maxevents;
     int timeout;
     SyscallDataType return_value;
@@ -1474,7 +1525,7 @@ namespace gpcache {
     int epfd;
     int op;
     int fd;
-     epoll_event * event;
+    struct epoll_event * event;
     SyscallDataType return_value;
   };
 
@@ -1525,7 +1576,7 @@ namespace gpcache {
     const char * name;
     int oflag;
     mode_t mode;
-     mq_attr * attr;
+    struct mq_attr * attr;
     SyscallDataType return_value;
   };
 
@@ -1543,7 +1594,7 @@ namespace gpcache {
     const char * msg_ptr;
     size_t msg_len;
     unsigned int msg_prio;
-    const __kernel_timespec * abs_timeout;
+    const struct __kernel_timespec * abs_timeout;
     SyscallDataType return_value;
   };
 
@@ -1554,7 +1605,7 @@ namespace gpcache {
     char * msg_ptr;
     size_t msg_len;
     unsigned int * msg_prio;
-    const __kernel_timespec * abs_timeout;
+    const struct __kernel_timespec * abs_timeout;
     SyscallDataType return_value;
   };
 
@@ -1562,7 +1613,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 244;
     mqd_t mqdes;
-    const sigevent * notification;
+    const struct sigevent * notification;
     SyscallDataType return_value;
   };
 
@@ -1570,8 +1621,8 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 245;
     mqd_t mqdes;
-    const mq_attr * mqstat;
-     mq_attr * omqstat;
+    const struct mq_attr * mqstat;
+    struct mq_attr * omqstat;
     SyscallDataType return_value;
   };
 
@@ -1676,6 +1727,16 @@ namespace gpcache {
     SyscallDataType return_value;
   };
 
+  struct Event_newfstatat
+  {
+    static SyscallDataType constexpr syscall_id = 262;
+    int dfd;
+    const char * filename;
+    struct stat * statbuf;
+    int flag;
+    SyscallDataType return_value;
+  };
+
   struct Event_unlinkat
   {
     static SyscallDataType constexpr syscall_id = 263;
@@ -1750,7 +1811,7 @@ namespace gpcache {
     fd_set * unnamed1;
     fd_set * unnamed2;
     fd_set * unnamed3;
-     __kernel_timespec * unnamed4;
+    struct __kernel_timespec * unnamed4;
     void * unnamed5;
     SyscallDataType return_value;
   };
@@ -1791,7 +1852,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 278;
     int fd;
-    const iovec * iov;
+    const struct iovec * iov;
     unsigned long nr_segs;
     unsigned int flags;
     SyscallDataType return_value;
@@ -1814,7 +1875,7 @@ namespace gpcache {
     static SyscallDataType constexpr syscall_id = 280;
     int dfd;
     const char * filename;
-     __kernel_timespec * utimes;
+    struct __kernel_timespec * utimes;
     int flags;
     SyscallDataType return_value;
   };
@@ -1823,7 +1884,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 281;
     int epfd;
-     epoll_event * events;
+    struct epoll_event * events;
     int maxevents;
     int timeout;
     const sigset_t * SignMask;
@@ -1870,8 +1931,8 @@ namespace gpcache {
     static SyscallDataType constexpr syscall_id = 286;
     int ufd;
     int flags;
-    const __kernel_itimerspec * utmr;
-     __kernel_itimerspec * otmr;
+    const struct __kernel_itimerspec * utmr;
+    struct __kernel_itimerspec * otmr;
     SyscallDataType return_value;
   };
 
@@ -1879,7 +1940,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 287;
     int ufd;
-     __kernel_itimerspec * otmr;
+    struct __kernel_itimerspec * otmr;
     SyscallDataType return_value;
   };
 
@@ -1887,7 +1948,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 288;
     int unnamed0;
-     sockaddr * unnamed1;
+    struct sockaddr * unnamed1;
     int * unnamed2;
     int unnamed3;
     SyscallDataType return_value;
@@ -1946,7 +2007,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 295;
     unsigned long fd;
-    const iovec * vec;
+    const struct iovec * vec;
     unsigned long vlen;
     unsigned long pos_l;
     unsigned long pos_h;
@@ -1957,7 +2018,7 @@ namespace gpcache {
   {
     static SyscallDataType constexpr syscall_id = 296;
     unsigned long fd;
-    const iovec * vec;
+    const struct iovec * vec;
     unsigned long vlen;
     unsigned long pos_l;
     unsigned long pos_h;
@@ -1974,42 +2035,36 @@ namespace gpcache {
     SyscallDataType return_value;
   };
 
-  // Unsupported: Syscall(id=4, name='newstat', params=[Param(cpptype='const char *', name='filename'), Param(cpptype=' stat *', name='statbuf')], supported=False)
-  // Unsupported: Syscall(id=5, name='newfstat', params=[Param(cpptype='unsigned int', name='fd'), Param(cpptype=' stat *', name='statbuf')], supported=False)
-  // Unsupported: Syscall(id=6, name='newlstat', params=[Param(cpptype='const char *', name='filename'), Param(cpptype=' stat *', name='statbuf')], supported=False)
-  // Unsupported: Syscall(id=7, name='poll', params=[Param(cpptype=' pollfd *', name='ufds'), Param(cpptype='unsigned int', name='nfds'), Param(cpptype='int', name='timeout')], supported=False)
-  // Unsupported: Syscall(id=13, name='rt_sigaction', params=[Param(cpptype='int', name=''), Param(cpptype='const sigaction *', name=''), Param(cpptype=' sigaction *', name=''), Param(cpptype='size_t', name='')], supported=False)
-  // Unsupported: Syscall(id=23, name='select', params=[Param(cpptype='int', name='n'), Param(cpptype='fd_set *', name='inp'), Param(cpptype='fd_set *', name='outp'), Param(cpptype='fd_set *', name='exp'), Param(cpptype=' __kernel_timeval *', name='tvp')], supported=False)
-  // Unsupported: Syscall(id=31, name='shmctl', params=[Param(cpptype='int', name='shmid'), Param(cpptype='int', name='cmd'), Param(cpptype=' shmid_ds *', name='buf')], supported=False)
-  // Unsupported: Syscall(id=36, name='getitimer', params=[Param(cpptype='int', name='which'), Param(cpptype=' __kernel_itimerval *', name='value')], supported=False)
-  // Unsupported: Syscall(id=38, name='setitimer', params=[Param(cpptype='int', name='which'), Param(cpptype=' __kernel_itimerval *', name='value'), Param(cpptype=' __kernel_itimerval *', name='ovalue')], supported=False)
-  // Unsupported: Syscall(id=46, name='sendmsg', params=[Param(cpptype='int', name='fd'), Param(cpptype=' user_msghdr *', name='msg'), Param(cpptype='unsigned', name='flags')], supported=False)
-  // Unsupported: Syscall(id=47, name='recvmsg', params=[Param(cpptype='int', name='fd'), Param(cpptype=' user_msghdr *', name='msg'), Param(cpptype='unsigned', name='flags')], supported=False)
-  // Unsupported: Syscall(id=61, name='wait4', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype='int *', name='stat_addr'), Param(cpptype='int', name='options'), Param(cpptype=' rusage *', name='ru')], supported=False)
-  // Unsupported: Syscall(id=63, name='uname', params=[Param(cpptype=' utsname *', name='')], supported=False)
-  // Unsupported: Syscall(id=65, name='semop', params=[Param(cpptype='int', name='semid'), Param(cpptype=' sembuf *', name='sops'), Param(cpptype='unsigned', name='nsops')], supported=False)
-  // Unsupported: Syscall(id=69, name='msgsnd', params=[Param(cpptype='int', name='msqid'), Param(cpptype=' msgbuf *', name='msgp'), Param(cpptype='size_t', name='msgsz'), Param(cpptype='int', name='msgflg')], supported=False)
-  // Unsupported: Syscall(id=70, name='msgrcv', params=[Param(cpptype='int', name='msqid'), Param(cpptype=' msgbuf *', name='msgp'), Param(cpptype='size_t', name='msgsz'), Param(cpptype='long', name='msgtyp'), Param(cpptype='int', name='msgflg')], supported=False)
-  // Unsupported: Syscall(id=71, name='msgctl', params=[Param(cpptype='int', name='msqid'), Param(cpptype='int', name='cmd'), Param(cpptype=' msqid_ds *', name='buf')], supported=False)
-  // Unsupported: Syscall(id=78, name='getdents', params=[Param(cpptype='unsigned int', name='fd'), Param(cpptype=' linux_dirent *', name='dirent'), Param(cpptype='unsigned int', name='count')], supported=False)
-  // Unsupported: Syscall(id=96, name='gettimeofday', params=[Param(cpptype=' __kernel_timeval *', name='tv'), Param(cpptype=' timezone *', name='tz')], supported=False)
-  // Unsupported: Syscall(id=97, name='getrlimit', params=[Param(cpptype='unsigned int', name='resource'), Param(cpptype=' rlimit *', name='rlim')], supported=False)
-  // Unsupported: Syscall(id=98, name='getrusage', params=[Param(cpptype='int', name='who'), Param(cpptype=' rusage *', name='ru')], supported=False)
-  // Unsupported: Syscall(id=99, name='sysinfo', params=[Param(cpptype=' sysinfo *', name='info')], supported=False)
-  // Unsupported: Syscall(id=100, name='times', params=[Param(cpptype=' tms *', name='tbuf')], supported=False)
+  // Unsupported: Syscall(id=7, name='poll', params=[Param(cpptype='struct pollfd *', name='ufds'), Param(cpptype='unsigned int', name='nfds'), Param(cpptype='int', name='timeout')], supported=False)
+  // Unsupported: Syscall(id=13, name='rt_sigaction', params=[Param(cpptype='int', name=''), Param(cpptype='const struct sigaction *', name=''), Param(cpptype='struct sigaction *', name=''), Param(cpptype='size_t', name='')], supported=False)
+  // Unsupported: Syscall(id=23, name='select', params=[Param(cpptype='int', name='n'), Param(cpptype='fd_set *', name='inp'), Param(cpptype='fd_set *', name='outp'), Param(cpptype='fd_set *', name='exp'), Param(cpptype='struct __kernel_timeval *', name='tvp')], supported=False)
+  // Unsupported: Syscall(id=31, name='shmctl', params=[Param(cpptype='int', name='shmid'), Param(cpptype='int', name='cmd'), Param(cpptype='struct shmid_ds *', name='buf')], supported=False)
+  // Unsupported: Syscall(id=36, name='getitimer', params=[Param(cpptype='int', name='which'), Param(cpptype='struct __kernel_itimerval *', name='value')], supported=False)
+  // Unsupported: Syscall(id=38, name='setitimer', params=[Param(cpptype='int', name='which'), Param(cpptype='struct __kernel_itimerval *', name='value'), Param(cpptype='struct __kernel_itimerval *', name='ovalue')], supported=False)
+  // Unsupported: Syscall(id=46, name='sendmsg', params=[Param(cpptype='int', name='fd'), Param(cpptype='struct user_msghdr *', name='msg'), Param(cpptype='unsigned', name='flags')], supported=False)
+  // Unsupported: Syscall(id=47, name='recvmsg', params=[Param(cpptype='int', name='fd'), Param(cpptype='struct user_msghdr *', name='msg'), Param(cpptype='unsigned', name='flags')], supported=False)
+  // Unsupported: Syscall(id=61, name='wait4', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype='int *', name='stat_addr'), Param(cpptype='int', name='options'), Param(cpptype='struct rusage *', name='ru')], supported=False)
+  // Unsupported: Syscall(id=63, name='uname', params=[Param(cpptype='struct utsname *', name='')], supported=False)
+  // Unsupported: Syscall(id=65, name='semop', params=[Param(cpptype='int', name='semid'), Param(cpptype='struct sembuf *', name='sops'), Param(cpptype='unsigned', name='nsops')], supported=False)
+  // Unsupported: Syscall(id=69, name='msgsnd', params=[Param(cpptype='int', name='msqid'), Param(cpptype='struct msgbuf *', name='msgp'), Param(cpptype='size_t', name='msgsz'), Param(cpptype='int', name='msgflg')], supported=False)
+  // Unsupported: Syscall(id=70, name='msgrcv', params=[Param(cpptype='int', name='msqid'), Param(cpptype='struct msgbuf *', name='msgp'), Param(cpptype='size_t', name='msgsz'), Param(cpptype='long', name='msgtyp'), Param(cpptype='int', name='msgflg')], supported=False)
+  // Unsupported: Syscall(id=71, name='msgctl', params=[Param(cpptype='int', name='msqid'), Param(cpptype='int', name='cmd'), Param(cpptype='struct msqid_ds *', name='buf')], supported=False)
+  // Unsupported: Syscall(id=78, name='getdents', params=[Param(cpptype='unsigned int', name='fd'), Param(cpptype='struct linux_dirent *', name='dirent'), Param(cpptype='unsigned int', name='count')], supported=False)
+  // Unsupported: Syscall(id=96, name='gettimeofday', params=[Param(cpptype='struct __kernel_timeval *', name='tv'), Param(cpptype='struct timezone *', name='tz')], supported=False)
+  // Unsupported: Syscall(id=97, name='getrlimit', params=[Param(cpptype='unsigned int', name='resource'), Param(cpptype='struct rlimit *', name='rlim')], supported=False)
+  // Unsupported: Syscall(id=98, name='getrusage', params=[Param(cpptype='int', name='who'), Param(cpptype='struct rusage *', name='ru')], supported=False)
+  // Unsupported: Syscall(id=99, name='sysinfo', params=[Param(cpptype='struct sysinfo *', name='info')], supported=False)
+  // Unsupported: Syscall(id=100, name='times', params=[Param(cpptype='struct tms *', name='tbuf')], supported=False)
   // Unsupported: Syscall(id=125, name='capget', params=[Param(cpptype='cap_user_header_t', name='header'), Param(cpptype='cap_user_data_t', name='dataptr')], supported=False)
   // Unsupported: Syscall(id=126, name='capset', params=[Param(cpptype='cap_user_header_t', name='header'), Param(cpptype='const cap_user_data_t', name='data')], supported=False)
-  // Unsupported: Syscall(id=132, name='utime', params=[Param(cpptype='char *', name='filename'), Param(cpptype=' utimbuf *', name='times')], supported=False)
+  // Unsupported: Syscall(id=132, name='utime', params=[Param(cpptype='char *', name='filename'), Param(cpptype='struct utimbuf *', name='times')], supported=False)
   // Unsupported: Syscall(id=134, name='ni_syscall', params=[], supported=False)
-  // Unsupported: Syscall(id=136, name='ustat', params=[Param(cpptype='unsigned', name='dev'), Param(cpptype=' ustat *', name='ubuf')], supported=False)
-  // Unsupported: Syscall(id=137, name='statfs', params=[Param(cpptype='const char *', name='path'), Param(cpptype=' statfs *', name='buf')], supported=False)
-  // Unsupported: Syscall(id=138, name='fstatfs', params=[Param(cpptype='unsigned int', name='fd'), Param(cpptype=' statfs *', name='buf')], supported=False)
-  // Unsupported: Syscall(id=142, name='sched_setparam', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype=' sched_param *', name='param')], supported=False)
-  // Unsupported: Syscall(id=143, name='sched_getparam', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype=' sched_param *', name='param')], supported=False)
-  // Unsupported: Syscall(id=144, name='sched_setscheduler', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype='int', name='policy'), Param(cpptype=' sched_param *', name='param')], supported=False)
-  // Unsupported: Syscall(id=159, name='adjtimex', params=[Param(cpptype=' __kernel_timex *', name='txc_p')], supported=False)
-  // Unsupported: Syscall(id=160, name='setrlimit', params=[Param(cpptype='unsigned int', name='resource'), Param(cpptype=' rlimit *', name='rlim')], supported=False)
-  // Unsupported: Syscall(id=164, name='settimeofday', params=[Param(cpptype=' __kernel_timeval *', name='tv'), Param(cpptype=' timezone *', name='tz')], supported=False)
+  // Unsupported: Syscall(id=142, name='sched_setparam', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype='struct sched_param *', name='param')], supported=False)
+  // Unsupported: Syscall(id=143, name='sched_getparam', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype='struct sched_param *', name='param')], supported=False)
+  // Unsupported: Syscall(id=144, name='sched_setscheduler', params=[Param(cpptype='pid_t', name='pid'), Param(cpptype='int', name='policy'), Param(cpptype='struct sched_param *', name='param')], supported=False)
+  // Unsupported: Syscall(id=159, name='adjtimex', params=[Param(cpptype='struct __kernel_timex *', name='txc_p')], supported=False)
+  // Unsupported: Syscall(id=160, name='setrlimit', params=[Param(cpptype='unsigned int', name='resource'), Param(cpptype='struct rlimit *', name='rlim')], supported=False)
+  // Unsupported: Syscall(id=164, name='settimeofday', params=[Param(cpptype='struct __kernel_timeval *', name='tv'), Param(cpptype='struct timezone *', name='tz')], supported=False)
   // Unsupported: Syscall(id=174, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=177, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=178, name='ni_syscall', params=[], supported=False)
@@ -2019,22 +2074,21 @@ namespace gpcache {
   // Unsupported: Syscall(id=184, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=185, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=205, name='ni_syscall', params=[], supported=False)
-  // Unsupported: Syscall(id=209, name='io_submit', params=[Param(cpptype='aio_context_t', name=''), Param(cpptype='long', name=''), Param(cpptype=' iocb * *', name='')], supported=False)
-  // Unsupported: Syscall(id=210, name='io_cancel', params=[Param(cpptype='aio_context_t', name='ctx_id'), Param(cpptype=' iocb *', name='iocb'), Param(cpptype=' io_event *', name='result')], supported=False)
+  // Unsupported: Syscall(id=209, name='io_submit', params=[Param(cpptype='aio_context_t', name=''), Param(cpptype='long', name=''), Param(cpptype='struct iocb * *', name='')], supported=False)
+  // Unsupported: Syscall(id=210, name='io_cancel', params=[Param(cpptype='aio_context_t', name='ctx_id'), Param(cpptype='struct iocb *', name='iocb'), Param(cpptype='struct io_event *', name='result')], supported=False)
   // Unsupported: Syscall(id=211, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=214, name='ni_syscall', params=[], supported=False)
   // Unsupported: Syscall(id=215, name='ni_syscall', params=[], supported=False)
-  // Unsupported: Syscall(id=217, name='getdents64', params=[Param(cpptype='unsigned int', name='fd'), Param(cpptype=' linux_dirent64 *', name='dirent'), Param(cpptype='unsigned int', name='count')], supported=False)
-  // Unsupported: Syscall(id=220, name='semtimedop', params=[Param(cpptype='int', name='semid'), Param(cpptype=' sembuf *', name='sops'), Param(cpptype='unsigned', name='nsops'), Param(cpptype='const __kernel_timespec *', name='timeout')], supported=False)
-  // Unsupported: Syscall(id=235, name='utimes', params=[Param(cpptype='char *', name='filename'), Param(cpptype=' __kernel_timeval *', name='utimes')], supported=False)
+  // Unsupported: Syscall(id=217, name='getdents64', params=[Param(cpptype='unsigned int', name='fd'), Param(cpptype='struct linux_dirent64 *', name='dirent'), Param(cpptype='unsigned int', name='count')], supported=False)
+  // Unsupported: Syscall(id=220, name='semtimedop', params=[Param(cpptype='int', name='semid'), Param(cpptype='struct sembuf *', name='sops'), Param(cpptype='unsigned', name='nsops'), Param(cpptype='const struct __kernel_timespec *', name='timeout')], supported=False)
+  // Unsupported: Syscall(id=235, name='utimes', params=[Param(cpptype='char *', name='filename'), Param(cpptype='struct __kernel_timeval *', name='utimes')], supported=False)
   // Unsupported: Syscall(id=236, name='ni_syscall', params=[], supported=False)
-  // Unsupported: Syscall(id=246, name='kexec_load', params=[Param(cpptype='unsigned long', name='entry'), Param(cpptype='unsigned long', name='nr_segments'), Param(cpptype=' kexec_segment *', name='segments'), Param(cpptype='unsigned long', name='flags')], supported=False)
-  // Unsupported: Syscall(id=247, name='waitid', params=[Param(cpptype='int', name='which'), Param(cpptype='pid_t', name='pid'), Param(cpptype=' siginfo *', name='infop'), Param(cpptype='int', name='options'), Param(cpptype=' rusage *', name='ru')], supported=False)
+  // Unsupported: Syscall(id=246, name='kexec_load', params=[Param(cpptype='unsigned long', name='entry'), Param(cpptype='unsigned long', name='nr_segments'), Param(cpptype='struct kexec_segment *', name='segments'), Param(cpptype='unsigned long', name='flags')], supported=False)
+  // Unsupported: Syscall(id=247, name='waitid', params=[Param(cpptype='int', name='which'), Param(cpptype='pid_t', name='pid'), Param(cpptype='struct siginfo *', name='infop'), Param(cpptype='int', name='options'), Param(cpptype='struct rusage *', name='ru')], supported=False)
   // Unsupported: Syscall(id=248, name='add_key', params=[Param(cpptype='const char *', name='_type'), Param(cpptype='const char *', name='_description'), Param(cpptype='const void *', name='_payload'), Param(cpptype='size_t', name='plen'), Param(cpptype='key_serial_t', name='destringid')], supported=False)
   // Unsupported: Syscall(id=249, name='request_key', params=[Param(cpptype='const char *', name='_type'), Param(cpptype='const char *', name='_description'), Param(cpptype='const char *', name='_callout_info'), Param(cpptype='key_serial_t', name='destringid')], supported=False)
-  // Unsupported: Syscall(id=261, name='futimesat', params=[Param(cpptype='int', name='dfd'), Param(cpptype='const char *', name='filename'), Param(cpptype=' __kernel_timeval *', name='utimes')], supported=False)
-  // Unsupported: Syscall(id=262, name='newfstatat', params=[Param(cpptype='int', name='dfd'), Param(cpptype='const char *', name='filename'), Param(cpptype=' stat *', name='statbuf'), Param(cpptype='int', name='flag')], supported=False)
-  // Unsupported: Syscall(id=273, name='set_robust_list', params=[Param(cpptype=' robust_list_head *', name='head'), Param(cpptype='size_t', name='len')], supported=False)
-  // Unsupported: Syscall(id=274, name='get_robust_list', params=[Param(cpptype='int', name='pid'), Param(cpptype=' robust_list_head * *', name='head_ptr'), Param(cpptype='size_t *', name='len_ptr')], supported=False)
-  // Unsupported: Syscall(id=298, name='perf_event_open', params=[Param(cpptype=' perf_event_attr *', name='attr_uptr'), Param(cpptype='pid_t', name='pid'), Param(cpptype='int', name='cpu'), Param(cpptype='int', name='group_fd'), Param(cpptype='unsigned long', name='flags')], supported=False)
+  // Unsupported: Syscall(id=261, name='futimesat', params=[Param(cpptype='int', name='dfd'), Param(cpptype='const char *', name='filename'), Param(cpptype='struct __kernel_timeval *', name='utimes')], supported=False)
+  // Unsupported: Syscall(id=273, name='set_robust_list', params=[Param(cpptype='struct robust_list_head *', name='head'), Param(cpptype='size_t', name='len')], supported=False)
+  // Unsupported: Syscall(id=274, name='get_robust_list', params=[Param(cpptype='int', name='pid'), Param(cpptype='struct robust_list_head * *', name='head_ptr'), Param(cpptype='size_t *', name='len_ptr')], supported=False)
+  // Unsupported: Syscall(id=298, name='perf_event_open', params=[Param(cpptype='struct perf_event_attr *', name='attr_uptr'), Param(cpptype='pid_t', name='pid'), Param(cpptype='int', name='cpu'), Param(cpptype='int', name='group_fd'), Param(cpptype='unsigned long', name='flags')], supported=False)
 } // namespace
