@@ -31,9 +31,13 @@ namespace Ptrace
 
   struct SysCall
   {
+    const pid_t pid;
     const SyscallInfo info;
     const Syscall_Args arguments;
     const std::optional<SyscallDataType> return_value;
+
+    // only makes sense if all other parameters are const (or if this is a complex class)
+    mutable std::string _cached_string_representation;
   };
 
   namespace Raw
@@ -52,38 +56,6 @@ namespace Ptrace
   auto PEEKTEXT_string(int pid, char const *begin) -> std::string;
 
   // This is an explicit function because in addition to the SysCall it also needs pid_t.
-  inline auto syscall_to_string(pid_t const p, SysCall const &syscall)
-  {
-    const std::string params = [&]() {
-      std::string params = "";
-      for (auto [pos, param] : enumerate(syscall.info.params))
-      {
-        if (!params.empty())
-          params += ", ";
-        SyscallDataType const value = syscall.arguments[pos];
-        if (param.type == std::string("const char *") || param.type == std::string("char *"))
-        {
-          std::string str = PEEKTEXT_string(p, reinterpret_cast<char const *>(value));
-          if (auto pos = str.find('\n'); pos != std::string::npos)
-            str = str.substr(0, pos) + "...";
-          if (str.length() > 50)
-            str = str.substr(0, 50) + "...";
-          params += fmt::format("{} {} = \"{}\"", param.type, param.name, str);
-        }
-        else
-        {
-          params += fmt::format("{} {} = {}", param.type, param.name, value);
-        }
-      }
-      return params;
-    }();
-
-    return fmt::format("{}({}) --> {} = {}",
-                       syscall.info.name,
-                       params,
-                       syscall.return_value.value(),
-                       -syscall.return_value.value());
-  }
 
   // sounds like this could be a co_routine, but let's see what else we need here
   class PtraceProcess
@@ -120,3 +92,48 @@ namespace Ptrace
   auto create_syscall_map() -> std::map<SyscallDataType, SyscallInfo> const;
 
 } // namespace ptrace
+
+template <>
+struct fmt::formatter<Ptrace::SysCall>
+{
+  constexpr auto parse(auto &ctx) { return ctx.begin(); }
+
+  auto format(Ptrace::SysCall const &syscall, auto &ctx)
+  {
+    if (syscall._cached_string_representation.empty())
+    {
+      const std::string params = [&]() {
+        std::string params = "";
+        for (auto [pos, param] : enumerate(syscall.info.params))
+        {
+          if (!params.empty())
+            params += ", ";
+          Ptrace::SyscallDataType const value = syscall.arguments[pos];
+          if (param.type == std::string("const char *") || param.type == std::string("char *"))
+          {
+            std::string str = Ptrace::PEEKTEXT_string(syscall.pid, reinterpret_cast<char const *>(value));
+            if (auto pos = str.find('\n'); pos != std::string::npos)
+              str = str.substr(0, pos) + "...";
+            if (str.length() > 50)
+              str = str.substr(0, 50) + "...";
+            params += fmt::format("{} {} = \"{}\"", param.type, param.name, str);
+          }
+          else
+          {
+            params += fmt::format("{} {} = {}", param.type, param.name, value);
+          }
+        }
+        return params;
+      }();
+
+      syscall._cached_string_representation =
+          fmt::format("{}({}) --> {} = {}",
+                      syscall.info.name,
+                      params,
+                      syscall.return_value.value(),
+                      -syscall.return_value.value());
+    }
+    // There is probably a better direct function for this.
+    return fmt::format_to(ctx.out(), "{}", syscall._cached_string_representation);
+  }
+};

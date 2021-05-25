@@ -188,7 +188,7 @@ namespace gpcache
     std::optional<Action> input;
   };
 
-  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, std::string const &syscall_str, FiledescriptorManager &fds) -> SyscallResult
+  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, FiledescriptorManager &fds) -> SyscallResult
   {
     switch (syscall.info.syscall_id)
     {
@@ -209,7 +209,7 @@ namespace gpcache
       if (path.is_absolute())
       {
         int fd = syscall.return_value.value();
-        fds.open(fd, path, syscall_str);
+        fds.open(fd, path, fmt::format("open via {}", syscall));
         return SyscallResult{true, OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0}};
       }
       else
@@ -229,7 +229,7 @@ namespace gpcache
     case Syscall_close::syscall_id:
     {
       auto const syscall_close = static_cast<Syscall_close>(syscall.arguments);
-      fds.close(syscall_close.fd(), "close via " + syscall_str);
+      fds.close(syscall_close.fd(), fmt::format("close via {}", syscall));
       return SyscallResult{.supported = true};
     }
     case Syscall_newfstat::syscall_id:
@@ -314,18 +314,16 @@ namespace gpcache
 
       // Do the conversion only once (move into optional in SysCall ?!) -> Yeah. TODO
       // Simply add p to SysCall!
-      auto const syscall_str = syscall_to_string(p.get_pid(), *syscall);
-
-      auto result = handle_syscall(p, *syscall, syscall_str, fds);
+      auto result = handle_syscall(p, *syscall, fds);
 
       if (result.supported)
       {
-        spdlog::info("Supported syscall {}", syscall_str);
+        spdlog::info("Supported syscall {}", *syscall);
         if (result.input)
           inputs.actions.push_back(*result.input);
       }
       else
-        spdlog::warn("Unsupported syscall {}", syscall_str);
+        spdlog::warn("Unsupported syscall {}", *syscall);
     }
 
     return inputs;
