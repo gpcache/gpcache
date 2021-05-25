@@ -25,9 +25,112 @@
 
 ABSL_FLAG(bool, verbose, false, "Add verbose output");
 ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
+ABSL_FLAG(std::string, sloppy, "", "sloppiness");
 
 namespace gpcache
 {
+
+  auto mmap_flag_to_string(int flags)
+  {
+    std::vector<std::string> s;
+#define FLAG(x)      \
+  if (flags & x)     \
+  {                  \
+    s.push_back(#x); \
+    flags &= ~x;     \
+  }
+
+#define FLAG2(x, str)    \
+  if (flags & x)         \
+  {                      \
+    s.push_back(#x str); \
+    flags &= ~x;         \
+  }
+    FLAG(MAP_SHARED);
+    FLAG(MAP_SHARED_VALIDATE);
+    FLAG(MAP_PRIVATE);
+    FLAG(MAP_32BIT);
+    FLAG(MAP_ANONYMOUS);
+    FLAG2(MAP_DENYWRITE, " (ignored)");
+    FLAG(MAP_FIXED);
+    FLAG(MAP_FIXED_NOREPLACE);
+    FLAG(MAP_GROWSDOWN);
+    FLAG(MAP_HUGETLB);
+    FLAG(MAP_LOCKED);
+    FLAG(MAP_NONBLOCK);
+    FLAG(MAP_NORESERVE);
+    FLAG(MAP_POPULATE);
+    FLAG(MAP_STACK);
+    FLAG(MAP_SYNC);
+    if (flags)
+      s.push_back(fmt::format("Remaining flags: {}", flags));
+
+#undef FLAG
+#undef FLAG2
+
+    return join(s, ", ");
+  }
+
+  auto mmap_prot_to_string(int prot)
+  {
+    std::vector<std::string> s;
+#define FLAG(x)      \
+  if (prot & x)      \
+  {                  \
+    s.push_back(#x); \
+    prot &= ~x;      \
+  }
+    FLAG(PROT_EXEC);
+    FLAG(PROT_READ);
+    FLAG(PROT_WRITE);
+    FLAG(PROT_NONE);
+#undef FLAG
+
+    if (prot)
+      s.push_back(fmt::format("Remaining: {}", prot));
+
+    return join(s, ", ");
+  }
+
+  auto openat_flag_to_string(int val)
+  {
+    std::vector<std::string> s;
+#define FLAG(x)            \
+  if (val & x || val == x) \
+  {                        \
+    s.push_back(#x);       \
+    val &= ~x;             \
+  }
+    FLAG(O_APPEND);
+    FLAG(O_ASYNC);
+    FLAG(O_CLOEXEC);
+    FLAG(O_CREAT);
+    FLAG(O_DIRECT);
+    FLAG(O_DIRECTORY);
+    FLAG(O_DSYNC);
+    FLAG(O_EXCL);
+    FLAG(O_LARGEFILE);
+    FLAG(O_NOATIME);
+    FLAG(O_NOCTTY);
+    FLAG(O_NOFOLLOW);
+    FLAG(O_NONBLOCK);
+    FLAG(O_NDELAY);
+    FLAG(O_PATH);
+    FLAG(O_SYNC);
+    FLAG(O_TMPFILE);
+    FLAG(O_TRUNC);
+    FLAG(O_RDONLY);
+    FLAG(O_WRONLY);
+    FLAG(O_RDWR);
+
+#undef FLAG
+
+    if (val)
+      s.push_back(fmt::format("Remaining: {}", val));
+
+    return join(s, ", ");
+  }
+
   class MmapState
   {
   private:
@@ -47,7 +150,7 @@ namespace gpcache
 
   class FiledescriptorState
   {
-  private:
+  public:
     enum class State
     {
       open,
@@ -56,28 +159,32 @@ namespace gpcache
     struct FiledescriptorData
     {
       int fd;
-      std::string filename;
+      std::filesystem::path filename;
+      int flags;
       State state;
-      std::vector<std::string> source;
+      std::vector<std::string> source; ///< for debugging only
     };
+
+  private:
     std::map<int, FiledescriptorData> fds;
 
     // Sounds like this should be in fmt
     auto dump_data(auto const level, FiledescriptorData const &data) const -> void
     {
       spdlog::log(level, "file descriptor fd: {}", data.fd);
-      spdlog::log(level, "file descriptor filename: {}", data.filename);
+      spdlog::log(level, "file descriptor filename: {}", data.filename.string());
       spdlog::log(level, "file descriptor state: {}", data.state);
+      spdlog::log(level, "file descriptor flags: {}", openat_flag_to_string(data.flags));
       for (auto const &src : data.source)
-        spdlog::log(level, "file descriptor source: {}", src);
+        spdlog::log(level, "file descriptor history: {}", src);
     }
 
   public:
     FiledescriptorState()
     {
-      fds[0] = {.fd = 0, .filename = "0", .state = State::open, .source = {"default"}};
-      fds[1] = {.fd = 1, .filename = "1", .state = State::open, .source = {"default"}};
-      fds[2] = {.fd = 2, .filename = "2", .state = State::open, .source = {"default"}};
+      fds[0] = {.fd = 0, .filename = "0", .flags = 0, .state = State::open, .source = {"default"}};
+      fds[1] = {.fd = 1, .filename = "1", .flags = 0, .state = State::open, .source = {"default"}};
+      fds[2] = {.fd = 2, .filename = "2", .flags = 0, .state = State::open, .source = {"default"}};
     }
 
     auto dump(auto const level, int const fd) const -> void
@@ -101,26 +208,39 @@ namespace gpcache
       }
     }
 
-    auto get_path(int const fd) const -> std::filesystem::path
+    const auto &get_open(int const fd) const
     {
       if (auto entry = fds.find(fd); entry != fds.end() && entry->second.state == State::open)
       {
-        return entry->second.filename;
+        return entry->second;
       }
       else
       {
         // ToDo cache invalid syscall?
-        spdlog::warn("get_path of file descriptor {}", fd);
+        spdlog::warn("get_open of file descriptor {}", fd);
         dump(spdlog::level::warn);
-        throw std::runtime_error("invalid get_path");
+        throw std::runtime_error("invalid get_open");
       }
     }
 
-    auto open(int fd, std::string file, std::string source) -> void
+    auto get_open_opt(int const fd) const
+    {
+      if (auto entry = fds.find(fd); entry != fds.end() && entry->second.state == State::open)
+      {
+        return std::make_optional(entry->second);
+      }
+      else
+      {
+        return std::optional<FiledescriptorData>{};
+      }
+    }
+
+    auto open(int fd, std::string file, int flags, std::string source) -> void
     {
       FiledescriptorData new_entry = {
           .fd = fd,
           .filename = file,
+          .flags = flags,
           .state = State::open,
           .source = {"open via " + source}};
 
@@ -168,37 +288,6 @@ namespace gpcache
     }
   };
 
-  auto mmap_flag_to_string(int flags)
-  {
-    std::vector<std::string> s;
-#define FLAG(x)      \
-  if (flags & x)     \
-  {                  \
-    s.push_back(#x); \
-    flags &= ~x;     \
-  }
-    FLAG(MAP_SHARED);
-    FLAG(MAP_SHARED_VALIDATE);
-    FLAG(MAP_PRIVATE);
-    FLAG(MAP_32BIT);
-    FLAG(MAP_ANONYMOUS);
-    FLAG(MAP_DENYWRITE);
-    FLAG(MAP_FIXED);
-    FLAG(MAP_FIXED_NOREPLACE);
-    FLAG(MAP_GROWSDOWN);
-    FLAG(MAP_HUGETLB);
-    FLAG(MAP_LOCKED);
-    FLAG(MAP_NONBLOCK);
-    FLAG(MAP_NORESERVE);
-    FLAG(MAP_POPULATE);
-    FLAG(MAP_STACK);
-    FLAG(MAP_SYNC);
-    if (flags)
-      s.push_back(fmt::format("Remaining flags: {}", flags));
-
-    return join(s, ", ");
-  }
-
   struct SyscallResult
   {
     bool supported;
@@ -211,6 +300,7 @@ namespace gpcache
     {
     case Syscall_brk::syscall_id:
     case Syscall_arch_prctl::syscall_id:
+    case Syscall_mprotect::syscall_id: // maybe interesting with ignoring more mmap calls... ignore for now
       return SyscallResult{.supported = true};
     case Syscall_access::syscall_id:
     {
@@ -223,10 +313,11 @@ namespace gpcache
       auto const syscall_openat = static_cast<Syscall_openat>(syscall.arguments);
 
       const std::filesystem::path path = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_openat.filename());
-      if (path.is_absolute())
+      if (path.is_absolute() && (syscall_openat.flags() == O_CLOEXEC || syscall_openat.flags() == (O_RDONLY | O_CLOEXEC)))
       {
         int fd = syscall.return_value.value();
-        fds.open(fd, path, fmt::format("open via {}", syscall));
+        fds.open(fd, path, syscall_openat.flags(), fmt::format("open via {}", syscall));
+        spdlog::info("flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
         return SyscallResult{true, OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0}};
       }
       else
@@ -240,6 +331,7 @@ namespace gpcache
         {
           // open relative to dirfd
         }
+        spdlog::warn("flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
         return SyscallResult{.supported = false};
       }
     }
@@ -259,7 +351,7 @@ namespace gpcache
                                    sizeof(struct stat));
       memcpy(&s, data.c_str(), sizeof(struct stat));
 
-      auto path = fds.get_path(syscall_fstat.fd());
+      auto const path = fds.get_open(syscall_fstat.fd()).filename;
 
       FstatAction fstat{path, s, syscall.return_value.value() == 0, 0};
       return SyscallResult{true, fstat};
@@ -268,14 +360,14 @@ namespace gpcache
     {
       auto const syscall_read = static_cast<Syscall_close>(syscall.arguments);
       // In theory only the actually read parts of the file...
-      FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
+      FileHash hash{fds.get_open(syscall_read.fd()).filename, "ToDo"};
       return SyscallResult{true, hash};
     }
     case Syscall_pread64::syscall_id:
     {
       auto const syscall_read = static_cast<Syscall_pread64>(syscall.arguments);
       // In theory only the actually read parts of the file...
-      FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
+      FileHash hash{fds.get_open(syscall_read.fd()).filename, "ToDo"};
       return SyscallResult{true, hash};
     }
     case Syscall_mmap::syscall_id:
@@ -283,19 +375,37 @@ namespace gpcache
       auto const syscall_mmap = static_cast<Syscall_mmap>(syscall.arguments);
       auto const addr = reinterpret_cast<void *>(syscall_mmap.addr());
 
-      if (syscall_mmap.fd() != 0 && syscall_mmap.prot() == PROT_READ)
+      // Yes this will truncate! and wrap around 4294967295 to -1!
+      int const fd = static_cast<int>(syscall_mmap.fd());
+
+      auto file_data = fds.get_open_opt(fd);
+
+      if (file_data.has_value() && (syscall_mmap.prot() == PROT_READ || syscall_mmap.prot() == (PROT_READ | PROT_EXEC)))
       {
-        auto path = fds.get_path(syscall_mmap.fd());
-        FileHash hash{path, "ToDo"};
-        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), path);
+        FileHash hash{file_data->filename, "ToDo"};
+        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
+        return SyscallResult{true, hash};
+      }
+      else if (file_data.has_value() && (syscall_mmap.prot() == (PROT_READ | PROT_WRITE)) && ((file_data->flags & (O_RDONLY | O_WRONLY | O_RDWR)) == O_RDONLY))
+      {
+        // Well this should not work... but it seems to work... let's assume it's read only?!
+        FileHash hash{file_data->filename, "ToDo"};
+        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
         return SyscallResult{true, hash};
       }
       else
       {
-        auto str = mmap_flag_to_string(syscall_mmap.flags());
-        spdlog::warn("flags {} = {}", syscall_mmap.flags(), str);
+        spdlog::warn("flags {} = {}", syscall_mmap.flags(), mmap_flag_to_string(syscall_mmap.flags()));
+        spdlog::warn("prot {} = {}", syscall_mmap.prot(), mmap_prot_to_string(syscall_mmap.prot()));
+        if (file_data.has_value())
+        {
+          spdlog::warn("fd.path {}", file_data->filename.string());
+          spdlog::warn("fd.flags {}", openat_flag_to_string(file_data->flags));
+        }
+
         // ToDo: handle length correctly
         mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), {});
+
         return SyscallResult{.supported = false};
       }
     }
@@ -304,9 +414,9 @@ namespace gpcache
       auto const syscall_munmap = static_cast<Syscall_munmap>(syscall.arguments);
       auto const addr = reinterpret_cast<void *>(syscall_munmap.addr());
 
-      // ToDo: handle length correctly
+      // Who cares...?
       mmaps.munmap(addr);
-      return SyscallResult{.supported = false};
+      return SyscallResult{.supported = true};
     }
     } // switch
     return SyscallResult{.supported = false};
@@ -378,7 +488,7 @@ int main(int argc, char **argv)
   // later from args:
   try
   {
-    auto inputs = gpcache::cache_execution("echo", {"huhu"});
+    auto inputs = gpcache::cache_execution("true", {});
 
     fmt::print("\n");
     for (auto &action : inputs.actions)
