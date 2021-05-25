@@ -182,12 +182,115 @@ namespace gpcache
     return join(s, ", ");
   }
 
+  struct SyscallResult
+  {
+    bool supported;
+    std::optional<Action> input;
+  };
+
+  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, std::string const &syscall_str, FiledescriptorManager &fds) -> SyscallResult
+  {
+    switch (syscall.info.syscall_id)
+    {
+    case Syscall_brk::syscall_id:
+    case Syscall_arch_prctl::syscall_id:
+      return SyscallResult{.supported = true};
+    case Syscall_access::syscall_id:
+    {
+      auto syscall_access = static_cast<Syscall_access>(syscall.arguments);
+      std::string filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
+      return SyscallResult{true, AccessAction{filename, syscall_access.mode(), syscall.return_value.value()}};
+    }
+    case Syscall_openat::syscall_id:
+    {
+      auto const syscall_openat = static_cast<Syscall_openat>(syscall.arguments);
+
+      const std::filesystem::path path = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_openat.filename());
+      if (path.is_absolute())
+      {
+        int fd = syscall.return_value.value();
+        fds.open(fd, path, syscall_str);
+        return SyscallResult{true, OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0}};
+      }
+      else
+      {
+        auto const dirfd = syscall_openat.dfd();
+        if (dirfd == AT_FDCWD)
+        {
+          // open relative to CWD
+        }
+        else
+        {
+          // open relative to dirfd
+        }
+        return SyscallResult{.supported = false};
+      }
+    }
+    case Syscall_close::syscall_id:
+    {
+      auto const syscall_close = static_cast<Syscall_close>(syscall.arguments);
+      fds.close(syscall_close.fd(), "close via " + syscall_str);
+      return SyscallResult{.supported = true};
+    }
+    case Syscall_newfstat::syscall_id:
+    {
+      // This is fstat, fo rsome reason called newfstat.
+      // Using wrong field in parser?!
+      auto const syscall_fstat = static_cast<Syscall_newfstat>(syscall.arguments);
+      struct stat s;
+      // ToDo: Ptrace::PEEKTEXT<struct stat>
+      auto data = Ptrace::PEEKTEXT(p.get_pid(),
+                                   reinterpret_cast<uint8_t *>(syscall_fstat.statbuf()),
+                                   sizeof(struct stat));
+      memcpy(&s, data.c_str(), sizeof(struct stat));
+
+      auto path = fds.get_path(syscall_fstat.fd());
+
+      FstatAction fstat{path, s, syscall.return_value.value() == 0, 0};
+      return SyscallResult{true, fstat};
+    }
+    case Syscall_read::syscall_id:
+    {
+      auto const syscall_read = static_cast<Syscall_close>(syscall.arguments);
+      // In theory only the actually read parts of the file...
+      FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
+      return SyscallResult{true, hash};
+    }
+    case Syscall_pread64::syscall_id:
+    {
+      auto const syscall_read = static_cast<Syscall_pread64>(syscall.arguments);
+      // In theory only the actually read parts of the file...
+      FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
+      return SyscallResult{true, hash};
+    }
+    case Syscall_mmap::syscall_id:
+    {
+      auto const syscall_mmap = static_cast<Syscall_mmap>(syscall.arguments);
+      if (syscall_mmap.fd() != 0 && syscall_mmap.prot() == PROT_READ)
+      {
+        FileHash hash{fds.get_path(syscall_mmap.fd()), "ToDo"};
+        return SyscallResult{true, hash};
+      }
+      else
+      {
+        auto str = mmap_flag_to_string(syscall_mmap.flags());
+        spdlog::warn("flags {} = {}", syscall_mmap.flags(), str);
+        return SyscallResult{.supported = false};
+      }
+    }
+    case Syscall_munmap::syscall_id:
+    {
+      auto const syscall_mmap = static_cast<Syscall_munmap>(syscall.arguments);
+      // ToDo: keep mmap list...
+    }
+    } // switch
+    return SyscallResult{.supported = false};
+  }
+
   auto cache_execution(std::string const program, std::vector<std::string> const arguments) -> Inputs
   {
     Ptrace::PtraceProcess p = Ptrace::createChildProcess(program, arguments);
     spdlog::debug("after createChildProcess");
-
-    std::set ignore = {Syscall_brk::syscall_id, Syscall_arch_prctl::syscall_id};
 
     Inputs inputs;
     FiledescriptorManager fds;
@@ -209,110 +312,20 @@ namespace gpcache
         continue;
       }
 
+      // Do the conversion only once (move into optional in SysCall ?!) -> Yeah. TODO
+      // Simply add p to SysCall!
       auto const syscall_str = syscall_to_string(p.get_pid(), *syscall);
 
-      bool supported = false;
+      auto result = handle_syscall(p, *syscall, syscall_str, fds);
 
-      if (contains(ignore, syscall->info.syscall_id))
+      if (result.supported)
       {
-        supported = true;
-      }
-      else if (syscall->info.syscall_id == Syscall_access::syscall_id)
-      {
-        auto syscall_access = static_cast<Syscall_access>(syscall->arguments);
-        std::string filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
-        inputs.actions.push_back(AccessAction{filename, syscall_access.mode(), syscall->return_value.value()});
-        supported = true;
-      }
-      else if (syscall->info.syscall_id == Syscall_openat::syscall_id)
-      {
-        auto const syscall_openat = static_cast<Syscall_openat>(syscall->arguments);
-
-        const std::filesystem::path path = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_openat.filename());
-        if (path.is_absolute())
-        {
-          int fd = syscall->return_value.value();
-          inputs.actions.push_back(OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0});
-          fds.open(fd, path, syscall_str);
-          supported = true;
-        }
-        else
-        {
-          auto const dirfd = syscall_openat.dfd();
-          if (dirfd == AT_FDCWD)
-          {
-            // open relative to CWD
-          }
-          else
-          {
-            // open relative to dirfd
-          }
-        }
-      }
-      else if (syscall->info.syscall_id == Syscall_close::syscall_id)
-      {
-        auto const syscall_close = static_cast<Syscall_close>(syscall->arguments);
-        fds.close(syscall_close.fd(), "close via " + syscall_str);
-        supported = true;
-      }
-      else if (syscall->info.syscall_id == Syscall_newfstat::syscall_id)
-      {
-        // This is fstat, fo rsome reason called newfstat.
-        // Using wrong field in parser?!
-        auto const syscall_fstat = static_cast<Syscall_newfstat>(syscall->arguments);
-        struct stat s;
-        // ToDo: Ptrace::PEEKTEXT<struct stat>
-        auto data = Ptrace::PEEKTEXT(p.get_pid(),
-                                     reinterpret_cast<uint8_t *>(syscall_fstat.statbuf()),
-                                     sizeof(struct stat));
-        memcpy(&s, data.c_str(), sizeof(struct stat));
-
-        auto path = fds.get_path(syscall_fstat.fd());
-
-        FstatAction fstat{path, s, syscall->return_value.value() == 0, 0};
-        inputs.actions.push_back(fstat);
-        supported = true;
-      }
-      else if (syscall->info.syscall_id == Syscall_read::syscall_id)
-      {
-        auto const syscall_read = static_cast<Syscall_close>(syscall->arguments);
-        // In theory only the actually read parts of the file...
-        FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
-        inputs.actions.push_back(hash);
-        supported = true;
-      }
-      else if (syscall->info.syscall_id == Syscall_pread64::syscall_id)
-      {
-        auto const syscall_read = static_cast<Syscall_pread64>(syscall->arguments);
-        // In theory only the actually read parts of the file...
-        FileHash hash{fds.get_path(syscall_read.fd()), "ToDo"};
-        inputs.actions.push_back(hash);
-        supported = true;
-      }
-      else if (syscall->info.syscall_id == Syscall_mmap::syscall_id)
-      {
-        auto const syscall_mmap = static_cast<Syscall_mmap>(syscall->arguments);
-        if (syscall_mmap.fd() != 0 && syscall_mmap.prot() == PROT_READ)
-        {
-          FileHash hash{fds.get_path(syscall_mmap.fd()), "ToDo"};
-          inputs.actions.push_back(hash);
-          supported = true;
-        }
-        else
-        {
-          auto str = mmap_flag_to_string(syscall_mmap.flags());
-          spdlog::warn("flags {} = {}", syscall_mmap.flags(), str);
-        }
-      }
-      else if (syscall->info.syscall_id == Syscall_munmap::syscall_id)
-      {
-        auto const syscall_mmap = static_cast<Syscall_munmap>(syscall->arguments);
-        // ToDo: keep mmap list...
-      }
-      if (!supported)
-        spdlog::warn("Unsupported syscall {}", syscall_str);
-      else
         spdlog::info("Supported syscall {}", syscall_str);
+        if (result.input)
+          inputs.actions.push_back(*result.input);
+      }
+      else
+        spdlog::warn("Unsupported syscall {}", syscall_str);
     }
 
     return inputs;
