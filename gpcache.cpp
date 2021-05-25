@@ -28,7 +28,24 @@ ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
 
 namespace gpcache
 {
-  class FiledescriptorManager
+  class MmapState
+  {
+  private:
+    struct MmapData
+    {
+      void *addr;
+      int prot;
+      int flags;
+      std::optional<int> fd;
+    };
+    std::vector<MmapData> mmaps;
+
+  public:
+    auto mmap(void *addr, int prot, int flags, std::filesystem::path path) {}
+    auto munmap(void *addr) {}
+  };
+
+  class FiledescriptorState
   {
   private:
     enum class State
@@ -56,7 +73,7 @@ namespace gpcache
     }
 
   public:
-    FiledescriptorManager()
+    FiledescriptorState()
     {
       fds[0] = {.fd = 0, .filename = "0", .state = State::open, .source = {"default"}};
       fds[1] = {.fd = 1, .filename = "1", .state = State::open, .source = {"default"}};
@@ -188,7 +205,7 @@ namespace gpcache
     std::optional<Action> input;
   };
 
-  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, FiledescriptorManager &fds) -> SyscallResult
+  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, FiledescriptorState &fds, MmapState &mmaps) -> SyscallResult
   {
     switch (syscall.info.syscall_id)
     {
@@ -232,11 +249,9 @@ namespace gpcache
       fds.close(syscall_close.fd(), fmt::format("close via {}", syscall));
       return SyscallResult{.supported = true};
     }
-    case Syscall_newfstat::syscall_id:
+    case Syscall_fstat::syscall_id:
     {
-      // This is fstat, fo rsome reason called newfstat.
-      // Using wrong field in parser?!
-      auto const syscall_fstat = static_cast<Syscall_newfstat>(syscall.arguments);
+      auto const syscall_fstat = static_cast<Syscall_fstat>(syscall.arguments);
       struct stat s;
       // ToDo: Ptrace::PEEKTEXT<struct stat>
       auto data = Ptrace::PEEKTEXT(p.get_pid(),
@@ -266,22 +281,32 @@ namespace gpcache
     case Syscall_mmap::syscall_id:
     {
       auto const syscall_mmap = static_cast<Syscall_mmap>(syscall.arguments);
+      auto const addr = reinterpret_cast<void *>(syscall_mmap.addr());
+
       if (syscall_mmap.fd() != 0 && syscall_mmap.prot() == PROT_READ)
       {
-        FileHash hash{fds.get_path(syscall_mmap.fd()), "ToDo"};
+        auto path = fds.get_path(syscall_mmap.fd());
+        FileHash hash{path, "ToDo"};
+        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), path);
         return SyscallResult{true, hash};
       }
       else
       {
         auto str = mmap_flag_to_string(syscall_mmap.flags());
         spdlog::warn("flags {} = {}", syscall_mmap.flags(), str);
+        // ToDo: handle length correctly
+        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), {});
         return SyscallResult{.supported = false};
       }
     }
     case Syscall_munmap::syscall_id:
     {
-      auto const syscall_mmap = static_cast<Syscall_munmap>(syscall.arguments);
-      // ToDo: keep mmap list...
+      auto const syscall_munmap = static_cast<Syscall_munmap>(syscall.arguments);
+      auto const addr = reinterpret_cast<void *>(syscall_munmap.addr());
+
+      // ToDo: handle length correctly
+      mmaps.munmap(addr);
+      return SyscallResult{.supported = false};
     }
     } // switch
     return SyscallResult{.supported = false};
@@ -293,7 +318,8 @@ namespace gpcache
     spdlog::debug("after createChildProcess");
 
     Inputs inputs;
-    FiledescriptorManager fds;
+    FiledescriptorState fds;
+    MmapState mmaps;
 
     while (true)
     {
@@ -314,7 +340,7 @@ namespace gpcache
 
       // Do the conversion only once (move into optional in SysCall ?!) -> Yeah. TODO
       // Simply add p to SysCall!
-      auto result = handle_syscall(p, *syscall, fds);
+      auto result = handle_syscall(p, *syscall, fds, mmaps);
 
       if (result.supported)
       {

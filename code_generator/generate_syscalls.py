@@ -21,6 +21,7 @@ class Param:
 class Syscall:
     id: int
     name: str
+    kernal_internal_function_name: str
     params: List[Param]
     supported: bool = True
 
@@ -29,28 +30,33 @@ Syscalls = Dict[int, Syscall]
 
 
 def download_and_parse_syscall_numbers() -> Syscalls:
-    # ToDo: why is this only on spotify fork??
     source: str = requests.get(
-        "https://raw.githubusercontent.com/spotify/linux/master/arch/x86/include/asm/unistd_64.h").text
-
-    # Switch here?!
-    # https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl
-
-    # Better source ?!
-    # /usr/include/x86_64-linux-gnu/asm/unistd_64.h
+        "https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_64.tbl").text
 
     syscalls: Syscalls = {}
 
     syscall_number_pattern = (
-        r"#define __NR_.*?\s(?P<number>\d+)\n"
-        r"__(?:SC_COMP|SYSCALL)\(.*?, sys_(?P<name>.*?)[,\)]")
-    for syscall_match in re.finditer(syscall_number_pattern, source):
+        r"^(?P<number>\d*)\t+"
+        r"(?P<abi>[a-z0-9]*)\t+"
+        r"(?P<name>[a-z0-9_]*)"
+        r"(\t+(?P<entry_point>[a-z0-9_]*))?$")
+    for syscall_match in re.finditer(
+            syscall_number_pattern,
+            source,
+            re.MULTILINE):
+
+        if syscall_match["abi"] == "x32":
+            continue
+
         syscall_id = int(syscall_match["number"])
-        syscall_name = syscall_match["name"]
 
-        syscalls[syscall_id] = Syscall(syscall_id, syscall_name, [])
+        syscalls[syscall_id] = Syscall(
+            syscall_id,
+            syscall_match["name"],
+            syscall_match["entry_point"],
+            [])
 
-        if(syscall_name == 'ni_syscall'):
+        if(not syscall_match["entry_point"]):
             syscalls[syscall_id].supported = False
 
     return syscalls
@@ -113,48 +119,54 @@ def download_and_parse_syscall_params(syscalls: Syscalls) -> None:
     # - Parse http://asm.sourceforge.net/syscall.html
     # - Parse linked c files? https://filippo.io/linux-syscall-table/
 
-    source: str = requests.get(
-        "https://raw.githubusercontent.com/torvalds/linux/master/include/linux/syscalls.h").text
+    def parse_header(syscalls: Syscalls, header: str):
+        # all in one regex makes the regex unreadable, parse in two steps:
+        # 1. fetch all syscalls
+        # 2. parse syscall parameters
 
-    # all in one regex makes the regex unreadable, parse in two steps:
-    # 1. fetch all syscalls
-    # 2. parse syscall parameters
+        syscall_pattern = re.compile(
+            r"^asmlinkage long (?P<syscall>sys_.*?)\((?P<params>.*?)\);",
+            re.MULTILINE | re.DOTALL)
 
-    syscall_pattern = re.compile(
-        r"^asmlinkage long sys_(?P<syscall>.*?)\((?P<params>.*?)\);",
-        re.MULTILINE | re.DOTALL)
+        for syscall_match in re.finditer(syscall_pattern, header):
+            kernal_internal_function_name = syscall_match["syscall"]
 
-    for syscall_match in re.finditer(syscall_pattern, source):
-        syscall_name = syscall_match["syscall"]
-        # fix strange alias
-        if(syscall_name == 'mmap_pgoff'):
-            syscall_name = 'mmap'
+            def find_syscall_by_kernal_internal_function_name(
+                    syscalls: Syscalls, kernal_internal_function_name: str):
+                for syscall in syscalls.values():
+                    if syscall.kernal_internal_function_name == kernal_internal_function_name:
+                        return syscall.id
+                return None
 
-        def find_syscall_by_name(syscalls: Syscalls, syscall_name: str):
-            for syscall in syscalls.values():
-                if syscall.name == syscall_name:
-                    return syscall.id
-            return None
+            syscall_id = find_syscall_by_kernal_internal_function_name(
+                syscalls, kernal_internal_function_name)
+            if syscall_id is None:
+                # raise RuntimeError("Unknown syscall " + syscall_name)
+                logging.warning(
+                    "Unknown syscall " +
+                    kernal_internal_function_name)
+                continue
 
-        syscall_id = find_syscall_by_name(syscalls, syscall_name)
-        if syscall_id is None:
-            # raise RuntimeError("Unknown syscall " + syscall_name)
-            logging.warning("Unknown syscall " + syscall_name)
-            continue
+            syscall = syscalls[syscall_id]
 
-        syscall = syscalls[syscall_id]
+            if syscall_match.group("params") != "void":
+                for param_full_str in syscall_match.group("params").split(","):
+                    supported, param = parse_param(param_full_str)
+                    syscall.params.append(param)
 
-        if syscall_match.group("params") != "void":
-            for param_full_str in syscall_match.group("params").split(","):
-                supported, param = parse_param(param_full_str)
-                syscall.params.append(param)
+                    if not supported:
+                        syscall.supported = False
 
-                if not supported:
-                    syscall.supported = False
+            # "new" is a bad idea in C++
+            if len(syscall.params) >= 2 and syscall.params[1].name == 'new':
+                syscall.params[1].name = 'new__'
 
-        # "new" is a bad idea for names
-        if(syscall_name == 'symlink' and syscall.params[1].name == 'new'):
-            syscall.params[1].name = 'linkpath'
+    parse_header(syscalls, requests.get(
+        "https://raw.githubusercontent.com/torvalds/linux/master/include/linux/syscalls.h").text)
+
+    # mmap
+    parse_header(syscalls, requests.get(
+        "https://raw.githubusercontent.com/torvalds/linux/master/include/asm-generic/syscalls.h").text)
 
 
 def write_event(file, syscalls: Syscalls):
