@@ -7,11 +7,11 @@
 namespace gpcache
 {
   // std::ranges::input_range<string>
-  std::string join__(const auto &strings)
+  std::string join(auto const &strings, std::string const glue)
   {
     return std::accumulate(std::begin(strings), std::end(strings), std::string(),
-                           [](const std::string &a, const std::string &b) -> std::string {
-                             return a + (a.empty() ? "" : " > ") + b;
+                           [&glue](const std::string &a, const std::string &b) -> std::string {
+                             return a + (a.empty() ? "" : glue) + b;
                            });
   }
 }

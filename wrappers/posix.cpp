@@ -13,10 +13,10 @@ namespace Posix
   {
     int status;
 
-    spdlog::debug("before waitpid({}, -, {})", pid, options);
+    //spdlog::debug("before waitpid({}, -, {})", pid, options);
     ::waitpid(pid, &status, options);
 
-    spdlog::debug("waitpid({}, {}, {})", pid, status, options);
+    //spdlog::debug("waitpid({}, {}, {})", pid, status, options);
 
     if (WIFEXITED(status))
       return {.state = StopReason::ProcessState::EXITED, .signal_number = {}, .exit_status = WEXITSTATUS(status)};
@@ -33,9 +33,9 @@ namespace Posix
   /// @returns false if process has already exited
   auto wait_for_signal2(int const pid, std::vector<int> const signum_to_wait_for) -> bool
   {
-    spdlog::debug("before waitpid");
+    //spdlog::debug("before waitpid");
     const auto status = Posix::waitpid(pid, 0);
-    spdlog::debug("after waitpid"); // todo trace status
+    //spdlog::debug("after waitpid"); // todo trace status
 
     using Posix::StopReason;
 

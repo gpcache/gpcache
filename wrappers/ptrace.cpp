@@ -60,16 +60,19 @@ namespace
     // ToDo: explain_ptrace_or_die
     const auto ret = ptrace(request, pid, addr, data);
 
-    // wow this is terrible
-    if constexpr (std::is_pointer_v<decltype(addr)>)
-      if constexpr (std::is_pointer_v<decltype(data)>)
-        spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, reinterpret_cast<void const *>(addr), reinterpret_cast<void *>(data), ret, ::strerror(errno));
+    if constexpr (false)
+    {
+      // wow this is terrible
+      if constexpr (std::is_pointer_v<decltype(addr)>)
+        if constexpr (std::is_pointer_v<decltype(data)>)
+          spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, reinterpret_cast<void const *>(addr), reinterpret_cast<void *>(data), ret, ::strerror(errno));
+        else
+          spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, reinterpret_cast<void const *>(addr), data, ret, ::strerror(errno));
+      else if constexpr (std::is_pointer_v<decltype(data)>)
+        spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
       else
-        spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, reinterpret_cast<void const *>(addr), data, ret, ::strerror(errno));
-    else if constexpr (std::is_pointer_v<decltype(data)>)
-      spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, reinterpret_cast<void *>(data), ret, ::strerror(errno));
-    else
-      spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, data, ret, ::strerror(errno));
+        spdlog::debug("ptrace({}, {}, {}, {}) -> {}, {}", readable_ptrace_request(request), pid, addr, data, ret, ::strerror(errno));
+    }
 
     if (ret == -1 || errno) // ToDo: improve detection. E.g. PEEKTEXT may return -1
     {
@@ -167,7 +170,6 @@ namespace Ptrace
 
   auto PtraceProcess::restart_child_and_wait_for_next_syscall() -> std::optional<SysCall>
   {
-    spdlog::debug("restart_child_and_wait_for_next_syscall");
     Raw::SYSCALL(pid);
     auto still_running = Posix::wait_for_signal2(pid, {SIGTRAP | 0x80});
     if (!still_running)

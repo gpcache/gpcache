@@ -21,6 +21,7 @@
 #include <spdlog/spdlog.h>
 #include "inputs.h"
 #include "outputs.h"
+#include <sys/mman.h> // mmap PROT_READ
 
 ABSL_FLAG(bool, verbose, false, "Add verbose output");
 ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
@@ -150,6 +151,37 @@ namespace gpcache
     }
   };
 
+  auto mmap_flag_to_string(int flags)
+  {
+    std::vector<std::string> s;
+#define FLAG(x)      \
+  if (flags & x)     \
+  {                  \
+    s.push_back(#x); \
+    flags &= ~x;     \
+  }
+    FLAG(MAP_SHARED);
+    FLAG(MAP_SHARED_VALIDATE);
+    FLAG(MAP_PRIVATE);
+    FLAG(MAP_32BIT);
+    FLAG(MAP_ANONYMOUS);
+    FLAG(MAP_DENYWRITE);
+    FLAG(MAP_FIXED);
+    FLAG(MAP_FIXED_NOREPLACE);
+    FLAG(MAP_GROWSDOWN);
+    FLAG(MAP_HUGETLB);
+    FLAG(MAP_LOCKED);
+    FLAG(MAP_NONBLOCK);
+    FLAG(MAP_NORESERVE);
+    FLAG(MAP_POPULATE);
+    FLAG(MAP_STACK);
+    FLAG(MAP_SYNC);
+    if (flags)
+      s.push_back(fmt::format("Remaining flags: {}", flags));
+
+    return join(s, ", ");
+  }
+
   auto cache_execution(std::string const program, std::vector<std::string> const arguments) -> Inputs
   {
     Ptrace::PtraceProcess p = Ptrace::createChildProcess(program, arguments);
@@ -174,12 +206,10 @@ namespace gpcache
       // Since gpcache does not modify syscalls, just monitoring the exists is sufficient
       if (!syscall->return_value)
       {
-        spdlog::debug("!return");
         continue;
       }
 
       auto const syscall_str = syscall_to_string(p.get_pid(), *syscall);
-      spdlog::debug("Handling syscall... {}", syscall_str);
 
       bool supported = false;
 
@@ -197,7 +227,6 @@ namespace gpcache
       else if (syscall->info.syscall_id == Syscall_openat::syscall_id)
       {
         auto const syscall_openat = static_cast<Syscall_openat>(syscall->arguments);
-        spdlog::debug("loc {}", __LINE__);
 
         const std::filesystem::path path = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_openat.filename());
         if (path.is_absolute())
@@ -205,7 +234,6 @@ namespace gpcache
           int fd = syscall->return_value.value();
           inputs.actions.push_back(OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0});
           fds.open(fd, path, syscall_str);
-          fds.dump(spdlog::level::debug);
           supported = true;
         }
         else
@@ -225,7 +253,6 @@ namespace gpcache
       {
         auto const syscall_close = static_cast<Syscall_close>(syscall->arguments);
         fds.close(syscall_close.fd(), "close via " + syscall_str);
-        fds.dump(spdlog::level::debug);
         supported = true;
       }
       else if (syscall->info.syscall_id == Syscall_newfstat::syscall_id)
@@ -262,8 +289,26 @@ namespace gpcache
         inputs.actions.push_back(hash);
         supported = true;
       }
-
-      spdlog::debug("printing syscall...");
+      else if (syscall->info.syscall_id == Syscall_mmap::syscall_id)
+      {
+        auto const syscall_mmap = static_cast<Syscall_mmap>(syscall->arguments);
+        if (syscall_mmap.fd() != 0 && syscall_mmap.prot() == PROT_READ)
+        {
+          FileHash hash{fds.get_path(syscall_mmap.fd()), "ToDo"};
+          inputs.actions.push_back(hash);
+          supported = true;
+        }
+        else
+        {
+          auto str = mmap_flag_to_string(syscall_mmap.flags());
+          spdlog::warn("flags {} = {}", syscall_mmap.flags(), str);
+        }
+      }
+      else if (syscall->info.syscall_id == Syscall_munmap::syscall_id)
+      {
+        auto const syscall_mmap = static_cast<Syscall_munmap>(syscall->arguments);
+        // ToDo: keep mmap list...
+      }
       if (!supported)
         spdlog::warn("Unsupported syscall {}", syscall_str);
       else
@@ -296,7 +341,7 @@ int main(int argc, char **argv)
   // later from args:
   try
   {
-    auto inputs = gpcache::cache_execution("true", {});
+    auto inputs = gpcache::cache_execution("echo", {"huhu"});
 
     fmt::print("\n");
     for (auto &action : inputs.actions)

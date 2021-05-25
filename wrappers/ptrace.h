@@ -51,6 +51,7 @@ namespace Ptrace
   auto PEEKTEXT(int pid, const uint8_t *const begin, size_t count) -> std::string;
   auto PEEKTEXT_string(int pid, char const *begin) -> std::string;
 
+  // This is an explicit function because in addition to the SysCall it also needs pid_t.
   inline auto syscall_to_string(pid_t const p, SysCall const &syscall)
   {
     const std::string params = [&]() {
@@ -63,7 +64,11 @@ namespace Ptrace
         if (param.type == std::string("const char *") || param.type == std::string("char *"))
         {
           std::string str = PEEKTEXT_string(p, reinterpret_cast<char const *>(value));
-          params += fmt::format("{} {} = {}", param.type, param.name, str);
+          if (auto pos = str.find('\n'); pos != std::string::npos)
+            str = str.substr(0, pos) + "...";
+          if (str.length() > 50)
+            str = str.substr(0, 50) + "...";
+          params += fmt::format("{} {} = \"{}\"", param.type, param.name, str);
         }
         else
         {
@@ -73,8 +78,8 @@ namespace Ptrace
       return params;
     }();
 
-    return fmt::format("{} ({}) with ({}) --> {} = {}",
-                       syscall.info.name, syscall.info.syscall_id,
+    return fmt::format("{}({}) --> {} = {}",
+                       syscall.info.name,
                        params,
                        syscall.return_value.value(),
                        -syscall.return_value.value());
