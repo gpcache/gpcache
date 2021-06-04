@@ -49,6 +49,7 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
 add_library(gpcache_lib
+  utils/flag_to_string.cpp
   wrappers/hash.cpp
   wrappers/posix.cpp
   wrappers/ptrace.cpp

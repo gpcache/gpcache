@@ -27,7 +27,7 @@ class gpcache(ConanFile):
         pass
 
     def build(self):
-        cmake = CMake(self, "Ninja")
+        cmake = CMake(self, generator="Ninja", build_type="Debug")
         cmake.definitions["FORCE_COLORED_OUTPUT"] = "ON"
         cmake.configure()
         cmake.build()

@@ -1,6 +1,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include "utils/flag_to_string.h"
 
 struct AccessAction
 {
@@ -8,7 +9,18 @@ struct AccessAction
   int mode;
 
   uint64_t result; // int? bool? SyscallDataType?
+
+  friend auto operator<=>(const AccessAction &, const AccessAction &) = default;
 };
+
+auto return_code_to_string(uint64_t result)
+{
+  // wild guess:
+  if (result > 0xF00000000000000)
+    return fmt::format("Failed with '{}'", strerror(-result));
+  else
+    std::to_string(result);
+}
 
 template <>
 struct fmt::formatter<AccessAction>
@@ -17,7 +29,7 @@ struct fmt::formatter<AccessAction>
 
   auto format(AccessAction const &action, auto &ctx)
   {
-    return fmt::format_to(ctx.out(), "access({}, {}) -> {}", action.filename, action.mode, action.result);
+    return fmt::format_to(ctx.out(), "access({}, {}) -> {}", action.filename, action.mode, return_code_to_string(action.result));
   }
 };
 
@@ -30,6 +42,8 @@ struct OpenAction
 
   bool success;
   int errno_code;
+
+  friend auto operator<=>(const OpenAction &, const OpenAction &) = default;
 };
 
 template <>
@@ -39,9 +53,35 @@ struct fmt::formatter<OpenAction>
 
   auto format(OpenAction const &action, auto &ctx)
   {
-    return fmt::format_to(ctx.out(), "openat({}, {}, {}, {}) -> {}, {}", action.dirfd, action.filename, action.flags, action.mode, action.success, action.errno_code);
+    return fmt::format_to(ctx.out(), "openat({}, {}, {}, {}) -> {}, {}", action.dirfd, action.filename, gpcache::openat_flag_to_string(action.flags), action.mode, action.success, action.errno_code);
   }
 };
+
+std::strong_ordering int_to_strong_order(int i)
+{
+  switch (i)
+  {
+  case -1:
+    return std::strong_ordering::less;
+  case 0:
+    return std::strong_ordering::equal;
+  case 1:
+    return std::strong_ordering::greater;
+  }
+  __builtin_unreachable();
+}
+
+auto operator<=>(const struct stat &lhs, const struct stat &rhs)
+{
+  spdlog::debug("running operator<=> on struct stat");
+  return int_to_strong_order(std::memcmp(reinterpret_cast<const void *>(&lhs), reinterpret_cast<const void *>(&rhs), sizeof(struct stat)));
+}
+
+auto operator==(const struct stat &lhs, const struct stat &rhs)
+{
+  spdlog::debug("running operator== on struct stat");
+  return std::memcmp(reinterpret_cast<const void *>(&lhs), reinterpret_cast<const void *>(&rhs), sizeof(struct stat)) == 0;
+}
 
 struct FstatAction
 {
@@ -50,6 +90,8 @@ struct FstatAction
 
   bool success;
   int errno_code;
+
+  friend auto operator<=>(const FstatAction &, const FstatAction &) = default;
 };
 
 template <>
@@ -60,7 +102,7 @@ struct fmt::formatter<struct stat>
   auto format(struct stat const &s, auto &ctx)
   {
     return fmt::format_to(ctx.out(),
-                          "(dev {}, ino {}, mode{}, nlink {}, uid {}, gid {}, rdev {}, "
+                          "(dev {}, ino {}, mode {}, nlink {}, uid {}, gid {}, rdev {}, "
                           "size {}, blksize {}, blocks {}, "
                           "atim {}.{}, mtim {}.{}, ctim {}.{})",
                           s.st_dev, s.st_ino, s.st_mode, s.st_nlink, s.st_uid, s.st_gid, s.st_rdev,
@@ -87,6 +129,8 @@ struct FileHash
 {
   std::filesystem::path path;
   std::string hash;
+
+  friend auto operator<=>(const FileHash &, const FileHash &) = default;
 };
 
 template <>
