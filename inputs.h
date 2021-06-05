@@ -13,15 +13,6 @@ struct AccessAction
   friend auto operator<=>(const AccessAction &, const AccessAction &) = default;
 };
 
-auto return_code_to_string(uint64_t result)
-{
-  // wild guess:
-  if (result > 0xF00000000000000)
-    return fmt::format("Failed with '{}'", strerror(-result));
-  else
-    std::to_string(result);
-}
-
 template <>
 struct fmt::formatter<AccessAction>
 {
@@ -29,7 +20,7 @@ struct fmt::formatter<AccessAction>
 
   auto format(AccessAction const &action, auto &ctx)
   {
-    return fmt::format_to(ctx.out(), "access({}, {}) -> {}", action.filename, action.mode, return_code_to_string(action.result));
+    return fmt::format_to(ctx.out(), "access({}, {}) -> {}", action.filename, action.mode, gpcache::return_code_to_string(action.result));
   }
 };
 

@@ -22,6 +22,15 @@
 
 namespace gpcache
 {
+  auto return_code_to_string(uint64_t result) -> std::string
+  {
+    // wild guess:
+    if (result > 0xF00000000000000)
+      return fmt::format("Failed with '{}'", strerror(-result));
+    else
+      return std::to_string(result);
+  }
+
   auto mmap_flag_to_string(int flags) -> std::string
   {
     std::vector<std::string> s;

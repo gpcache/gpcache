@@ -180,19 +180,18 @@ namespace Ptrace
     const auto syscall_id = get_syscall_number_from_registers(regs);
     const static auto syscall_map = create_syscall_map();
     const auto syscall_info = syscall_map.at(syscall_id);
-    const auto return_value = [&]() -> std::optional<SyscallDataType> {
-      if (next_call == EnterExit::exit)
+    const auto return_value = [&]() -> std::optional<SyscallDataType>
+    {
+      auto const val = get_syscall_return_value_from_registers(regs);
+
+      // entering syscall?
+      if (-val == ENOSYS)
       {
-        next_call = EnterExit::enter;
-        return std::make_optional(get_syscall_return_value_from_registers(regs));
+        return std::nullopt;
       }
       else
       {
-        auto const val = get_syscall_return_value_from_registers(regs);
-        if (-val != ENOSYS)
-          spdlog::warn("entering syscall with return code: {} = {}", val, -val);
-        next_call = EnterExit::exit;
-        return std::nullopt;
+        return std::make_optional(get_syscall_return_value_from_registers(regs));
       }
     }();
     const auto syscall_arguments = get_syscall_args(regs);
@@ -226,15 +225,16 @@ namespace Ptrace
       Raw::TRACEME();
 
       const std::vector<char *>
-          charPtrArguments = [&program, &arguments]() {
-            std::vector<char *> v;
-            v.reserve(arguments.size() + 2);
-            v.push_back(const_cast<char *>(program.c_str()));
-            for (auto arg : arguments)
-              v.push_back(const_cast<char *>(arg.c_str()));
-            v.push_back(nullptr);
-            return v;
-          }();
+          charPtrArguments = [&program, &arguments]()
+      {
+        std::vector<char *> v;
+        v.reserve(arguments.size() + 2);
+        v.push_back(const_cast<char *>(program.c_str()));
+        for (auto arg : arguments)
+          v.push_back(const_cast<char *>(arg.c_str()));
+        v.push_back(nullptr);
+        return v;
+      }();
       spdlog::debug("calling {}", program);
       execvp(program.c_str(), &charPtrArguments[0]); // noreturn
       spdlog::error("after calling {}", program);

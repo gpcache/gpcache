@@ -9,6 +9,7 @@
 
 #include <fmt/format.h>      // good dependency?
 #include "utils/enumerate.h" // good dependency?
+#include "utils/flag_to_string.h"
 
 // ptrace is more than a simple function, each possible parameter has a separate wrapper.
 namespace Ptrace
@@ -73,13 +74,6 @@ namespace Ptrace
 
   private:
     pid_t pid;
-
-    enum class EnterExit
-    {
-      enter,
-      exit
-    };
-    EnterExit next_call = EnterExit::enter;
   };
 
   auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int;
@@ -93,6 +87,24 @@ namespace Ptrace
 
 } // namespace ptrace
 
+auto get_readable_param_value(auto pid, auto param_type, auto param_value)
+{
+  if (param_type == std::string("const char *") || param_type == std::string("char *"))
+  {
+    std::string str = Ptrace::PEEKTEXT_string(pid, reinterpret_cast<char const *>(param_value));
+    if (auto pos = str.find('\n'); pos != std::string::npos)
+      str = str.substr(0, pos) + "...";
+    if (str.length() > 50)
+      str = str.substr(0, 50) + "...";
+    return str;
+  }
+  else
+  {
+    // need to return same type, since fmt doesn't really work with any or variant :-/
+    return std::to_string(param_value);
+  }
+}
+
 template <>
 struct fmt::formatter<Ptrace::SysCall>
 {
@@ -102,36 +114,25 @@ struct fmt::formatter<Ptrace::SysCall>
   {
     if (syscall._cached_string_representation.empty())
     {
-      const std::string params = [&]() {
+      const std::string params = [&]()
+      {
         std::string params = "";
         for (auto [pos, param] : enumerate(syscall.info.params))
         {
           if (!params.empty())
             params += ", ";
-          Ptrace::SyscallDataType const value = syscall.arguments[pos];
-          if (param.type == std::string("const char *") || param.type == std::string("char *"))
-          {
-            std::string str = Ptrace::PEEKTEXT_string(syscall.pid, reinterpret_cast<char const *>(value));
-            if (auto pos = str.find('\n'); pos != std::string::npos)
-              str = str.substr(0, pos) + "...";
-            if (str.length() > 50)
-              str = str.substr(0, 50) + "...";
-            params += fmt::format("{} {} = \"{}\"", param.type, param.name, str);
-          }
-          else
-          {
-            params += fmt::format("{} {} = {}", param.type, param.name, value);
-          }
+
+          auto param_value = get_readable_param_value(syscall.pid, param.type, syscall.arguments[pos]);
+          params += fmt::format("{} {} = {}", param.type, param.name, param_value);
         }
         return params;
       }();
 
       syscall._cached_string_representation =
-          fmt::format("{}({}) --> {} = {}",
+          fmt::format("{}({}) --> {}",
                       syscall.info.name,
                       params,
-                      syscall.return_value.value(),
-                      -syscall.return_value.value());
+                      gpcache::return_code_to_string(syscall.return_value.value()));
     }
     // There is probably a better direct function for this.
     return fmt::format_to(ctx.out(), "{}", syscall._cached_string_representation);
