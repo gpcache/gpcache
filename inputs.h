@@ -1,7 +1,11 @@
+#include <nlohmann/json.hpp>
+
 #include <string>
 #include <variant>
 #include <vector>
 #include "utils/flag_to_string.h"
+
+using json = nlohmann::json;
 
 struct AccessAction
 {
@@ -9,6 +13,15 @@ struct AccessAction
   int mode;
 
   uint64_t result; // int? bool? SyscallDataType?
+
+  auto action_to_json() const
+  {
+    return json{{"filename", filename}, {"mode", mode}};
+  }
+  auto result_to_json() const
+  {
+    return json{{"result", gpcache::return_code_to_string(result)}};
+  }
 
   friend auto operator<=>(const AccessAction &, const AccessAction &) = default;
 };
@@ -33,6 +46,15 @@ struct OpenAction
 
   bool success;
   int errno_code;
+
+  auto action_to_json() const
+  {
+    return json{{"dirfd", dirfd}, {"filename", filename}, {"flags", flags}, {"mode", mode}};
+  }
+  auto result_to_json() const
+  {
+    return json{{"success", success}, {"errno", errno_code}};
+  }
 
   friend auto operator<=>(const OpenAction &, const OpenAction &) = default;
 };
@@ -74,17 +96,6 @@ auto operator==(const struct stat &lhs, const struct stat &rhs)
   return std::memcmp(reinterpret_cast<const void *>(&lhs), reinterpret_cast<const void *>(&rhs), sizeof(struct stat)) == 0;
 }
 
-struct FstatAction
-{
-  std::filesystem::path path;
-  struct stat stats;
-
-  bool success;
-  int errno_code;
-
-  friend auto operator<=>(const FstatAction &, const FstatAction &) = default;
-};
-
 template <>
 struct fmt::formatter<struct stat>
 {
@@ -104,6 +115,26 @@ struct fmt::formatter<struct stat>
   }
 };
 
+struct FstatAction
+{
+  std::filesystem::path path;
+
+  struct stat stats;
+  bool success;
+  int errno_code;
+
+  auto action_to_json() const
+  {
+    return json{{"path", path}};
+  }
+  auto result_to_json() const
+  {
+    return json{{"success", success}, {"errno", errno_code}, {"stats", fmt::format("{}", stats)}};
+  }
+
+  friend auto operator<=>(const FstatAction &, const FstatAction &) = default;
+};
+
 template <>
 struct fmt::formatter<FstatAction>
 {
@@ -111,7 +142,7 @@ struct fmt::formatter<FstatAction>
 
   auto format(FstatAction const &action, auto &ctx)
   {
-    return fmt::format_to(ctx.out(), "fstat({}, {}) -> {}, {}",
+    return fmt::format_to(ctx.out(), "fstat({}) -> {}, {}, {}",
                           action.path.string(), action.stats, action.success, action.errno_code);
   }
 };
@@ -120,6 +151,15 @@ struct FileHash
 {
   std::filesystem::path path;
   std::string hash;
+
+  auto action_to_json() const
+  {
+    return json{{"path", path}};
+  }
+  auto result_to_json() const
+  {
+    return json{{"hash", hash}};
+  }
 
   friend auto operator<=>(const FileHash &, const FileHash &) = default;
 };

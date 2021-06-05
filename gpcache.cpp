@@ -22,6 +22,7 @@
 #include "inputs.h"
 #include "outputs.h"
 #include <sys/mman.h> // mmap PROT_READ
+#include "wrappers/hash.h"
 
 ABSL_FLAG(bool, verbose, false, "Add verbose output");
 ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
@@ -374,7 +375,41 @@ namespace gpcache
 
     return inputs;
   }
-}
+
+  void print_inputs(auto inputs)
+  {
+    fmt::print("\n");
+    for (auto &action : inputs.actions)
+    {
+      std::visit(
+          [](auto &&cached_syscall)
+          {
+            fmt::print("Cached syscall: {}\n", cached_syscall);
+          },
+          action);
+    }
+  }
+
+  void cache_inputs(const Inputs inputs)
+  {
+    fmt::print("\n");
+    std::string path = ".gpcache/";
+    for (const Action &action : inputs.actions)
+    {
+      std::visit(
+          [&path](auto &&cached_syscall)
+          {
+            auto action_action = cached_syscall.action_to_json();
+            auto action_result = cached_syscall.result_to_json();
+            fmt::print("{}action.txt = {}\n", path, action_action.dump());
+            auto action_result_hash = calculate_hash_of_str(action_result.dump(), 3);
+            path += action_result_hash + "/";
+            fmt::print("{}readable_result_for_debugging.txt = {}\n", path, action_result.dump());
+          },
+          action);
+    }
+  }
+} // namespace gpcache
 
 int main(int argc, char **argv)
 {
@@ -389,8 +424,7 @@ int main(int argc, char **argv)
   for (auto param : params)
     std::cout << fmt::format("* {}\n", param);
 
-  bool const verbose_flag = absl::GetFlag(FLAGS_verbose);
-  if (verbose_flag)
+  if (absl::GetFlag(FLAGS_verbose))
     spdlog::set_level(spdlog::level::debug);
   else
     spdlog::set_level(spdlog::level::info);
@@ -399,16 +433,8 @@ int main(int argc, char **argv)
   try
   {
     auto inputs = gpcache::cache_execution("true", {});
-
-    fmt::print("\n");
-    for (auto &action : inputs.actions)
-    {
-      std::visit(
-          [](auto &&cached_syscall) {
-            fmt::print("Cached syscall: {}\n", cached_syscall);
-          },
-          action);
-    }
+    gpcache::print_inputs(inputs);
+    gpcache::cache_inputs(inputs);
   }
   catch (const char *error)
   {
