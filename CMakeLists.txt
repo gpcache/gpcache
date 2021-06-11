@@ -27,6 +27,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
+if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10) # 10 is ok
+   OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10) # 9.3.0 does not work, 10.2.0 is ok
+   OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)) # todo
+  message(FATAL_ERROR "The compiler you are using is too old, sorry.")
+endif()
+
+
 # Always export compile_commands.json since it's useful for some tools.
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 

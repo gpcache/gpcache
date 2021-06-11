@@ -1,7 +1,3 @@
-#if __cplusplus < 202002L
-#error "< C++20"
-#endif
-
 #include "hash.h"
 
 #include "blake2.h"
