@@ -1,4 +1,5 @@
 #include <nlohmann/json.hpp>
+#include <boost/pfr/core.hpp>
 
 #include <string>
 #include <variant>
@@ -7,67 +8,58 @@
 
 using json = nlohmann::json;
 
-struct AccessAction
+// Generate this file? C++ is just awful.
+#define CPP_SUCKS(STRUCT, ...)                                       \
+  friend auto operator<=>(const STRUCT &, const STRUCT &) = default; \
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE(STRUCT, __VA_ARGS__)
+
+//  friend auto operator==(const STRUCT &, const STRUCT &) = default;  \
+
+struct Input_Access
 {
-  std::string filename;
-  int mode;
+  static constexpr char name[] = "access";
 
-  uint64_t result; // int? bool? SyscallDataType?
-
-  auto action_to_json() const
+  struct Action
   {
-    return json{{"filename", filename}, {"mode", mode}};
-  }
-  auto result_to_json() const
+    std::string filename;
+    int mode;
+
+    CPP_SUCKS(Action, filename, mode);
+  } action;
+
+  struct Result
   {
-    return json{{"result", gpcache::return_code_to_string(result)}};
-  }
+    uint64_t result; // int? bool? SyscallDataType?
 
-  friend auto operator<=>(const AccessAction &, const AccessAction &) = default;
-};
+    CPP_SUCKS(Result, result)
+  } result;
 
-template <>
-struct fmt::formatter<AccessAction>
-{
-  constexpr auto parse(auto &ctx) { return ctx.begin(); }
-
-  auto format(AccessAction const &action, auto &ctx)
-  {
-    return fmt::format_to(ctx.out(), "access({}, {}) -> {}", action.filename, action.mode, gpcache::return_code_to_string(action.result));
-  }
+  CPP_SUCKS(Input_Access, action, result)
 };
 
 struct OpenAction
 {
-  int dirfd;
-  std::string filename;
-  int flags;
-  mode_t mode;
+  static constexpr char name[] = "open";
 
-  bool success;
-  int errno_code;
-
-  auto action_to_json() const
+  struct Action
   {
-    return json{{"dirfd", dirfd}, {"filename", filename}, {"flags", flags}, {"mode", mode}};
-  }
-  auto result_to_json() const
+    int dirfd;
+    std::string filename;
+    int flags;
+    mode_t mode;
+
+    CPP_SUCKS(Action, dirfd, filename, flags, mode)
+  } action;
+
+  struct Result
   {
-    return json{{"success", success}, {"errno", errno_code}};
-  }
+    bool success;
+    int errno_code;
 
-  friend auto operator<=>(const OpenAction &, const OpenAction &) = default;
-};
+    CPP_SUCKS(Result, success, errno_code)
+  } result;
 
-template <>
-struct fmt::formatter<OpenAction>
-{
-  constexpr auto parse(auto &ctx) { return ctx.begin(); }
-
-  auto format(OpenAction const &action, auto &ctx)
-  {
-    return fmt::format_to(ctx.out(), "openat({}, {}, {}, {}) -> {}, {}", action.dirfd, action.filename, gpcache::openat_flag_to_string(action.flags), action.mode, action.success, action.errno_code);
-  }
+  CPP_SUCKS(OpenAction, action, result)
 };
 
 std::strong_ordering int_to_strong_order(int i)
@@ -86,14 +78,15 @@ std::strong_ordering int_to_strong_order(int i)
 
 auto operator<=>(const struct stat &lhs, const struct stat &rhs)
 {
-  spdlog::debug("running operator<=> on struct stat");
-  return int_to_strong_order(std::memcmp(reinterpret_cast<const void *>(&lhs), reinterpret_cast<const void *>(&rhs), sizeof(struct stat)));
+  return int_to_strong_order(std::memcmp(
+      reinterpret_cast<const void *>(&lhs),
+      reinterpret_cast<const void *>(&rhs),
+      sizeof(struct stat)));
 }
 
 auto operator==(const struct stat &lhs, const struct stat &rhs)
 {
-  spdlog::debug("running operator== on struct stat");
-  return std::memcmp(reinterpret_cast<const void *>(&lhs), reinterpret_cast<const void *>(&rhs), sizeof(struct stat)) == 0;
+  return operator<=>(lhs, rhs) == std::strong_ordering::equal;
 }
 
 template <>
@@ -114,69 +107,57 @@ struct fmt::formatter<struct stat>
                           s.st_ctim.tv_sec, s.st_ctim.tv_nsec);
   }
 };
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(struct stat,
+                                   st_dev, st_ino, st_mode, st_nlink,
+                                   st_uid, st_gid, st_rdev,
+                                   st_size, st_blksize, st_blocks,
+                                   st_atim.tv_sec, st_atim.tv_nsec,
+                                   st_mtim.tv_sec, st_mtim.tv_nsec,
+                                   st_ctim.tv_sec, st_ctim.tv_nsec)
 
 struct FstatAction
 {
-  std::filesystem::path path;
+  static constexpr char name[] = "fstat";
 
-  struct stat stats;
-  bool success;
-  int errno_code;
-
-  auto action_to_json() const
+  struct Action
   {
-    return json{{"path", path}};
-  }
-  auto result_to_json() const
+    std::filesystem::path path;
+
+    CPP_SUCKS(Action, path)
+  } action;
+
+  struct Result
   {
-    return json{{"success", success}, {"errno", errno_code}, {"stats", fmt::format("{}", stats)}};
-  }
+    struct stat stats;
+    bool success;
+    int errno_code;
 
-  friend auto operator<=>(const FstatAction &, const FstatAction &) = default;
-};
+    CPP_SUCKS(Result, stats, success, errno_code)
+  } result;
 
-template <>
-struct fmt::formatter<FstatAction>
-{
-  constexpr auto parse(auto &ctx) { return ctx.begin(); }
-
-  auto format(FstatAction const &action, auto &ctx)
-  {
-    return fmt::format_to(ctx.out(), "fstat({}) -> {}, {}, {}",
-                          action.path.string(), action.stats, action.success, action.errno_code);
-  }
+  CPP_SUCKS(FstatAction, action, result)
 };
 
 struct FileHash
 {
-  std::filesystem::path path;
-  std::string hash;
+  static constexpr char name[] = "filehash";
 
-  auto action_to_json() const
+  struct Action
   {
-    return json{{"path", path}};
-  }
-  auto result_to_json() const
-  {
-    return json{{"hash", hash}};
-  }
+    std::filesystem::path path;
+    CPP_SUCKS(Action, path)
+  } action;
 
-  friend auto operator<=>(const FileHash &, const FileHash &) = default;
+  struct Result
+  {
+    std::string hash;
+    CPP_SUCKS(Result, hash)
+  } result;
+
+  CPP_SUCKS(FileHash, action, result)
 };
 
-template <>
-struct fmt::formatter<FileHash>
-{
-  constexpr auto parse(auto &ctx) { return ctx.begin(); }
-
-  auto format(FileHash const &action, auto &ctx)
-  {
-    return fmt::format_to(ctx.out(), "file hash ({}) -> {}",
-                          action.path.string(), action.hash);
-  }
-};
-
-using Action = std::variant<AccessAction, OpenAction, FstatAction, FileHash>;
+using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash>;
 
 // Holds collection of all inputs which should lead to the same output.
 struct Inputs

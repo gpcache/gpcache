@@ -201,12 +201,12 @@ namespace gpcache
     case Syscall_brk::syscall_id:
     case Syscall_arch_prctl::syscall_id:
     case Syscall_mprotect::syscall_id: // maybe interesting with ignoring more mmap calls... ignore for now
-      return SyscallResult{.supported = true};
+      return SyscallResult{true};
     case Syscall_access::syscall_id:
     {
       auto syscall_access = static_cast<Syscall_access>(syscall.arguments);
       std::string filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
-      return SyscallResult{true, AccessAction{filename, syscall_access.mode(), syscall.return_value.value()}};
+      return SyscallResult{true, Input_Access{filename, syscall_access.mode(), syscall.return_value.value()}};
     }
     case Syscall_openat::syscall_id:
     {
@@ -384,7 +384,7 @@ namespace gpcache
       std::visit(
           [](auto &&cached_syscall)
           {
-            fmt::print("Cached syscall: {}\n", cached_syscall);
+            fmt::print("Cached syscall: {}\n", json{cached_syscall}.dump());
           },
           action);
     }
@@ -393,18 +393,35 @@ namespace gpcache
   void cache_inputs(const Inputs inputs)
   {
     fmt::print("\n");
+
+    // make it some filesystem::path ?!
     std::string path = ".gpcache/";
+
+    // executable + parameters first!
+
     for (const Action &action : inputs.actions)
     {
       std::visit(
-          [&path](auto &&cached_syscall)
+          [&path](auto &&input)
           {
-            auto action_action = cached_syscall.action_to_json();
-            auto action_result = cached_syscall.result_to_json();
-            fmt::print("{}action.txt = {}\n", path, action_action.dump());
-            auto action_result_hash = calculate_hash_of_str(action_result.dump(), 3);
-            path += action_result_hash + "/";
-            fmt::print("{}readable_result_for_debugging.txt = {}\n", path, action_result.dump());
+            const auto action = json{input.action};
+            const auto result = json{input.result};
+            // ToDo: handle hash conflicts... somehow...
+            const auto result_hash = calculate_hash_of_str(result.dump(), 3);
+
+            const json action_file_content = {{"input", input.name}, {"action", action}}; // move name into action?
+            const json result_file_content = json{input}.dump();
+
+            const auto action_file = path + "action.txt";
+            path += result_hash + "/";
+            const auto result_file = path + "readable_result_for_debugging.txt";
+
+            //if(!path_exists(path))
+              //create_directory(path);
+            //if(file_exists) assert content is action_file_content
+
+            fmt::print("{} = {}\n", action_file, action_file_content.dump());
+            fmt::print("{} = {}\n", result_file, result_file_content.dump());
           },
           action);
     }
