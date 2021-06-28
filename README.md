@@ -22,13 +22,16 @@ Preconditions:
 
 
 ## Current state
-- Proof of concept written in python, but actual tool shall be written in C++
-- C++ implementation has passed the proof of concept (as expected), but has not yet catched up with the python version
+- Proof of concept written in python and C++
+- Both languages have advantages... and more importantly huge disadvantages
 
-### Why C++
+### Pro Python
+The amount of code required compared to C++ is so much smaller, it's astonishing.
+
+### Pro C++
 Main trigger was stats. I was not able to figure out how to use stats result in python and had to issue a manual stats. Therefore a new syscall. Besides performance problems this results in asynchronities since sometimes differnt values will be cached than actually used by the to-be-cached-tool.
 
-## Build gpcache from source
+### C++: Build gpcache from source
 Demonstrating with an in source build, although that is not really encouraged.
 Not sure I'm using conan correctly here, but hey... "it works on my machine".
 

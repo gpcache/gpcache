@@ -390,12 +390,38 @@ namespace gpcache
     }
   }
 
+  auto ensure_json_content(const std::filesystem::path &file, const json &content) -> bool
+  {
+    }
+
+  auto cache_input(const std::filesystem::path &path, const std::string &input_name, const json &action, const json &result)
+  {
+    // ToDo: handle hash conflicts... somehow...
+    const auto result_hash = calculate_hash_of_str(result.dump(), 3);
+    const auto result_path = path / result_hash;
+
+    const json action_file_content = {{"input", input_name}, {"action", action}};
+    const json result_file_content = result;
+
+    const auto action_file = path / "action.txt";
+    const auto result_file = result_path / "readable_result_for_debugging.txt";
+
+    //if(!path_exists(path))
+    //create_directory(path);
+    //if(file_exists) assert content is action_file_content
+
+    fmt::print("{} = {}\n", action_file.string(), action_file_content.dump());
+    fmt::print("{} = {}\n", result_file.string(), result_file_content.dump());
+
+    return result_path;
+  }
+
   void cache_inputs(const Inputs inputs)
   {
     fmt::print("\n");
 
     // make it some filesystem::path ?!
-    std::string path = ".gpcache/";
+    std::filesystem::path path = ".gpcache/";
 
     // executable + parameters first!
 
@@ -404,24 +430,7 @@ namespace gpcache
       std::visit(
           [&path](auto &&input)
           {
-            const auto action = json{input.action};
-            const auto result = json{input.result};
-            // ToDo: handle hash conflicts... somehow...
-            const auto result_hash = calculate_hash_of_str(result.dump(), 3);
-
-            const json action_file_content = {{"input", input.name}, {"action", action}}; // move name into action?
-            const json result_file_content = json{input}.dump();
-
-            const auto action_file = path + "action.txt";
-            path += result_hash + "/";
-            const auto result_file = path + "readable_result_for_debugging.txt";
-
-            //if(!path_exists(path))
-              //create_directory(path);
-            //if(file_exists) assert content is action_file_content
-
-            fmt::print("{} = {}\n", action_file, action_file_content.dump());
-            fmt::print("{} = {}\n", result_file, result_file_content.dump());
+            path = cache_input(path, input.name, json{input.action}, json{input.result});
           },
           action);
     }
