@@ -7,7 +7,7 @@ General Purpose Cache will speed up repetitios retesting, just as ccache speeds 
 - It will cache all dependencies and the test result
 - In case the same executable is run again and all dependencies are unmodified it will quickly print the test result without rerunning your executable
 
-## When this helps
+## When gpcache helps
 If you have a testsuite of badly written unittest-like executables and an average commit changes only a small part of them.
 
 Details:
@@ -20,18 +20,25 @@ Preconditions:
 * Tests must be slow but stable (automatic flaky test detection is possible in the future)
 * Tests must not rely on untrackable features like message queues, sockets, etc
 
+---
 
-## Current state
-- Proof of concept written in python and C++
-- Both languages have advantages... and more importantly huge disadvantages
+# Current state of gpcache
+Proof of concept written in python and C++.
+C++ looks more promising, but is not a clear winner so far.
+Both languages have advantages... and more importantly huge disadvantages.
 
-### Pro Python
-The amount of code required compared to C++ is so much smaller, it's astonishing.
+Pro Python:
+* The amount of code required compared to C++ is so much smaller, it's astonishing (I'm a C++ programmer).
 
 ### Pro C++
-Main trigger was stats. I was not able to figure out how to use stats result in python and had to issue a manual stats. Therefore a new syscall. Besides performance problems this results in asynchronities since sometimes differnt values will be cached than actually used by the to-be-cached-tool.
+* Main trigger was stats. I was not able to figure out how to use stats result in python and had to issue a second stats call from python.
+  Besides performance problems this results in asynchronities since sometimes differnt values will be cached than actually used by the to-be-cached-tool.
+* Works on any machine (e.g. actual target hardware)
 
-### C++: Build gpcache from source
+---
+# Installation
+
+## C++: Build gpcache from source
 Demonstrating with an in source build, although that is not really encouraged.
 Not sure I'm using conan correctly here, but hey... "it works on my machine".
 
@@ -61,3 +68,7 @@ Changing compiler:
 Debugging:
 `conan install ../gpcache -s compiler=gcc -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CC=gcc-10 -e CXX=g++-10 -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug`
 `conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug`
+
+
+## Python: Build gpcache from source
+Ensure python3 is available.
