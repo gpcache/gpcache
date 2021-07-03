@@ -1,9 +1,22 @@
 #include <nlohmann/json.hpp>
 #include <boost/pfr/core.hpp>
+#include <fmt/format.h>
 
 #include <string>
 #include <variant>
 #include <vector>
+#include <sys/stat.h>
+
+#if __has_include(<filesystem>)
+#include <filesystem>
+namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+error "Missing the <filesystem> header."
+#endif
+
 #include "utils/flag_to_string.h"
 
 using json = nlohmann::json;
