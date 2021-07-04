@@ -1,3 +1,5 @@
+#pragma once
+
 #include <nlohmann/json.hpp>
 #include <boost/pfr/core.hpp>
 #include <fmt/format.h>
@@ -9,10 +11,14 @@
 
 #if __has_include(<filesystem>)
 #include <filesystem>
-namespace fs = std::filesystem;
 #elif __has_include(<experimental/filesystem>)
 #include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+// ToDo: proide instructions how to update libc++
+// fails for me even fpr clang++10 (with g++-10 installed)
+namespace std
+{
+  using filesystem = ::std::experimental::filesystem;
+}
 #else
 error "Missing the <filesystem> header."
 #endif
@@ -21,61 +27,7 @@ error "Missing the <filesystem> header."
 
 using json = nlohmann::json;
 
-// Generate this file? C++ is just awful.
-#define CPP_SUCKS(STRUCT, ...)                                       \
-  friend auto operator<=>(const STRUCT &, const STRUCT &) = default; \
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(STRUCT, __VA_ARGS__)
-
-//  friend auto operator==(const STRUCT &, const STRUCT &) = default;  \
-
-struct Input_Access
-{
-  static constexpr char name[] = "access";
-
-  struct Action
-  {
-    std::string filename;
-    int mode;
-
-    CPP_SUCKS(Action, filename, mode);
-  } action;
-
-  struct Result
-  {
-    uint64_t result; // int? bool? SyscallDataType?
-
-    CPP_SUCKS(Result, result)
-  } result;
-
-  CPP_SUCKS(Input_Access, action, result)
-};
-
-struct OpenAction
-{
-  static constexpr char name[] = "open";
-
-  struct Action
-  {
-    int dirfd;
-    std::string filename;
-    int flags;
-    mode_t mode;
-
-    CPP_SUCKS(Action, dirfd, filename, flags, mode)
-  } action;
-
-  struct Result
-  {
-    bool success;
-    int errno_code;
-
-    CPP_SUCKS(Result, success, errno_code)
-  } result;
-
-  CPP_SUCKS(OpenAction, action, result)
-};
-
-std::strong_ordering int_to_strong_order(int i)
+inline std::strong_ordering int_to_strong_order(int i)
 {
   switch (i)
   {
@@ -89,7 +41,7 @@ std::strong_ordering int_to_strong_order(int i)
   __builtin_unreachable();
 }
 
-auto operator<=>(const struct stat &lhs, const struct stat &rhs)
+inline auto operator<=>(const struct stat &lhs, const struct stat &rhs)
 {
   return int_to_strong_order(std::memcmp(
       reinterpret_cast<const void *>(&lhs),
@@ -97,13 +49,13 @@ auto operator<=>(const struct stat &lhs, const struct stat &rhs)
       sizeof(struct stat)));
 }
 
-auto operator==(const struct stat &lhs, const struct stat &rhs)
+inline auto operator==(const struct stat &lhs, const struct stat &rhs)
 {
   return operator<=>(lhs, rhs) == std::strong_ordering::equal;
 }
 
 template <>
-struct fmt::formatter<struct stat>
+struct ::fmt::formatter<struct stat>
 {
   constexpr auto parse(auto &ctx) { return ctx.begin(); }
 
@@ -128,58 +80,134 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(struct stat,
                                    st_mtim.tv_sec, st_mtim.tv_nsec,
                                    st_ctim.tv_sec, st_ctim.tv_nsec)
 
-struct FstatAction
+namespace gpcache
 {
-  static constexpr char name[] = "fstat";
+// Generate this file? C++ is just awful.
+#define CPP_SUCKS(STRUCT, ...)                                       \
+  friend auto operator<=>(const STRUCT &, const STRUCT &) = default; \
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE(STRUCT, __VA_ARGS__)
 
-  struct Action
+  //  friend auto operator==(const STRUCT &, const STRUCT &) = default;  \
+
+  struct Input_Access
   {
-    std::filesystem::path path;
+    static constexpr char name[] = "access";
 
-    CPP_SUCKS(Action, path)
-  } action;
+    struct Action
+    {
+      std::string filename;
+      int mode;
 
-  struct Result
+      CPP_SUCKS(Action, filename, mode);
+    } action;
+
+    struct Result
+    {
+      uint64_t result; // int? bool? SyscallDataType?
+
+      CPP_SUCKS(Result, result)
+    } result;
+
+    CPP_SUCKS(Input_Access, action, result)
+  };
+
+  struct OpenAction
   {
-    struct stat stats;
-    bool success;
-    int errno_code;
+    static constexpr char name[] = "open";
 
-    CPP_SUCKS(Result, stats, success, errno_code)
-  } result;
+    struct Action
+    {
+      int dirfd;
+      std::string filename;
+      int flags;
+      mode_t mode;
 
-  CPP_SUCKS(FstatAction, action, result)
-};
+      CPP_SUCKS(Action, dirfd, filename, flags, mode)
+    } action;
 
-struct FileHash
-{
-  static constexpr char name[] = "filehash";
+    struct Result
+    {
+      bool success;
+      int errno_code;
 
-  struct Action
+      CPP_SUCKS(Result, success, errno_code)
+    } result;
+
+    CPP_SUCKS(OpenAction, action, result)
+  };
+
+  struct FstatAction
   {
-    std::filesystem::path path;
-    CPP_SUCKS(Action, path)
-  } action;
+    static constexpr char name[] = "fstat";
 
-  struct Result
+    struct Action
+    {
+      std::filesystem::path path;
+
+      CPP_SUCKS(Action, path)
+    } action;
+
+    struct Result
+    {
+      struct stat stats;
+      bool success;
+      int errno_code;
+
+      CPP_SUCKS(Result, stats, success, errno_code)
+    } result;
+
+    CPP_SUCKS(FstatAction, action, result)
+  };
+
+  struct FileHash
   {
-    std::string hash;
-    CPP_SUCKS(Result, hash)
-  } result;
+    static constexpr char name[] = "filehash";
 
-  CPP_SUCKS(FileHash, action, result)
-};
+    struct Action
+    {
+      std::filesystem::path path;
+      CPP_SUCKS(Action, path)
+    } action;
 
-using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash>;
+    struct Result
+    {
+      std::string hash;
+      CPP_SUCKS(Result, hash)
+    } result;
 
-// Holds collection of all inputs which should lead to the same output.
-struct Inputs
-{
-  // ToDo:
-  // - cwd/pwd
-  // - some env variables like SOURCE_DATE_EPOCH
-  //   (never ending list... but adding everything would be overkill)
-  // - uid, gid ?!
+    CPP_SUCKS(FileHash, action, result)
+  };
 
-  std::vector<Action> actions;
-};
+  struct UnsupportedInput
+  {
+    static constexpr char name[] = "unsupported";
+
+    struct Action
+    {
+      bool thisIsJustCrazy;
+      CPP_SUCKS(Action, thisIsJustCrazy)
+    } action;
+
+    struct Result
+    {
+      bool thisIsJustCrazy;
+      CPP_SUCKS(Result, thisIsJustCrazy)
+    } result;
+
+    CPP_SUCKS(UnsupportedInput, action, result)
+  };
+
+  using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash, UnsupportedInput>;
+
+  // Holds collection of all inputs which should lead to the same output.
+  struct Inputs
+  {
+    // ToDo:
+    // - cwd/pwd
+    // - some env variables like SOURCE_DATE_EPOCH
+    //   (never ending list... but adding everything would be overkill)
+    // - uid, gid ?!
+
+    std::vector<Action> actions;
+  };
+} // namespace gpcache
