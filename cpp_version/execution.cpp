@@ -197,11 +197,11 @@ namespace gpcache
       auto const syscall_openat = static_cast<Syscall_openat>(syscall.arguments);
 
       const std::filesystem::path path = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_openat.filename());
-      if (path.is_absolute() && (syscall_openat.flags() == O_CLOEXEC || syscall_openat.flags() == (O_RDONLY | O_CLOEXEC)))
+      if (path.is_absolute() && (syscall_openat.flags() == O_CLOEXEC || syscall_openat.flags() == (O_RDONLY | O_CLOEXEC) || syscall_openat.flags() == (O_RDONLY | O_LARGEFILE)))
       {
         int fd = syscall.return_value.value();
         fds.open(fd, path, syscall_openat.flags(), fmt::format("open via {}", syscall));
-        spdlog::info("flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
+        spdlog::info("openat flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
         return SyscallResult{true, OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0}};
       }
       else
@@ -317,9 +317,9 @@ namespace gpcache
     Outputs outputs;
   };
 
-  auto cache_execution(std::string const program, std::vector<std::string> const arguments) -> ExecutionCache
+  auto cache_execution(std::vector<char *> const &prog_and_arguments) -> ExecutionCache
   {
-    Ptrace::PtraceProcess p = Ptrace::createChildProcess(program, arguments);
+    Ptrace::PtraceProcess p = Ptrace::createChildProcess(prog_and_arguments);
     spdlog::debug("after createChildProcess");
 
     Inputs inputs;

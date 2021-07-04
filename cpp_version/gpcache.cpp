@@ -56,19 +56,29 @@ int main(int argc, char **argv)
       "* gpcache echo 'This will be cached'\n");
 
   std::vector<char *> params = absl::ParseCommandLine(argc, argv);
-  std::cout << fmt::format("'Hello, World' called with:\n");
-  for (auto param : params)
-    std::cout << fmt::format("* {}\n", param);
 
-  if (absl::GetFlag(FLAGS_verbose))
-    spdlog::set_level(spdlog::level::debug);
-  else
-    spdlog::set_level(spdlog::level::info);
+  // unless we set up some in-place replacement logic like ccache just drop the first parameter
+  params.erase(params.begin(), params.begin() + 1);
+
+  spdlog::set_level(absl::GetFlag(FLAGS_verbose) ? spdlog::level::debug : spdlog::level::info);
+
+  spdlog::debug("gpcache called with:");
+  for (auto param : params)
+    spdlog::debug("* {}", param);
+  spdlog::debug("--------------------");
+
+  params.push_back(nullptr); // required for syscalls so end of array can be detected.
+
+  if (params[0] == nullptr)
+  {
+    fmt::print("Pass your executable to gpcache, e.g. gpcache echo 'Hello, World!'\n");
+    exit(1);
+  }
 
   // later from args:
   try
   {
-    auto [inputs, outputs] = gpcache::cache_execution("true", {});
+    auto [inputs, outputs] = gpcache::cache_execution(params);
     gpcache::print_inputs(inputs);
     auto backend = gpcache::FileBasedBackend();
 

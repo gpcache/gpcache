@@ -199,7 +199,7 @@ namespace Ptrace
     return SysCall{pid, syscall_info, syscall_arguments, return_value};
   }
 
-  [[nodiscard]] auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int
+  [[nodiscard]] auto createChildProcess(std::vector<char *> const &prog_and_arguments) -> int
   {
     const pid_t pid = fork();
     spdlog::debug("fork() -> {}", pid);
@@ -224,20 +224,10 @@ namespace Ptrace
       // Stpo at next syscall
       Raw::TRACEME();
 
-      const std::vector<char *>
-          charPtrArguments = [&program, &arguments]()
-      {
-        std::vector<char *> v;
-        v.reserve(arguments.size() + 2);
-        v.push_back(const_cast<char *>(program.c_str()));
-        for (auto arg : arguments)
-          v.push_back(const_cast<char *>(arg.c_str()));
-        v.push_back(nullptr);
-        return v;
-      }();
-      spdlog::debug("calling {}", program);
-      execvp(program.c_str(), &charPtrArguments[0]); // noreturn
-      spdlog::error("after calling {}", program);
+      assert(prog_and_arguments.back() == nullptr);
+      spdlog::debug("calling {}", prog_and_arguments[0]);
+      execvp(prog_and_arguments[0], prog_and_arguments.data()); // noreturn
+      spdlog::error("after calling {}", prog_and_arguments[0]);
       throw("this should never ever be reached");
     }
     else

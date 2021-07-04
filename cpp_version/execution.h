@@ -8,5 +8,5 @@ namespace gpcache
     Outputs outputs;
   };
 
-  auto cache_execution(std::string const program, std::vector<std::string> const arguments) -> ExecutionCache;
+  auto cache_execution(std::vector<char *> const &prog_and_arguments) -> ExecutionCache;
 }

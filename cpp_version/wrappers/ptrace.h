@@ -76,7 +76,7 @@ namespace Ptrace
     pid_t pid;
   };
 
-  auto createChildProcess(const std::string program, const std::vector<std::string> arguments) -> int;
+  auto createChildProcess(std::vector<char *> const &prog_and_arguments) -> int;
 
   auto get_syscall_number_from_registers(const user_regs_struct &regs) -> SyscallDataType;
   auto get_syscall_return_value_from_registers(const user_regs_struct &regs) -> SyscallDataType;
