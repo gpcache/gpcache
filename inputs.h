@@ -55,7 +55,7 @@ inline auto operator==(const struct stat &lhs, const struct stat &rhs)
 }
 
 template <>
-struct ::fmt::formatter<struct stat>
+struct fmt::formatter<struct stat>
 {
   constexpr auto parse(auto &ctx) { return ctx.begin(); }
 
