@@ -1,3 +1,5 @@
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/gpcache/gpcache)
+
 # gpcache
 General Purpose Cache will speed up repetitios retesting, just as ccache speeds up repetitions recompilations.
 
@@ -23,11 +25,11 @@ Preconditions:
 ---
 
 # Current state of gpcache
-Proof of concept written in python and C++.
+Proof of concept written in python (see history) and C++.
 C++ looks more promising, but is not a clear winner so far.
 Both languages have advantages... and more importantly huge disadvantages.
 
-Pro Python:
+Pro Python (see history):
 * The amount of code required compared to C++ is so much smaller, it's astonishing (I'm a C++ programmer).
 
 ### Pro C++
@@ -58,7 +60,7 @@ mkdir gpcache_build
 cd gpcache_build
 conan install ../gpcache --settings compiler.cppstd=20 --build=missing
 
-You'll need to run the first build via conan, afterwards you can use make/ninja.
+# You'll need to run the first build via conan, afterwards you can use make/ninja.
 conan build ../gpcache
 ```
 
