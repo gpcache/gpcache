@@ -355,8 +355,8 @@ namespace gpcache
           auto &new_action = *result.input;
 
           // Only the most trivial optimization for now
-          if (inputs.actions.empty() || inputs.actions.back() != new_action)
-            inputs.actions.push_back(new_action);
+          if (inputs.empty() || inputs.back() != new_action)
+            inputs.push_back(new_action);
         }
       }
       else

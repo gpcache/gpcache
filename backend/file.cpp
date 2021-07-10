@@ -1,6 +1,8 @@
 #include "backend/file.h"
 #include "wrappers/hash.h"
 
+#include <spdlog/spdlog.h>
+
 #include <fstream>
 #include <string>
 #include <cerrno>
@@ -39,24 +41,44 @@ namespace gpcache
 
   auto cache_input(const std::filesystem::path &path, const std::string &input_name, const json &action, const json &result)
   {
+    spdlog::info("Backend_File: cache_input()");
+
     // ToDo: handle hash conflicts... somehow...
     const auto result_hash = calculate_hash_of_str(result.dump(), 3);
     const auto result_path = path / result_hash;
 
     const json action_file_content = {{"input", input_name}, {"action", action}};
+    const std::string action_file_content_str = action_file_content.dump();
     const json result_file_content = result;
 
     const auto action_file = path / "action.txt";
     const auto result_file = result_path / "readable_result_for_debugging.txt";
 
-    std::filesystem::create_directories(path);
     if (std::filesystem::exists(action_file))
     {
+      spdlog::info("action_file ({}) exists", action_file.string());
+
       auto res = read_file(action_file);
-      if (const auto existing_file_content = std::get_if<std::string>(&res))
+      if (std::holds_alternative<std::string>(res))
       {
-        fmt::print("Existing action_file {} = {}", action_file, existing_file_content);
+        const std::string existing_file_content = std::get<std::string>(res);
+        fmt::print("Existing action_file {} = {}", action_file.string(), existing_file_content);
+
+        if (existing_file_content != action_file_content_str)
+        {
+          spdlog::warn("action hash match, but action file content mismatch. Why was it even compared? crap...");
+        }
       }
+      else
+      {
+        const auto existing_file_error = std::get<int>(res);
+        fmt::print("Non Existing action_file {} because of {}", action_file.string(), existing_file_error);
+      }
+    }
+    else
+    {
+      spdlog::info("action_file ({}) does not exists, creating path ({})...", action_file.string(), path.string());
+      std::filesystem::create_directories(path);
     }
     //if(!path_exists(path))
     //create_directory(path);
@@ -75,14 +97,14 @@ namespace gpcache
 
     std::filesystem::path path = ".gpcache/";
 
-    for (const Action &action : inputs.actions)
+    for (const Action &input : inputs)
     {
       std::visit(
-          [&path](auto &&input)
+          [&path](auto &&typed_input)
           {
-            path = cache_input(path, input.name, json{input.action}, json{input.result});
+            path = cache_input(path, typed_input.name, json{typed_input.action}, json{typed_input.result});
           },
-          action);
+          input);
     }
 
     return path;
@@ -94,6 +116,7 @@ namespace gpcache
 
   auto FileBasedBackend::store(const Inputs &inputs, const Outputs &outputs) -> void
   {
+    spdlog::info("FileBasedBackend::store called");
     auto handle = create_output_path(inputs);
     store_outputs(handle, outputs);
   }

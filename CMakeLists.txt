@@ -55,6 +55,23 @@ endif()
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
+
+option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
+if (${FORCE_COLORED_OUTPUT})
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+       add_compile_options (-fdiagnostics-color=always)
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+      add_compile_options (-fcolor-diagnostics)
+    endif ()
+endif ()
+
+if (MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra -pedantic)
+endif()
+
+
 add_library(gpcache_lib
   utils/flag_to_string.cpp
   wrappers/hash.cpp
@@ -76,7 +93,7 @@ if(FS_LIB)
   target_link_libraries(gpcache_lib ${FS_LIB})
 endif()
 
-add_executable(gpcache gpcache.cpp)
+add_executable(gpcache main.cpp)
 target_link_libraries(gpcache gpcache_lib)
 
 add_executable(test1 tests/test1.cpp)
@@ -84,18 +101,3 @@ target_link_libraries(test1 gpcache_lib)
 
 add_executable(test2 tests/test2.cpp)
 target_link_libraries(test2 gpcache_lib)
-
-option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
-if (${FORCE_COLORED_OUTPUT})
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-       add_compile_options (-fdiagnostics-color=always)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       add_compile_options (-fcolor-diagnostics)
-    endif ()
-endif ()
-
-if (MSVC)
-    add_compile_options(/W4)
-else()
-    add_compile_options(-Wall -Wextra -pedantic)
-endif()

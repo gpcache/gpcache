@@ -79,7 +79,7 @@ int main(int argc, char **argv)
   try
   {
     auto [inputs, outputs] = gpcache::cache_execution(params);
-    gpcache::print_inputs(inputs);
+    //gpcache::print_inputs(inputs);
     auto backend = gpcache::FileBasedBackend();
 
     backend.store(inputs, outputs);

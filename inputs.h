@@ -87,7 +87,7 @@ namespace gpcache
   friend auto operator<=>(const STRUCT &, const STRUCT &) = default; \
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(STRUCT, __VA_ARGS__)
 
-  //  friend auto operator==(const STRUCT &, const STRUCT &) = default;  \
+  //  friend auto operator==(const STRUCT &, const STRUCT &) = default;
 
   struct Input_Access
   {
@@ -200,14 +200,6 @@ namespace gpcache
   using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash, UnsupportedInput>;
 
   // Holds collection of all inputs which should lead to the same output.
-  struct Inputs
-  {
-    // ToDo:
-    // - cwd/pwd
-    // - some env variables like SOURCE_DATE_EPOCH
-    //   (never ending list... but adding everything would be overkill)
-    // - uid, gid ?!
+  using Inputs = std::vector<Action>;
 
-    std::vector<Action> actions;
-  };
 } // namespace gpcache
