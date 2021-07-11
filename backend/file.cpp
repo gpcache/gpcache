@@ -14,11 +14,7 @@ namespace gpcache
     return std::string(input); // todo
   }
 
-  auto ensure_json_content(const std::filesystem::path &file, const json &content) -> bool
-  {
-    return true;
-  }
-
+  // Is there some reasonable C++ convinience library that provides such functions?
   auto read_file(const std::filesystem::path &path) -> std::variant<std::string, int>
   {
     // todo: exact effect of binary
@@ -39,6 +35,67 @@ namespace gpcache
     }
   }
 
+  // Is there some reasonable C++ convinience library that provides such functions?
+  auto write_file(const std::filesystem::path &path, const std::string &content) -> std::variant<bool, int>
+  {
+    // todo: exact effect of binary
+    std::ofstream out(path, std::ios::out | std::ios::binary);
+    if (!out)
+    {
+      return errno;
+    }
+    else
+    {
+      out.write(&content[0], content.size());
+      out.close();
+      return out.good();
+    }
+  }
+
+  /// @returns true on success (existing, created or updated)
+  auto ensure_file_content(const std::filesystem::path &file, const std::string &content) -> bool
+  {
+    if (std::filesystem::exists(file))
+    {
+      spdlog::info("action_file ({}) exists", file.string());
+
+      auto res = read_file(file);
+      if (std::holds_alternative<std::string>(res))
+      {
+        const std::string existing_file_content = std::get<std::string>(res);
+
+        if (existing_file_content != content)
+        {
+          // store as action2.json, action3.json etc to facilitate good error messages
+          // Todo: different behavior of program vs inussificient hashing (hash length)
+          spdlog::warn("file content mismatch");
+          spdlog::debug(existing_file_content);
+          spdlog::debug(content);
+          return false;
+        }
+        else
+        {
+          return true;
+        }
+      }
+      else
+      {
+        const auto existing_file_error = std::get<int>(res);
+        fmt::print("Non Existing action_file {} because of {}", file.string(), existing_file_error);
+        // attempt to create it?
+        return false;
+      }
+    }
+    else
+    {
+      spdlog::info("action_file ({}) does not exists, creating path ({})...", file.string(), file.parent_path().string());
+      std::filesystem::create_directories(file.parent_path());
+
+      write_file(file, content);
+    }
+    return true;
+  }
+
   auto cache_input(const std::filesystem::path &path, const std::string &input_name, const json &action, const json &result)
   {
     spdlog::info("Backend_File: cache_input()");
@@ -48,46 +105,15 @@ namespace gpcache
     const auto result_path = path / result_hash;
 
     const json action_file_content = {{"input", input_name}, {"action", action}};
-    const std::string action_file_content_str = action_file_content.dump();
-    const json result_file_content = result;
 
     const auto action_file = path / "action.txt";
     const auto result_file = result_path / "readable_result_for_debugging.txt";
 
-    if (std::filesystem::exists(action_file))
-    {
-      spdlog::info("action_file ({}) exists", action_file.string());
+    if (ensure_file_content(action_file, action_file_content.dump()))
+      if (ensure_file_content(result_file, result.dump()))
+        return result_path;
 
-      auto res = read_file(action_file);
-      if (std::holds_alternative<std::string>(res))
-      {
-        const std::string existing_file_content = std::get<std::string>(res);
-        fmt::print("Existing action_file {} = {}", action_file.string(), existing_file_content);
-
-        if (existing_file_content != action_file_content_str)
-        {
-          spdlog::warn("action hash match, but action file content mismatch. Why was it even compared? crap...");
-        }
-      }
-      else
-      {
-        const auto existing_file_error = std::get<int>(res);
-        fmt::print("Non Existing action_file {} because of {}", action_file.string(), existing_file_error);
-      }
-    }
-    else
-    {
-      spdlog::info("action_file ({}) does not exists, creating path ({})...", action_file.string(), path.string());
-      std::filesystem::create_directories(path);
-    }
-    //if(!path_exists(path))
-    //create_directory(path);
-    //if(file_exists) assert content is action_file_content
-
-    fmt::print("{} = {}\n", action_file.string(), action_file_content.dump());
-    fmt::print("{} = {}\n", result_file.string(), result_file_content.dump());
-
-    return result_path;
+    throw std::runtime_error("cannot store cached data in cache");
   }
 
   // traverse_inputs?
