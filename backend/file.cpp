@@ -1,6 +1,7 @@
 #include "backend/file.h"
 #include "wrappers/hash.h"
 #include "utils/enumerate.h"
+#include "utils/Utils.h"
 
 #include <spdlog/spdlog.h>
 
@@ -94,8 +95,32 @@ namespace gpcache
     return true;
   }
 
-  auto cache_input(const std::filesystem::path &path, const std::string &input_name, const json &action, const json &result)
+  auto cache_input(const std::filesystem::path &path,
+                   const std::string &input_name,
+                   const json &action,
+                   json result,
+                   std::vector<std::string> const &sloppiness)
   {
+    // how to compare accounting for sloppiness?
+    // easiest way is to drop sloppy data!
+    // probably the correct way is to read the data, parse the json, compare while ignoring sloppy fields...
+    if (input_name == "fstat" && contains(sloppiness, "time of fstat 1"))
+    {
+      spdlog::info("Action: {}", action.dump());
+
+      // currently fd is encoded in path... omfg
+      auto fs_path = action["path"].get<std::filesystem::path>();
+      if (fs_path == std::filesystem::path("1"))
+      {
+        result["stats"]["st_atim.tv_sec"] = 0;
+        result["stats"]["st_mtim.tv_sec"] = 0;
+        result["stats"]["st_ctim.tv_sec"] = 0;
+        result["stats"]["st_atim.tv_nsec"] = 0;
+        result["stats"]["st_mtim.tv_nsec"] = 0;
+        result["stats"]["st_ctim.tv_nsec"] = 0;
+      }
+    }
+
     // ToDo: handle hash conflicts... somehow...
     const auto result_hash = calculate_hash_of_str(result.dump(), 3);
     const auto result_path = path / result_hash;
@@ -113,7 +138,7 @@ namespace gpcache
   }
 
   // traverse_inputs?
-  auto create_output_path(const Inputs inputs)
+  auto create_output_path(const Inputs inputs, std::vector<std::string> const &sloppiness)
   {
     fmt::print("\n");
 
@@ -122,9 +147,9 @@ namespace gpcache
     for (const Action &input : inputs)
     {
       std::visit(
-          [&path](auto &&typed_input)
+          [&path, &sloppiness](auto &&typed_input)
           {
-            path = cache_input(path, typed_input.name, json{typed_input.action}, json{typed_input.result});
+            path = cache_input(path, typed_input.name, json(typed_input.action), json(typed_input.result), sloppiness);
           },
           input);
     }
@@ -136,14 +161,14 @@ namespace gpcache
   {
     for (const auto &[index, data] : enumerate(outputs))
     {
-      ensure_file_content(path / fmt::format("output_{}.json", index), data);
+      ensure_file_content(path / fmt::format("output_{}.json", index), data.dump());
     }
   }
 
-  auto FileBasedBackend::store(const Inputs &inputs, const Outputs &outputs) -> void
+  auto FileBasedBackend::store(Inputs const &inputs, Outputs const &outputs, std::vector<std::string> const &sloppiness) -> void
   {
     // ToDo: intermixed inpiuts and outputs...
-    auto handle = create_output_path(inputs);
+    auto handle = create_output_path(inputs, sloppiness);
     store_outputs(handle, outputs);
     spdlog::info("FileBasedBackend::store has cached inputs and outputs");
   }

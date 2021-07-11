@@ -40,7 +40,7 @@ namespace gpcache
       std::visit(
           [](auto &&cached_syscall)
           {
-            fmt::print("Cached syscall: {}\n", json{cached_syscall}.dump());
+            fmt::print("Cached syscall: {}\n", json(cached_syscall).dump());
           },
           action);
     }
@@ -76,13 +76,16 @@ int main(int argc, char **argv)
   }
 
   // later from args:
+  std::vector<std::string> sloppiness;
+  sloppiness.push_back("time of fstat 1");
+
   try
   {
     auto [inputs, outputs] = gpcache::cache_execution(params);
     //gpcache::print_inputs(inputs);
     auto backend = gpcache::FileBasedBackend();
 
-    backend.store(inputs, outputs);
+    backend.store(inputs, outputs, sloppiness);
   }
   catch (const char *error)
   {

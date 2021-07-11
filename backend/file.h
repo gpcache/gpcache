@@ -12,6 +12,6 @@ namespace gpcache
     // ENV, executable, parameters etc
     auto retrieve(const Inputs &inputs) -> Outputs;
 
-    auto store(const Inputs &inputs, const Outputs &outputs) -> void;
+    auto store(Inputs const &inputs, Outputs const &outputs, std::vector<std::string> const &sloppiness) -> void;
   };
 }
