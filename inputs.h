@@ -197,6 +197,7 @@ namespace gpcache
     CPP_SUCKS(UnsupportedInput, action, result)
   };
 
+  // ToDo: rename to "Input"
   using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash, UnsupportedInput>;
 
   // Holds collection of all inputs which should lead to the same output.

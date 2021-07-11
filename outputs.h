@@ -3,15 +3,7 @@
 #include <string>
 #include <vector>
 
-struct FileToWrite
-{
-  std::string filename;
-  std::string content;
-  // access rights etc
-};
+using Output = json;
 
-struct Outputs
-{
-  std::string out, err; // treat as files?!
-  std::vector<FileToWrite> files;
-};
+// Holds collection of all inputs which should lead to the same output.
+using Outputs = std::vector<Output>;

@@ -1,5 +1,6 @@
 #include "backend/file.h"
 #include "wrappers/hash.h"
+#include "utils/enumerate.h"
 
 #include <spdlog/spdlog.h>
 
@@ -57,8 +58,6 @@ namespace gpcache
   {
     if (std::filesystem::exists(file))
     {
-      spdlog::info("action_file ({}) exists", file.string());
-
       auto res = read_file(file);
       if (std::holds_alternative<std::string>(res))
       {
@@ -81,14 +80,13 @@ namespace gpcache
       else
       {
         const auto existing_file_error = std::get<int>(res);
-        fmt::print("Non Existing action_file {} because of {}", file.string(), existing_file_error);
+        spdlog::warn("Cannot read cached file {} because of {}", file.string(), existing_file_error);
         // attempt to create it?
         return false;
       }
     }
     else
     {
-      spdlog::info("action_file ({}) does not exists, creating path ({})...", file.string(), file.parent_path().string());
       std::filesystem::create_directories(file.parent_path());
 
       write_file(file, content);
@@ -98,8 +96,6 @@ namespace gpcache
 
   auto cache_input(const std::filesystem::path &path, const std::string &input_name, const json &action, const json &result)
   {
-    spdlog::info("Backend_File: cache_input()");
-
     // ToDo: handle hash conflicts... somehow...
     const auto result_hash = calculate_hash_of_str(result.dump(), 3);
     const auto result_path = path / result_hash;
@@ -138,12 +134,17 @@ namespace gpcache
 
   auto store_outputs(const std::filesystem::path path, const Outputs &outputs)
   {
+    for (const auto &[index, data] : enumerate(outputs))
+    {
+      ensure_file_content(path / fmt::format("output_{}.json", index), data);
+    }
   }
 
   auto FileBasedBackend::store(const Inputs &inputs, const Outputs &outputs) -> void
   {
-    spdlog::info("FileBasedBackend::store called");
+    // ToDo: intermixed inpiuts and outputs...
     auto handle = create_output_path(inputs);
     store_outputs(handle, outputs);
+    spdlog::info("FileBasedBackend::store has cached inputs and outputs");
   }
 } // namespace gpcache

@@ -35,6 +35,8 @@ namespace gpcache
   class FiledescriptorState
   {
   public:
+    using file_descriptor_t = unsigned int;
+
     enum class State
     {
       open,
@@ -42,7 +44,7 @@ namespace gpcache
     };
     struct FiledescriptorData
     {
-      int fd;
+      file_descriptor_t fd;
       std::filesystem::path filename;
       int flags;
       State state;
@@ -50,7 +52,7 @@ namespace gpcache
     };
 
   private:
-    std::map<int, FiledescriptorData> fds;
+    std::map<file_descriptor_t, FiledescriptorData> fds;
 
     // Sounds like this should be in fmt
     auto dump_data(auto const level, FiledescriptorData const &data) const -> void
@@ -71,7 +73,7 @@ namespace gpcache
       fds[2] = {.fd = 2, .filename = "2", .flags = 0, .state = State::open, .source = {"default"}};
     }
 
-    auto dump(auto const level, int const fd) const -> void
+    auto dump(auto const level, file_descriptor_t const fd) const -> void
     {
       if (auto entry = fds.find(fd); entry != fds.end())
       {
@@ -92,7 +94,7 @@ namespace gpcache
       }
     }
 
-    const auto &get_open(int const fd) const
+    const auto &get_open(file_descriptor_t const fd) const
     {
       if (auto entry = fds.find(fd); entry != fds.end() && entry->second.state == State::open)
       {
@@ -107,7 +109,7 @@ namespace gpcache
       }
     }
 
-    auto get_open_opt(int const fd) const
+    auto get_open_opt(file_descriptor_t const fd) const
     {
       if (auto entry = fds.find(fd); entry != fds.end() && entry->second.state == State::open)
       {
@@ -119,7 +121,7 @@ namespace gpcache
       }
     }
 
-    auto open(int fd, std::string file, int flags, std::string source) -> void
+    auto open(file_descriptor_t fd, std::string file, int flags, std::string source) -> void
     {
       FiledescriptorData new_entry = {
           .fd = fd,
@@ -150,7 +152,7 @@ namespace gpcache
       }
     }
 
-    auto close(int fd, std::string source) -> void
+    auto close(file_descriptor_t fd, std::string source) -> void
     {
       if (auto entry = fds.find(fd); entry != fds.end())
       {
@@ -175,7 +177,9 @@ namespace gpcache
   struct SyscallResult
   {
     bool supported;
+    // todo: variant
     std::optional<Action> input;
+    std::optional<Output> output;
   };
 
   auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, FiledescriptorState &fds, MmapState &mmaps) -> SyscallResult
@@ -254,6 +258,20 @@ namespace gpcache
       FileHash hash{fds.get_open(syscall_read.fd()).filename, "ToDo"};
       return SyscallResult{true, hash};
     }
+    case Syscall_write::syscall_id:
+    {
+      auto const syscall_write = static_cast<Syscall_write>(syscall.arguments);
+
+      auto const filename = fds.get_open(syscall_write.fd()).filename;
+
+      json const ftw{
+          {"fd", syscall_write.fd()},
+          {"filename", fds.get_open(syscall_write.fd()).filename},
+          {"content", Ptrace::PEEKTEXT(p.get_pid(),
+                                       reinterpret_cast<const uint8_t *>(syscall_write.buf()),
+                                       syscall_write.count())}};
+      return SyscallResult{.supported = true, .output = ftw};
+    }
     case Syscall_mmap::syscall_id:
     {
       auto const syscall_mmap = static_cast<Syscall_mmap>(syscall.arguments);
@@ -323,6 +341,7 @@ namespace gpcache
     spdlog::debug("after createChildProcess");
 
     Inputs inputs;
+    Outputs outputs;
     FiledescriptorState fds;
     MmapState mmaps;
 
@@ -358,11 +377,16 @@ namespace gpcache
           if (inputs.empty() || inputs.back() != new_action)
             inputs.push_back(new_action);
         }
+        else if (result.output)
+        {
+          auto &new_output = *result.output;
+          outputs.push_back(new_output);
+        }
       }
       else
         spdlog::warn("Unsupported syscall {}", *syscall);
     }
 
-    return ExecutionCache{inputs, Outputs{}};
+    return ExecutionCache{inputs, outputs};
   }
 }
