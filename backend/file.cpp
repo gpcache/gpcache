@@ -54,9 +54,22 @@ namespace gpcache
     }
   }
 
+  auto is_file_content(const std::filesystem::path &file, const std::string &content) -> bool
+  {
+    auto res = read_file(file);
+    if (std::holds_alternative<std::string>(res))
+    {
+      const std::string existing_file_content = std::get<std::string>(res);
+
+      return existing_file_content == content;
+    }
+    return false;
+  }
+
   /// @returns true on success (existing, created or updated)
   auto ensure_file_content(const std::filesystem::path &file, const std::string &content) -> bool
   {
+    // use is_file_content ?!
     if (std::filesystem::exists(file))
     {
       auto res = read_file(file);
@@ -80,7 +93,7 @@ namespace gpcache
       }
       else
       {
-        const auto existing_file_error = std::get<int>(res);
+        auto const existing_file_error = std::get<int>(res);
         spdlog::warn("Cannot read cached file {} because of {}", file.string(), existing_file_error);
         // attempt to create it?
         return false;
@@ -122,13 +135,13 @@ namespace gpcache
     }
 
     // ToDo: handle hash conflicts... somehow...
-    const auto result_hash = calculate_hash_of_str(result.dump(), 3);
-    const auto result_path = path / result_hash;
+    auto const result_hash = calculate_hash_of_str(result.dump(), 3);
+    auto const result_path = path / result_hash;
 
     const json action_file_content = {{"input", input_name}, {"action", action}};
 
-    const auto action_file = path / "action.txt";
-    const auto result_file = result_path / "readable_result_for_debugging.txt";
+    auto const action_file = path / "action.txt";
+    auto const result_file = result_path / "readable_result_for_debugging.txt";
 
     if (ensure_file_content(action_file, action_file_content.dump()))
       if (ensure_file_content(result_file, result.dump()))
@@ -138,11 +151,11 @@ namespace gpcache
   }
 
   // traverse_inputs?
-  auto create_output_path(const Inputs inputs, std::vector<std::string> const &sloppiness)
+  auto create_output_path(std::filesystem::path path, json const &params_json, const Inputs inputs, std::vector<std::string> const &sloppiness)
   {
     fmt::print("\n");
 
-    std::filesystem::path path = ".gpcache/";
+    path = cache_input(path, "params", json(), params_json, sloppiness);
 
     for (const Action &input : inputs)
     {
@@ -159,17 +172,40 @@ namespace gpcache
 
   auto store_outputs(const std::filesystem::path path, const Outputs &outputs)
   {
-    for (const auto &[index, data] : enumerate(outputs))
+    for (auto const &[index, data] : enumerate(outputs))
     {
       ensure_file_content(path / fmt::format("output_{}.json", index), data.dump());
     }
   }
 
-  auto FileBasedBackend::store(Inputs const &inputs, Outputs const &outputs, std::vector<std::string> const &sloppiness) -> void
+  auto FileBasedBackend::store(json const &params_json, Inputs const &inputs, Outputs const &outputs, std::vector<std::string> const &sloppiness) -> void
   {
     // ToDo: intermixed inpiuts and outputs...
-    auto handle = create_output_path(inputs, sloppiness);
+    auto handle = create_output_path(this->cache_path, params_json, inputs, sloppiness);
     store_outputs(handle, outputs);
     spdlog::info("FileBasedBackend::store has cached inputs and outputs");
+  }
+
+  auto FileBasedBackend::retrieve(const std::filesystem::path &path, const json &result) -> retrieve_result
+  {
+    auto const result_hash = calculate_hash_of_str(result.dump(), 3);
+    auto const result_path = path / result_hash;
+
+    auto const result_file = result_path / "readable_result_for_debugging.txt";
+    auto const action_file = result_path / "action.txt";
+
+    if (is_file_content(result_file, result.dump()))
+    {
+      auto res = read_file(action_file);
+      if (std::holds_alternative<std::string>(res))
+      {
+        std::string const action_str = std::get<std::string>(res);
+        json const next_action = json::parse(action_str); // parse!
+        return {result_path, next_action};
+      }
+    }
+
+    // ToDo: result_path was partially constructed here! pass it along.
+    return {};
   }
 } // namespace gpcache

@@ -178,6 +178,28 @@ namespace gpcache
     CPP_SUCKS(FileHash, action, result)
   };
 
+  struct ParamsInput
+  {
+    static constexpr char name[] = "params";
+
+    struct Action
+    {
+      bool dummy = true;
+      CPP_SUCKS(Action, dummy)
+    } action;
+
+    struct Result
+    {
+      std::filesystem::path path; // cache this?
+      std::vector<std::string> params;
+      std::string cwd; // etc... ENV?
+
+      CPP_SUCKS(Result, path, params, cwd)
+    } result;
+
+    CPP_SUCKS(ParamsInput, action, result)
+  };
+
   struct UnsupportedInput
   {
     static constexpr char name[] = "unsupported";
@@ -198,7 +220,7 @@ namespace gpcache
   };
 
   // ToDo: rename to "Input"
-  using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash, UnsupportedInput>;
+  using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash, ParamsInput, UnsupportedInput>;
 
   // Holds collection of all inputs which should lead to the same output.
   using Inputs = std::vector<Action>;

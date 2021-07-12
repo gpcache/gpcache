@@ -67,9 +67,7 @@ int main(int argc, char **argv)
     spdlog::debug("* {}", param);
   spdlog::debug("--------------------");
 
-  params.push_back(nullptr); // required for syscalls so end of array can be detected.
-
-  if (params[0] == nullptr)
+  if (params.empty())
   {
     fmt::print("Pass your executable to gpcache, e.g. gpcache echo 'Hello, World!'\n");
     exit(1);
@@ -81,11 +79,25 @@ int main(int argc, char **argv)
 
   try
   {
+    auto backend = gpcache::FileBasedBackend(std::filesystem::path(".gpcache"));
+
+    // ToDo: add cwd tec
+    json const params_json = {
+        {"params", params}};
+
+    auto x = backend.retrieve(backend.cache_path, params_json);
+    if (!x.path.empty())
+    {
+      spdlog::info("Cached! Next action is {}", x.next_action);
+    }
+
+    // ToDo: move/hide to where the syscalls happen
+    params.push_back(nullptr); // required for syscalls so end of array can be detected.
+
     auto [inputs, outputs] = gpcache::cache_execution(params);
     //gpcache::print_inputs(inputs);
-    auto backend = gpcache::FileBasedBackend();
 
-    backend.store(inputs, outputs, sloppiness);
+    backend.store(params_json, inputs, outputs, sloppiness);
   }
   catch (const char *error)
   {
