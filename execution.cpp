@@ -205,7 +205,7 @@ namespace gpcache
       {
         int fd = syscall.return_value.value();
         fds.open(fd, path, syscall_openat.flags(), fmt::format("open via {}", syscall));
-        spdlog::info("openat flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
+        spdlog::debug("openat flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
         return SyscallResult{true, OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0}};
       }
       else
@@ -369,7 +369,7 @@ namespace gpcache
 
       if (result.supported)
       {
-        spdlog::info("Supported syscall {}", *syscall);
+        spdlog::debug("Supported syscall {}", *syscall);
         if (result.input)
         {
           auto &new_action = *result.input;

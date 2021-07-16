@@ -54,16 +54,27 @@ namespace gpcache
     }
   }
 
-  static auto is_file_content(const std::filesystem::path &file, const std::string &content) -> bool
+  struct is_file_content_result
   {
-    auto res = read_file(file);
+    std::optional<std::string> old_file_content;
+    std::optional<int> error;
+
+    bool ok() { !old_file_content && !error; }
+  };
+
+  static auto is_file_content(const std::filesystem::path &file, const std::string &content) -> is_file_content_result
+  {
+    auto const res = read_file(file);
     if (std::holds_alternative<std::string>(res))
     {
       const std::string existing_file_content = std::get<std::string>(res);
 
-      return existing_file_content == content;
+      if (existing_file_content == content)
+        return {};
+      else
+        return {.old_file_content = existing_file_content};
     }
-    return false;
+    return {.error = std::get<int>(res)};
   }
 
   struct ensure_file_content_error
@@ -218,14 +229,30 @@ namespace gpcache
     auto const result_file = result_path / "readable_result_for_debugging.txt";
     auto const action_file = result_path / "action.txt";
 
-    if (is_file_content(result_file, result.dump()))
+    spdlog::info("retrieve() called");
+
+    if (auto is = is_file_content(result_file, result.dump()); is.ok())
     {
+      spdlog::info("Found cache directory for executable with params: {}", result.dump());
       auto res = read_file(action_file);
       if (std::holds_alternative<std::string>(res))
       {
         std::string const action_str = std::get<std::string>(res);
         json const next_action = json::parse(action_str); // parse!
         return {result_path, next_action};
+      }
+    }
+    else
+    {
+      if (is.old_file_content)
+      {
+        spdlog::warn("Cannot use cached results because these two do not match");
+        spdlog::warn("Old: {}", result.dump());
+        spdlog::warn("New: {}", is.old_file_content.value());
+      }
+      else
+      {
+        spdlog::warn("Cannot use cached results because of error {}", is.error.value());
       }
     }
 

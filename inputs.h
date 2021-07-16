@@ -1,5 +1,6 @@
 #pragma once
 
+#define JSON_DIAGNOSTICS 1
 #include <nlohmann/json.hpp>
 #include <boost/pfr/core.hpp>
 #include <fmt/format.h>

@@ -88,7 +88,8 @@ int main(int argc, char **argv)
     auto x = backend.retrieve(backend.cache_path, params_json);
     if (!x.path.empty())
     {
-      spdlog::info("Cached! Next action is {}", x.next_action);
+      spdlog::info("Cached! Next action is {}", x.next_action.dump());
+      !!--continue here-- !!
     }
 
     // ToDo: move/hide to where the syscalls happen
