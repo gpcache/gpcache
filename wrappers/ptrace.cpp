@@ -148,12 +148,12 @@ namespace Ptrace
       auto chars = bit_cast<std::array<char, sizeof(data)>>(data);
       for (const char c : chars)
       {
-        result += c;
         if (c == '\0')
         {
           end_of_string = true;
           break;
         }
+        result += c;
       }
     }
 

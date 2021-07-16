@@ -193,7 +193,7 @@ namespace gpcache
     case Syscall_access::syscall_id:
     {
       auto syscall_access = static_cast<Syscall_access>(syscall.arguments);
-      std::string filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
+      std::string const filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
       return SyscallResult{true, Input_Access{filename, syscall_access.mode(), syscall.return_value.value()}};
     }
     case Syscall_openat::syscall_id:
