@@ -17,7 +17,7 @@ namespace gpcache
   }
 
   // Is there some reasonable C++ convinience library that provides such functions?
-  auto read_file(const std::filesystem::path &path) -> std::variant<std::string, int>
+  static auto read_file(const std::filesystem::path &path) -> std::variant<std::string, int>
   {
     // todo: exact effect of binary
     std::ifstream in(path, std::ios::in | std::ios::binary);
@@ -38,7 +38,7 @@ namespace gpcache
   }
 
   // Is there some reasonable C++ convinience library that provides such functions?
-  auto write_file(const std::filesystem::path &path, const std::string &content) -> std::variant<bool, int>
+  static auto write_file(const std::filesystem::path &path, const std::string &content) -> std::variant<bool, int>
   {
     // todo: exact effect of binary
     std::ofstream out(path, std::ios::out | std::ios::binary);
@@ -54,7 +54,7 @@ namespace gpcache
     }
   }
 
-  auto is_file_content(const std::filesystem::path &file, const std::string &content) -> bool
+  static auto is_file_content(const std::filesystem::path &file, const std::string &content) -> bool
   {
     auto res = read_file(file);
     if (std::holds_alternative<std::string>(res))
@@ -66,8 +66,15 @@ namespace gpcache
     return false;
   }
 
-  /// @returns true on success (existing, created or updated)
-  auto ensure_file_content(const std::filesystem::path &file, const std::string &content) -> bool
+  struct ensure_file_content_error
+  {
+    std::optional<std::string> old_file_content;
+    std::optional<int> error;
+
+    bool ok() { !old_file_content && !error; }
+  };
+
+  static auto ensure_file_content(const std::filesystem::path &file, const std::string &content) -> ensure_file_content_error
   {
     // use is_file_content ?!
     if (std::filesystem::exists(file))
@@ -84,11 +91,11 @@ namespace gpcache
           spdlog::warn("file content mismatch");
           spdlog::debug(existing_file_content);
           spdlog::debug(content);
-          return false;
+          return {.old_file_content = existing_file_content};
         }
         else
         {
-          return true;
+          return {};
         }
       }
       else
@@ -96,7 +103,7 @@ namespace gpcache
         auto const existing_file_error = std::get<int>(res);
         spdlog::warn("Cannot read cached file {} because of {}", file.string(), existing_file_error);
         // attempt to create it?
-        return false;
+        return {.error = existing_file_error};
       }
     }
     else
@@ -105,7 +112,7 @@ namespace gpcache
 
       write_file(file, content);
     }
-    return true;
+    return {};
   }
 
   auto cache_input(const std::filesystem::path &path,
@@ -143,9 +150,15 @@ namespace gpcache
     auto const action_file = path / "action.txt";
     auto const result_file = result_path / "readable_result_for_debugging.txt";
 
-    if (ensure_file_content(action_file, action_file_content.dump()))
-      if (ensure_file_content(result_file, result.dump()))
+    if (auto action_match = ensure_file_content(action_file, action_file_content.dump()); action_match.ok())
+    {
+      if (auto result_match = ensure_file_content(result_file, result.dump()); result_match.ok())
         return result_path;
+      else
+        spdlog::warn("Same application has suddenly produced different results");
+    }
+    else
+      spdlog::warn("Same application has suddenly produced different actions");
 
     throw std::runtime_error("cannot store cached data in cache");
   }

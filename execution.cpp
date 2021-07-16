@@ -267,9 +267,11 @@ namespace gpcache
       json const ftw{
           {"fd", syscall_write.fd()},
           {"filename", fds.get_open(syscall_write.fd()).filename},
-          {"content", Ptrace::PEEKTEXT(p.get_pid(),
-                                       reinterpret_cast<const uint8_t *>(syscall_write.buf()),
-                                       syscall_write.count())}};
+          // ToDo: exactly syscall_write.count() bytes
+          {"content", Ptrace::PEEKTEXT_string(p.get_pid(),
+                                              syscall_write.buf())}};
+      spdlog::warn("write: {}", ftw.dump(4));
+
       return SyscallResult{.supported = true, .output = ftw};
     }
     case Syscall_mmap::syscall_id:
