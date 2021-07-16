@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <fmt/format.h>
 #include <bit>
+#include <ranges>
 
 #include <spdlog/spdlog.h>
 
@@ -119,15 +120,17 @@ namespace Ptrace
     }
   }
 
-  auto PEEKTEXT(const int pid, const uint8_t *const begin, const size_t count) -> std::string
+  auto PEEKTEXT(const int pid, const char *const begin, const size_t count) -> std::string
   {
-    std::string result;
-    result.reserve(count + sizeof(intptr_t));
+    std::string result; // vector?
+    result.reserve(count);
 
     for (size_t pos_in_string = 0; pos_in_string < count; pos_in_string += sizeof(intptr_t))
     {
-      const long data = Raw::PEEKTEXT(pid, begin + pos_in_string);
-      std::memcpy(result.data() + pos_in_string, &data, std::min(count - pos_in_string, sizeof(intptr_t)));
+      long const data = Raw::PEEKTEXT(pid, reinterpret_cast<uint8_t const *>(begin) + pos_in_string);
+      std::memcpy(result.data() + pos_in_string,
+                  &data,
+                  std::min(count - pos_in_string, sizeof(intptr_t)));
     }
 
     return result;

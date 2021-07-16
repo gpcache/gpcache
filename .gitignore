@@ -1,19 +1,7 @@
+/.*
+
 # Typical build directories
 /build*/
 
-# Emacs save files
-*~
-
-# Vim save files
-.*.sw?
-.*.un~
-
 # Visual Studio settings and build output
-/.vs/
 /out/build/
-
-# Visual Studio Code settings
-/.vscode/
-
-# macOS custom attributes
-.DS_Store/

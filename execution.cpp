@@ -235,7 +235,7 @@ namespace gpcache
       struct stat s;
       // ToDo: Ptrace::PEEKTEXT<struct stat>
       auto data = Ptrace::PEEKTEXT(p.get_pid(),
-                                   reinterpret_cast<uint8_t *>(syscall_fstat.statbuf()),
+                                   reinterpret_cast<char *>(syscall_fstat.statbuf()),
                                    sizeof(struct stat));
       memcpy(&s, data.c_str(), sizeof(struct stat));
 
@@ -267,10 +267,9 @@ namespace gpcache
       json const ftw{
           {"fd", syscall_write.fd()},
           {"filename", fds.get_open(syscall_write.fd()).filename},
-          // ToDo: exactly syscall_write.count() bytes
-          {"content", Ptrace::PEEKTEXT_string(p.get_pid(),
-                                              syscall_write.buf())}};
-      spdlog::warn("write: {}", ftw.dump(4));
+          {"content", Ptrace::PEEKTEXT(p.get_pid(),
+                                       syscall_write.buf(),
+                                       syscall_write.count())}};
 
       return SyscallResult{.supported = true, .output = ftw};
     }

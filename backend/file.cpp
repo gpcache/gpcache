@@ -155,10 +155,21 @@ namespace gpcache
       if (auto result_match = ensure_file_content(result_file, result.dump()); result_match.ok())
         return result_path;
       else
-        spdlog::warn("Same application has suddenly produced different results");
+        spdlog::warn("Same application has suddenly produced different results. ToDo: Will no longer cache it!");
     }
     else
-      spdlog::warn("Same application has suddenly produced different actions");
+    {
+      if (action_match.old_file_content)
+      {
+        spdlog::warn("Same application is suddenly performing a different action for no obvious reason. ToDo: Will no longer cache it!");
+        spdlog::warn("Old: {}", *action_match.old_file_content);
+        spdlog::warn("New: {}", action_file_content.dump());
+      }
+      else
+      {
+        spdlog::warn("Cannot write cache file");
+      }
+    }
 
     throw std::runtime_error("cannot store cached data in cache");
   }

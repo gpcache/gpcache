@@ -53,7 +53,7 @@ namespace Ptrace
     auto SYSCALL(int pid, int signal = 0) -> void;
   }
 
-  auto PEEKTEXT(int pid, const uint8_t *const begin, size_t count) -> std::string;
+  auto PEEKTEXT(int pid, const char *begin, size_t count) -> std::string;
   auto PEEKTEXT_string(int pid, char const *begin) -> std::string;
 
   // This is an explicit function because in addition to the SysCall it also needs pid_t.
