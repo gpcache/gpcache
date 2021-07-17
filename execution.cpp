@@ -62,9 +62,7 @@ namespace gpcache
     }
     case Syscall_openat::syscall_id:
     {
-      auto const syscall_openat = static_cast<Syscall_openat>(syscall.arguments);
-      SyscallEx<Syscall_openat> const syscall_ex{syscall_openat, p, (int)syscall.return_value.value(), (int)-syscall.return_value.value()};
-      auto const cached_syscall = from_syscall(state, syscall_ex);
+      auto const cached_syscall = from_syscall(state, SyscallEx<Syscall_openat>(p, syscall));
 
       if (cached_syscall)
         return SyscallResult{true, cached_syscall.value()};
@@ -80,14 +78,8 @@ namespace gpcache
     }
     case Syscall_fstat::syscall_id:
     {
-      auto const syscall_fstat = static_cast<Syscall_fstat>(syscall.arguments);
-      struct stat const s = Ptrace::PEEKTEXT<struct stat>(p.get_pid(),
-                                                          reinterpret_cast<char *>(syscall_fstat.statbuf()));
-
-      auto const path = state.fds.get_open(syscall_fstat.fd()).filename;
-
-      FstatAction fstat{path, s, syscall.return_value.value() == 0, 0};
-      return SyscallResult{true, fstat};
+      auto const cached_syscall = from_syscall(state, SyscallEx<Syscall_fstat>(p, syscall));
+      return SyscallResult{true, cached_syscall};
     }
     case Syscall_read::syscall_id:
     {

@@ -151,6 +151,11 @@ struct fmt::formatter<Ptrace::SysCall>
 template <class T>
 struct SyscallEx : public T
 {
+  SyscallEx(Ptrace::PtraceProcess process, const Ptrace::SysCall &syscall)
+      : T(static_cast<T>(syscall.arguments)), process(process), return_value((int)syscall.return_value.value()), errno_value((int)-syscall.return_value.value())
+  {
+  }
+
   Ptrace::PtraceProcess const process;
   int const return_value;
   int const errno_value;

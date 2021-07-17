@@ -83,6 +83,8 @@ add_library(gpcache_lib
   execution.cpp
   execute_action.cpp
   cached_syscalls/open_close.cpp
+  cached_syscalls/fstat.cpp
+  state.cpp
 )
 target_include_directories(gpcache_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gpcache_lib ${CONAN_TARGETS} ${CMAKE_DL_LIBS})
