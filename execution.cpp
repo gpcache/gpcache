@@ -42,8 +42,12 @@ namespace gpcache
     std::optional<Output> output;
   };
 
-  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, FiledescriptorState &fds, MmapState &mmaps) -> SyscallResult
+  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, State &state, MmapState &mmaps) -> SyscallResult
   {
+    // Design problem:
+    // * variant with all possible syscall types takes minutes to compile
+    // * creating hundreds of virtual methods is kind of pointless when most of them are not supported
+    // So the only solution is this huge switch statement.
     switch (syscall.info.syscall_id)
     {
     case Syscall_brk::syscall_id:
@@ -54,29 +58,24 @@ namespace gpcache
     {
       auto syscall_access = static_cast<Syscall_access>(syscall.arguments);
       std::string const filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
-      return SyscallResult{true, Input_Access{filename, syscall_access.mode(), syscall.return_value.value()}};
+      return SyscallResult{true, Input_Access{filename, syscall_access.mode(), (int)syscall.return_value.value()}};
     }
     case Syscall_openat::syscall_id:
     {
       auto const syscall_openat = static_cast<Syscall_openat>(syscall.arguments);
-      SyscallEx<Syscall_openat> syscall_ex{syscall_openat, p, syscall.return_value.value()};
-      auto cached_syscall = from_syscall(syscall_ex);
+      SyscallEx<Syscall_openat> const syscall_ex{syscall_openat, p, syscall.return_value.value()};
+      auto const cached_syscall = from_syscall(state, syscall_ex);
 
       if (cached_syscall)
-      {
-        fds.open(cached_syscall->result.fd, cached_syscall->action.filename, syscall_openat.flags(), fmt::format("open via {}", syscall));
         return SyscallResult{true, cached_syscall.value()};
-      }
       else
-      {
-        return SyscallResult{.supported = false};
-      }
+        return SyscallResult{false};
       break; // unreachable, but g++ complains otherwise
     }
     case Syscall_close::syscall_id:
     {
       auto const syscall_close = static_cast<Syscall_close>(syscall.arguments);
-      fds.close(syscall_close.fd(), fmt::format("close via {}", syscall));
+      state.fds.close(syscall_close.fd(), fmt::format("close via {}", syscall));
       return SyscallResult{.supported = true};
     }
     case Syscall_fstat::syscall_id:
@@ -89,7 +88,7 @@ namespace gpcache
                                    sizeof(struct stat));
       memcpy(&s, data.c_str(), sizeof(struct stat));
 
-      auto const path = fds.get_open(syscall_fstat.fd()).filename;
+      auto const path = state.fds.get_open(syscall_fstat.fd()).filename;
 
       FstatAction fstat{path, s, syscall.return_value.value() == 0, 0};
       return SyscallResult{true, fstat};
@@ -98,25 +97,25 @@ namespace gpcache
     {
       auto const syscall_read = static_cast<Syscall_close>(syscall.arguments);
       // In theory only the actually read parts of the file...
-      FileHash hash{fds.get_open(syscall_read.fd()).filename, "ToDo"};
+      FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
       return SyscallResult{true, hash};
     }
     case Syscall_pread64::syscall_id:
     {
       auto const syscall_read = static_cast<Syscall_pread64>(syscall.arguments);
       // In theory only the actually read parts of the file...
-      FileHash hash{fds.get_open(syscall_read.fd()).filename, "ToDo"};
+      FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
       return SyscallResult{true, hash};
     }
     case Syscall_write::syscall_id:
     {
       auto const syscall_write = static_cast<Syscall_write>(syscall.arguments);
 
-      auto const filename = fds.get_open(syscall_write.fd()).filename;
+      auto const filename = state.fds.get_open(syscall_write.fd()).filename;
 
       json const ftw{
           {"fd", syscall_write.fd()},
-          {"filename", fds.get_open(syscall_write.fd()).filename},
+          {"filename", state.fds.get_open(syscall_write.fd()).filename},
           {"content", Ptrace::PEEKTEXT(p.get_pid(),
                                        syscall_write.buf(),
                                        syscall_write.count())}};
@@ -131,7 +130,7 @@ namespace gpcache
       // Yes this will truncate! and wrap around 4294967295 to -1!
       int const fd = static_cast<int>(syscall_mmap.fd());
 
-      auto file_data = fds.get_open_opt(fd);
+      auto file_data = state.fds.get_open_opt(fd);
 
       if (file_data.has_value() && (syscall_mmap.prot() == PROT_READ || syscall_mmap.prot() == (PROT_READ | PROT_EXEC)))
       {
@@ -194,7 +193,7 @@ namespace gpcache
 
     Inputs inputs;
     Outputs outputs;
-    FiledescriptorState fds;
+    State state;
     MmapState mmaps;
 
     while (true)
@@ -214,9 +213,8 @@ namespace gpcache
         continue;
       }
 
-      // Do the conversion only once (move into optional in SysCall ?!) -> Yeah. TODO
-      // Simply add p to SysCall!
-      auto result = handle_syscall(p, *syscall, fds, mmaps);
+      // add p to SysCall!
+      auto result = handle_syscall(p, *syscall, state, mmaps);
 
       if (result.supported)
       {

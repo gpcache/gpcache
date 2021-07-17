@@ -53,6 +53,12 @@ namespace gpcache
     auto dump_data(auto const level, FiledescriptorData const &data) const -> void;
   };
 
+  struct State
+  {
+    FiledescriptorState fds;
+    //MmapState mmaps;
+  };
+
   struct CachedSyscall_Open
   {
     static constexpr char name[] = "open";
@@ -80,5 +86,5 @@ namespace gpcache
 
   auto execute_action(CachedSyscall_Open::Action const &cached_syscall) -> CachedSyscall_Open::Result;
 
-  auto from_syscall(SyscallEx<Syscall_openat> const &syscall) -> std::optional<CachedSyscall_Open>;
+  auto from_syscall(State &state, SyscallEx<Syscall_openat> const &syscall) -> std::optional<CachedSyscall_Open>;
 }
