@@ -160,17 +160,6 @@ namespace Ptrace
     return result;
   }
 
-  static auto create_signal_mask_with_one_signal(const int signum)
-  {
-    sigset_t mask;
-    sigemptyset(&mask);
-    sigaddset(&mask, signum);
-    return mask;
-  }
-
-  static thread_local int global_signum_to_wait_for = 0;
-  static thread_local bool global_signal_arrived = false;
-
   auto PtraceProcess::restart_child_and_wait_for_next_syscall() -> std::optional<SysCall>
   {
     Raw::SYSCALL(pid);

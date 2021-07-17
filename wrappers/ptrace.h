@@ -148,11 +148,20 @@ struct fmt::formatter<Ptrace::SysCall>
   }
 };
 
+inline int get_errno_value(uint64_t return_value)
+{
+  // wild guess:
+  if (return_value > 0xF00000000000000)
+    return static_cast<int>(-return_value);
+  else
+    return 0;
+}
+
 template <class T>
 struct SyscallEx : public T
 {
   SyscallEx(Ptrace::PtraceProcess process, const Ptrace::SysCall &syscall)
-      : T(static_cast<T>(syscall.arguments)), process(process), return_value((int)syscall.return_value.value()), errno_value((int)-syscall.return_value.value())
+      : T(static_cast<T>(syscall.arguments)), process(process), return_value((int)syscall.return_value.value()), errno_value(get_errno_value(syscall.return_value.value()))
   {
   }
 

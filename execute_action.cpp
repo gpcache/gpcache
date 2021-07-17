@@ -25,6 +25,12 @@ static auto execute_open(json const &action) -> json
   return json(gpcache::execute_action(a));
 }
 
+template <class T>
+static auto run_execute_action(json const &action) -> json
+{
+  return json(gpcache::execute_action(static_cast<T::Action>(action)));
+}
+
 namespace gpcache
 {
   auto execute_action(json const &data) -> json
@@ -42,6 +48,8 @@ namespace gpcache
       return execute_access(action);
     if (input_type == "open")
       return execute_open(action);
+    if (input_type == "fstat")
+      return run_execute_action<CachedSyscall_Fstat>(action);
 
     return {};
   }
