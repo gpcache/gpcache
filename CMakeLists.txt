@@ -86,6 +86,8 @@ add_library(gpcache_lib
   cached_syscalls/fstat.cpp
   state.cpp
 )
+set_source_files_properties(execution.cpp PROPERTIES COMPILE_FLAGS -Wno-missing-field-initializers)
+
 target_include_directories(gpcache_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gpcache_lib ${CONAN_TARGETS} ${CMAKE_DL_LIBS})
 

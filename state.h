@@ -12,8 +12,10 @@ namespace gpcache
   class FiledescriptorState
   {
   public:
+    // we need to be able to store -1:
     // openat returns int: -1 for error, otherwise fd
-    using file_descriptor_t = unsigned int;
+    // fstat returns int: -1 for error, otherwise fd
+    using file_descriptor_t = int;
 
     enum class State
     {

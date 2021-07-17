@@ -141,18 +141,18 @@ namespace gpcache
     // how to compare accounting for sloppiness?
     // easiest way is to drop sloppy data!
     // probably the correct way is to read the data, parse the json, compare while ignoring sloppy fields...
+    // at least move this to fstat...
     if (input_name == "fstat" && contains(sloppiness, "time of fstat 1"))
     {
-      // currently fd is encoded in path... omfg
-      auto fs_path = action["path"].get<std::filesystem::path>();
-      if (fs_path == std::filesystem::path("1"))
+      auto fd = action.at("fd").get<int>();
+      if (fd == 1)
       {
-        result["stats"]["st_atim.tv_sec"] = 0;
-        result["stats"]["st_mtim.tv_sec"] = 0;
-        result["stats"]["st_ctim.tv_sec"] = 0;
-        result["stats"]["st_atim.tv_nsec"] = 0;
-        result["stats"]["st_mtim.tv_nsec"] = 0;
-        result["stats"]["st_ctim.tv_nsec"] = 0;
+        result.at("stats").at("st_atim.tv_sec") = 0;
+        result.at("stats").at("st_mtim.tv_sec") = 0;
+        result.at("stats").at("st_ctim.tv_sec") = 0;
+        result.at("stats").at("st_atim.tv_nsec") = 0;
+        result.at("stats").at("st_mtim.tv_nsec") = 0;
+        result.at("stats").at("st_ctim.tv_nsec") = 0;
       }
     }
 

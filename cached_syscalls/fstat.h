@@ -71,9 +71,9 @@ namespace gpcache
 
     struct Action
     {
-      std::filesystem::path path;
+      FiledescriptorState::file_descriptor_t fd;
 
-      CONVENIENCE(Action, path)
+      CONVENIENCE(Action, fd)
     } action;
 
     struct Result
