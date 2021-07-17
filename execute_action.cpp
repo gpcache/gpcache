@@ -1,11 +1,10 @@
 #include "execute_action.h"
-#include "utils/flag_to_string.h"
-#include "utils/Utils.h"
-
-#include <spdlog/spdlog.h>
-#include <fcntl.h> // O_RDONLY
 
 #include <unistd.h>
+
+#include <spdlog/spdlog.h>
+
+#include "utils/Utils.h"
 
 static auto execute_access(json const &action) -> json
 {
@@ -22,26 +21,8 @@ static auto execute_access(json const &action) -> json
 
 static auto execute_open(json const &action) -> json
 {
-  gpcache::OpenAction::Action a = action;
-  static const std::vector<int> allowlist = {
-      O_RDONLY,
-      O_RDONLY | O_CLOEXEC | O_LARGEFILE,
-      O_RDONLY | O_LARGEFILE,
-      O_RDONLY | O_CLOEXEC,
-  };
-  if (!gpcache::contains(allowlist, a.mode))
-  {
-    spdlog::warn("Cannot execute {} from cache at the moment (not yet implemented)", action.dump());
-    return {};
-  }
-
-  // ToDo: dirfd => full tracking of open files
-
-  gpcache::OpenAction::Result result;
-  int const fd = openat(0, a.filename.c_str(), a.flags, a.mode);
-  result.success = fd != -1;
-  result.errno_code = errno;
-  return json(result);
+  gpcache::CachedSyscall_Open::Action a = action;
+  return json(gpcache::execute_action(a));
 }
 
 namespace gpcache

@@ -1,4 +1,7 @@
 // Generated via ../gpcache/code_generator/generate_syscalls.py
+
+#pragma once
+
 #include <array>
 #include <variant>
 #include <linux/aio_abi.h>

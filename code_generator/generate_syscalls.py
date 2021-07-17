@@ -171,6 +171,7 @@ def download_and_parse_syscall_params(syscalls: Syscalls) -> None:
 
 def write_event(file, syscalls: Syscalls):
     with open(file, 'w') as writer:
+        writer.write("#pragma once\n")
         writer.write(f"// Generated via {__file__}\n")
         for x in (
             "variant linux/aio_abi.h sys/user.h unistd.h cstdint "
@@ -229,6 +230,7 @@ def cast(var_type: str) -> str:
 
 def write_event_wrapper(file, syscalls: Syscalls):
     with open(file, 'w') as writer:
+        writer.write("#pragma once\n")
         writer.write(f"// Generated via {__file__}\n")
         for x in (
             "array variant linux/aio_abi.h sys/user.h unistd.h cstdint "

@@ -28,150 +28,10 @@ namespace gpcache
     std::vector<MmapData> mmaps;
 
   public:
-    auto mmap(void *addr, int prot, int flags, std::filesystem::path path) {}
-    auto munmap(void *addr) {}
-  };
-
-  class FiledescriptorState
-  {
-  public:
-    using file_descriptor_t = unsigned int;
-
-    enum class State
-    {
-      open,
-      closed
-    };
-    struct FiledescriptorData
-    {
-      file_descriptor_t fd;
-      std::filesystem::path filename;
-      int flags;
-      State state;
-      std::vector<std::string> source; ///< for debugging only
-    };
-
-  private:
-    std::map<file_descriptor_t, FiledescriptorData> fds;
-
-    // Sounds like this should be in fmt
-    auto dump_data(auto const level, FiledescriptorData const &data) const -> void
-    {
-      spdlog::log(level, "file descriptor fd: {}", data.fd);
-      spdlog::log(level, "file descriptor filename: {}", data.filename.string());
-      spdlog::log(level, "file descriptor state: {}", data.state);
-      spdlog::log(level, "file descriptor flags: {}", openat_flag_to_string(data.flags));
-      for (auto const &src : data.source)
-        spdlog::log(level, "file descriptor history: {}", src);
-    }
-
-  public:
-    FiledescriptorState()
-    {
-      fds[0] = {.fd = 0, .filename = "0", .flags = 0, .state = State::open, .source = {"default"}};
-      fds[1] = {.fd = 1, .filename = "1", .flags = 0, .state = State::open, .source = {"default"}};
-      fds[2] = {.fd = 2, .filename = "2", .flags = 0, .state = State::open, .source = {"default"}};
-    }
-
-    auto dump(auto const level, file_descriptor_t const fd) const -> void
-    {
-      if (auto entry = fds.find(fd); entry != fds.end())
-      {
-        dump_data(level, entry->second);
-      }
-      else
-      {
-        spdlog::log(level, "{} has not been touched", fd);
-      }
-    }
-
-    auto dump(spdlog::level::level_enum const level) const -> void
-    {
-      for (auto const &[key, state] : fds)
-      {
-        spdlog::log(level, "-----------");
-        dump_data(level, state);
-      }
-    }
-
-    const auto &get_open(file_descriptor_t const fd) const
-    {
-      if (auto entry = fds.find(fd); entry != fds.end() && entry->second.state == State::open)
-      {
-        return entry->second;
-      }
-      else
-      {
-        // ToDo cache invalid syscall?
-        spdlog::warn("get_open of file descriptor {}", fd);
-        dump(spdlog::level::warn);
-        throw std::runtime_error("invalid get_open");
-      }
-    }
-
-    auto get_open_opt(file_descriptor_t const fd) const
-    {
-      if (auto entry = fds.find(fd); entry != fds.end() && entry->second.state == State::open)
-      {
-        return std::make_optional(entry->second);
-      }
-      else
-      {
-        return std::optional<FiledescriptorData>{};
-      }
-    }
-
-    auto open(file_descriptor_t fd, std::string file, int flags, std::string source) -> void
-    {
-      FiledescriptorData new_entry = {
-          .fd = fd,
-          .filename = file,
-          .flags = flags,
-          .state = State::open,
-          .source = {"open via " + source}};
-
-      if (auto entry = fds.find(fd); entry != fds.end())
-      {
-        if (entry->second.state == State::open)
-        {
-          // ToDo
-          spdlog::warn("double open of file descriptor {}", fd);
-          dump_data(spdlog::level::warn, new_entry);
-          dump(spdlog::level::warn, fd);
-        }
-        else
-        {
-          entry->second.filename = file;
-          entry->second.source.push_back("open via " + source);
-          entry->second.state = State::open;
-        }
-      }
-      else
-      {
-        fds.insert({fd, new_entry});
-      }
-    }
-
-    auto close(file_descriptor_t fd, std::string source) -> void
-    {
-      if (auto entry = fds.find(fd); entry != fds.end())
-      {
-        auto &data = entry->second;
-        if (data.state == State::closed)
-        {
-          throw std::runtime_error(fmt::format("closing closed fd {} from {}", fd, source));
-        }
-        else
-        {
-          data.state = State::closed;
-          data.source.push_back("closed via " + source);
-        }
-      }
-      else
-      {
-        throw std::runtime_error(fmt::format("closing unknown fd {} from {}", fd, source));
-      }
-    }
+    //auto mmap(void *addr, int prot, int flags, std::filesystem::path path) {}
+    auto mmap(void *, int, int, std::filesystem::path) {}
+    //auto munmap(void *addr) {}
+    auto munmap(void *) {}
   };
 
   struct SyscallResult
@@ -199,29 +59,19 @@ namespace gpcache
     case Syscall_openat::syscall_id:
     {
       auto const syscall_openat = static_cast<Syscall_openat>(syscall.arguments);
+      SyscallEx<Syscall_openat> syscall_ex{syscall_openat, p, syscall.return_value.value()};
+      auto cached_syscall = from_syscall(syscall_ex);
 
-      const std::filesystem::path path = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_openat.filename());
-      if (path.is_absolute() && (syscall_openat.flags() == O_CLOEXEC || syscall_openat.flags() == (O_RDONLY | O_CLOEXEC) || syscall_openat.flags() == (O_RDONLY | O_LARGEFILE)))
+      if (cached_syscall)
       {
-        int fd = syscall.return_value.value();
-        fds.open(fd, path, syscall_openat.flags(), fmt::format("open via {}", syscall));
-        spdlog::debug("openat flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
-        return SyscallResult{true, OpenAction{0, path, syscall_openat.flags(), syscall_openat.mode(), fd != -1, 0}};
+        fds.open(cached_syscall->result.fd, cached_syscall->action.filename, syscall_openat.flags(), fmt::format("open via {}", syscall));
+        return SyscallResult{true, cached_syscall.value()};
       }
       else
       {
-        auto const dirfd = syscall_openat.dfd();
-        if (dirfd == AT_FDCWD)
-        {
-          // open relative to CWD
-        }
-        else
-        {
-          // open relative to dirfd
-        }
-        spdlog::warn("flags {} = {}", syscall_openat.flags(), openat_flag_to_string(syscall_openat.flags()));
         return SyscallResult{.supported = false};
       }
+      break; // unreachable, but g++ complains otherwise
     }
     case Syscall_close::syscall_id:
     {
@@ -316,6 +166,7 @@ namespace gpcache
 
         return SyscallResult{.supported = false};
       }
+      break; // unreachable, but g++ complains otherwise
     }
     case Syscall_munmap::syscall_id:
     {

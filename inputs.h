@@ -1,15 +1,7 @@
 #pragma once
 
-#define JSON_DIAGNOSTICS 1
-#if DEBUG_JSON_ASSERT
-#define JSON_ASSERT(x)            \
-  if (!(x))                       \
-  {                               \
-    throw std::runtime_error(#x); \
-  }
-#endif
-
-#include <nlohmann/json.hpp>
+#include "wrappers/json.h"
+#include "wrappers/filesystem.h"
 #include <boost/pfr/core.hpp>
 #include <fmt/format.h>
 
@@ -18,23 +10,9 @@
 #include <vector>
 #include <sys/stat.h>
 
-#if __has_include(<filesystem>)
-#include <filesystem>
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-// ToDo: proide instructions how to update libc++
-// fails for me even fpr clang++10 (with g++-10 installed)
-namespace std
-{
-  using filesystem = ::std::experimental::filesystem;
-}
-#else
-error "Missing the <filesystem> header."
-#endif
-
 #include "utils/flag_to_string.h"
 
-using json = nlohmann::json;
+#include "cached_syscalls/open_close.h"
 
 inline std::strong_ordering int_to_strong_order(int i)
 {
@@ -91,13 +69,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(struct stat,
 
 namespace gpcache
 {
-// Generate this file? C++ is just awful.
-#define CPP_SUCKS(STRUCT, ...)                                       \
-  friend auto operator<=>(const STRUCT &, const STRUCT &) = default; \
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(STRUCT, __VA_ARGS__)
-
-  //  friend auto operator==(const STRUCT &, const STRUCT &) = default;
-
   struct Input_Access
   {
     static constexpr char name[] = "access";
@@ -107,42 +78,17 @@ namespace gpcache
       std::string filename;
       int mode;
 
-      CPP_SUCKS(Action, filename, mode);
+      CONVENIENCE(Action, filename, mode);
     } action;
 
     struct Result
     {
       int result;
 
-      CPP_SUCKS(Result, result)
+      CONVENIENCE(Result, result)
     } result;
 
-    CPP_SUCKS(Input_Access, action, result)
-  };
-
-  struct OpenAction
-  {
-    static constexpr char name[] = "open";
-
-    struct Action
-    {
-      int dirfd;
-      std::string filename;
-      int flags;
-      mode_t mode;
-
-      CPP_SUCKS(Action, dirfd, filename, flags, mode)
-    } action;
-
-    struct Result
-    {
-      bool success;
-      int errno_code;
-
-      CPP_SUCKS(Result, success, errno_code)
-    } result;
-
-    CPP_SUCKS(OpenAction, action, result)
+    CONVENIENCE(Input_Access, action, result)
   };
 
   struct FstatAction
@@ -153,7 +99,7 @@ namespace gpcache
     {
       std::filesystem::path path;
 
-      CPP_SUCKS(Action, path)
+      CONVENIENCE(Action, path)
     } action;
 
     struct Result
@@ -162,10 +108,10 @@ namespace gpcache
       bool success;
       int errno_code;
 
-      CPP_SUCKS(Result, stats, success, errno_code)
+      CONVENIENCE(Result, stats, success, errno_code)
     } result;
 
-    CPP_SUCKS(FstatAction, action, result)
+    CONVENIENCE(FstatAction, action, result)
   };
 
   struct FileHash
@@ -175,16 +121,16 @@ namespace gpcache
     struct Action
     {
       std::filesystem::path path;
-      CPP_SUCKS(Action, path)
+      CONVENIENCE(Action, path)
     } action;
 
     struct Result
     {
       std::string hash;
-      CPP_SUCKS(Result, hash)
+      CONVENIENCE(Result, hash)
     } result;
 
-    CPP_SUCKS(FileHash, action, result)
+    CONVENIENCE(FileHash, action, result)
   };
 
   struct ParamsInput
@@ -194,7 +140,7 @@ namespace gpcache
     struct Action
     {
       bool dummy = true;
-      CPP_SUCKS(Action, dummy)
+      CONVENIENCE(Action, dummy)
     } action;
 
     struct Result
@@ -203,10 +149,10 @@ namespace gpcache
       std::vector<std::string> params;
       std::string cwd; // etc... ENV?
 
-      CPP_SUCKS(Result, path, params, cwd)
+      CONVENIENCE(Result, path, params, cwd)
     } result;
 
-    CPP_SUCKS(ParamsInput, action, result)
+    CONVENIENCE(ParamsInput, action, result)
   };
 
   struct UnsupportedInput
@@ -216,20 +162,20 @@ namespace gpcache
     struct Action
     {
       bool thisIsJustCrazy;
-      CPP_SUCKS(Action, thisIsJustCrazy)
+      CONVENIENCE(Action, thisIsJustCrazy)
     } action;
 
     struct Result
     {
       bool thisIsJustCrazy;
-      CPP_SUCKS(Result, thisIsJustCrazy)
+      CONVENIENCE(Result, thisIsJustCrazy)
     } result;
 
-    CPP_SUCKS(UnsupportedInput, action, result)
+    CONVENIENCE(UnsupportedInput, action, result)
   };
 
   // ToDo: rename to "Input"
-  using Action = std::variant<Input_Access, OpenAction, FstatAction, FileHash, ParamsInput, UnsupportedInput>;
+  using Action = std::variant<Input_Access, CachedSyscall_Open, FstatAction, FileHash, ParamsInput, UnsupportedInput>;
 
   // Holds collection of all inputs which should lead to the same output.
   using Inputs = std::vector<Action>;

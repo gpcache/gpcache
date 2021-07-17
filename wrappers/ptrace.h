@@ -11,7 +11,7 @@
 #include "utils/enumerate.h" // good dependency?
 #include "utils/flag_to_string.h"
 
-// ptrace is more than a simple function, each possible parameter has a separate wrapper.
+// where to put this?
 namespace Ptrace
 {
   using SyscallDataType = decltype(user_regs_struct{}.rax);
@@ -137,4 +137,11 @@ struct fmt::formatter<Ptrace::SysCall>
     // There is probably a better direct function for this.
     return fmt::format_to(ctx.out(), "{}", syscall._cached_string_representation);
   }
+};
+
+template <class T>
+struct SyscallEx : public T
+{
+  Ptrace::PtraceProcess const process;
+  int const return_value;
 };
