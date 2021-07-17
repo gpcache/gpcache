@@ -56,6 +56,15 @@ namespace Ptrace
   auto PEEKTEXT(int pid, const char *begin, size_t count) -> std::string;
   auto PEEKTEXT_string(int pid, char const *begin) -> std::string;
 
+  template <class T>
+  auto PEEKTEXT(int pid, const char *begin) -> T
+  {
+    T result;
+    auto data = PEEKTEXT(pid, begin, sizeof(T));
+    memcpy(&result, data.c_str(), sizeof(T));
+    return result;
+  }
+
   // This is an explicit function because in addition to the SysCall it also needs pid_t.
 
   // sounds like this could be a co_routine, but let's see what else we need here
@@ -144,4 +153,5 @@ struct SyscallEx : public T
 {
   Ptrace::PtraceProcess const process;
   int const return_value;
+  int const errno_value;
 };

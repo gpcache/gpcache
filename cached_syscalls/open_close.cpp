@@ -42,10 +42,10 @@ namespace gpcache
       const std::filesystem::path path = Ptrace::PEEKTEXT_string(syscall.process.get_pid(), syscall.filename());
       if (path.is_absolute() && (syscall.flags() == O_CLOEXEC || syscall.flags() == (O_RDONLY | O_CLOEXEC) || syscall.flags() == (O_RDONLY | O_LARGEFILE)))
       {
-        int fd = syscall.return_value;
-        state.fds.open(fd, path, syscall.flags(), fmt::format("open via {}", reinterpret_cast<Syscall_openat>(syscall)));
-        spdlog::debug("openat flags {} = {}", syscall.flags(), openat_flag_to_string(syscall.flags()));
-        return CachedSyscall_Open{0, path, syscall.flags(), syscall.mode(), fd, 0};
+        CachedSyscall_Open const cached_syscall{{0, path, syscall.flags(), syscall.mode()}, {syscall.return_value, syscall.errno_value}};
+        if (syscall.return_value != -1)
+          state.fds.open(syscall.return_value, path, syscall.flags(), json(cached_syscall).dump());
+        return cached_syscall;
       }
       else
       {
