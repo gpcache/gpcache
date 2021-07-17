@@ -42,13 +42,18 @@ namespace gpcache
     std::optional<Output> output;
   };
 
-  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &syscall, State &state, MmapState &mmaps) -> SyscallResult
+  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &ptrace_syscall, State &state, MmapState &mmaps) -> SyscallResult
   {
+    Syscall_Base syscall{
+        .pid = p.get_pid(),
+        .args = ptrace_syscall.arguments,
+        .real_return_value = ptrace_syscall.return_value.value()};
+
     // Design problem:
     // * variant with all possible syscall types takes minutes to compile
     // * creating hundreds of virtual methods is kind of pointless when most of them are not supported
     // So the only solution is this huge switch statement.
-    switch (syscall.info.syscall_id)
+    switch (ptrace_syscall.info.syscall_id)
     {
     case Syscall_brk::syscall_id:
     case Syscall_arch_prctl::syscall_id:
@@ -56,13 +61,13 @@ namespace gpcache
       return SyscallResult{true};
     case Syscall_access::syscall_id:
     {
-      auto syscall_access = static_cast<Syscall_access>(syscall.arguments);
+      auto syscall_access = static_cast<Syscall_access>(syscall);
       std::string const filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
-      return SyscallResult{true, Input_Access{filename, syscall_access.mode(), (int)syscall.return_value.value()}};
+      return SyscallResult{true, Input_Access{filename, syscall_access.mode(), (int)syscall.return_value()}};
     }
     case Syscall_openat::syscall_id:
     {
-      auto const cached_syscall = from_syscall(state, SyscallEx<Syscall_openat>(p, syscall));
+      auto const cached_syscall = from_syscall(state, static_cast<Syscall_openat>(syscall));
 
       if (cached_syscall)
         return SyscallResult{true, cached_syscall.value()};
@@ -72,32 +77,32 @@ namespace gpcache
     }
     case Syscall_close::syscall_id:
     {
-      auto const syscall_close = static_cast<Syscall_close>(syscall.arguments);
-      state.fds.close(syscall_close.fd(), fmt::format("close via {}", syscall));
+      auto const syscall_close = static_cast<Syscall_close>(syscall);
+      state.fds.close(syscall_close.fd(), fmt::format("close via {}", json(syscall).dump()));
       return SyscallResult{.supported = true};
     }
     case Syscall_fstat::syscall_id:
     {
-      auto const cached_syscall = from_syscall(state, SyscallEx<Syscall_fstat>(p, syscall));
+      auto const cached_syscall = from_syscall(state, static_cast<Syscall_fstat>(syscall));
       return SyscallResult{true, cached_syscall};
     }
     case Syscall_read::syscall_id:
     {
-      auto const syscall_read = static_cast<Syscall_close>(syscall.arguments);
+      auto const syscall_read = static_cast<Syscall_close>(syscall);
       // In theory only the actually read parts of the file...
       FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
       return SyscallResult{true, hash};
     }
     case Syscall_pread64::syscall_id:
     {
-      auto const syscall_read = static_cast<Syscall_pread64>(syscall.arguments);
+      auto const syscall_read = static_cast<Syscall_pread64>(syscall);
       // In theory only the actually read parts of the file...
       FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
       return SyscallResult{true, hash};
     }
     case Syscall_write::syscall_id:
     {
-      auto const syscall_write = static_cast<Syscall_write>(syscall.arguments);
+      auto const syscall_write = static_cast<Syscall_write>(syscall);
 
       auto const filename = state.fds.get_open(syscall_write.fd()).filename;
 
@@ -112,7 +117,7 @@ namespace gpcache
     }
     case Syscall_mmap::syscall_id:
     {
-      auto const syscall_mmap = static_cast<Syscall_mmap>(syscall.arguments);
+      auto const syscall_mmap = static_cast<Syscall_mmap>(syscall);
       auto const addr = reinterpret_cast<void *>(syscall_mmap.addr());
 
       // Yes this will truncate! and wrap around 4294967295 to -1!
@@ -157,7 +162,7 @@ namespace gpcache
     }
     case Syscall_munmap::syscall_id:
     {
-      auto const syscall_munmap = static_cast<Syscall_munmap>(syscall.arguments);
+      auto const syscall_munmap = static_cast<Syscall_munmap>(syscall);
       auto const addr = reinterpret_cast<void *>(syscall_munmap.addr());
 
       // Who cares...?

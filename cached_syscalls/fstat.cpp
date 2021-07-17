@@ -20,15 +20,14 @@ namespace gpcache
     return result;
   }
 
-  auto from_syscall(State &, SyscallEx<Syscall_fstat> const &syscall) -> std::optional<CachedSyscall_Fstat>
+  auto from_syscall(State &, Syscall_fstat const &syscall) -> std::optional<CachedSyscall_Fstat>
   {
-    struct stat const s = Ptrace::PEEKTEXT<struct stat>(syscall.process.get_pid(),
-                                                        reinterpret_cast<char *>(syscall.statbuf()));
+    struct stat const s = Ptrace::PEEKTEXT<struct stat>(syscall.pid, syscall.statbuf());
     //auto const path = state.fds.get_open(syscall.fd()).filename;
 
     // assert fd is actually known?
     CachedSyscall_Fstat::Action const action{static_cast<int>(syscall.fd())};
-    CachedSyscall_Fstat::Result const result{s, syscall.return_value, syscall.errno_value};
+    CachedSyscall_Fstat::Result const result{s, (int)syscall.return_value(), syscall.errno_value()};
     return CachedSyscall_Fstat{action, result};
   }
 }

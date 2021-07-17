@@ -188,7 +188,7 @@ namespace Ptrace
     }();
     const auto syscall_arguments = get_syscall_args(regs);
 
-    return SysCall{pid, syscall_info, syscall_arguments, return_value};
+    return SysCall{pid, syscall_info, syscall_arguments, return_value, {}};
   }
 
   [[nodiscard]] auto createChildProcess(std::vector<char *> const &prog_and_arguments) -> int

@@ -36,15 +36,15 @@ namespace gpcache
     return result;
   }
 
-  auto from_syscall(State &state, SyscallEx<Syscall_openat> const &syscall) -> std::optional<CachedSyscall_Open>
+  auto from_syscall(State &state, Syscall_openat const &syscall) -> std::optional<CachedSyscall_Open>
   {
     {
-      const std::filesystem::path path = Ptrace::PEEKTEXT_string(syscall.process.get_pid(), syscall.filename());
+      const std::filesystem::path path = Ptrace::PEEKTEXT_string(syscall.pid, syscall.filename());
       if (path.is_absolute() && (syscall.flags() == O_CLOEXEC || syscall.flags() == (O_RDONLY | O_CLOEXEC) || syscall.flags() == (O_RDONLY | O_LARGEFILE)))
       {
-        CachedSyscall_Open const cached_syscall{{0, path, syscall.flags(), syscall.mode()}, {syscall.return_value, syscall.errno_value}};
-        if (syscall.return_value != -1)
-          state.fds.open(syscall.return_value, path, syscall.flags(), json(cached_syscall).dump());
+        CachedSyscall_Open const cached_syscall{{0, path, syscall.flags(), syscall.mode()}, {(int)syscall.return_value(), syscall.errno_value()}};
+        if (syscall.errno_value() == 0)
+          state.fds.open(syscall.return_value(), path, syscall.flags(), json(cached_syscall).dump());
         return cached_syscall;
       }
       else

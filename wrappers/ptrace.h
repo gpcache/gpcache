@@ -44,7 +44,7 @@ namespace Ptrace
   namespace Raw
   {
     auto CONT(int pid) -> void;
-    auto PEEKTEXT(int pid, const uint8_t *const begin) -> long;
+    auto PEEKTEXT(int pid, const uint8_t *const ptr_in_pid) -> long;
     auto GETREGS(int pid) -> user_regs_struct;
     auto TRACEME() -> void;
     auto SETOPTIONS(int pid, int options) -> void;
@@ -53,14 +53,14 @@ namespace Ptrace
     auto SYSCALL(int pid, int signal = 0) -> void;
   }
 
-  auto PEEKTEXT(int pid, const char *begin, size_t count) -> std::string;
-  auto PEEKTEXT_string(int pid, char const *begin) -> std::string;
+  auto PEEKTEXT(int pid, const char *ptr_in_pid, size_t count) -> std::string;
+  auto PEEKTEXT_string(int pid, char const *ptr_in_pid) -> std::string;
 
   template <class T>
-  auto PEEKTEXT(int pid, const char *begin) -> T
+  auto PEEKTEXT(int pid, const T *ptr_in_pid) -> T
   {
     T result;
-    auto data = PEEKTEXT(pid, begin, sizeof(T));
+    auto data = PEEKTEXT(pid, reinterpret_cast<const char *>(ptr_in_pid), sizeof(T));
     memcpy(&result, data.c_str(), sizeof(T));
     return result;
   }
@@ -146,26 +146,4 @@ struct fmt::formatter<Ptrace::SysCall>
     // There is probably a better direct function for this.
     return fmt::format_to(ctx.out(), "{}", syscall._cached_string_representation);
   }
-};
-
-inline int get_errno_value(uint64_t return_value)
-{
-  // wild guess:
-  if (return_value > 0xF00000000000000)
-    return static_cast<int>(-return_value);
-  else
-    return 0;
-}
-
-template <class T>
-struct SyscallEx : public T
-{
-  SyscallEx(Ptrace::PtraceProcess process, const Ptrace::SysCall &syscall)
-      : T(static_cast<T>(syscall.arguments)), process(process), return_value((int)syscall.return_value.value()), errno_value(get_errno_value(syscall.return_value.value()))
-  {
-  }
-
-  Ptrace::PtraceProcess const process;
-  int const return_value;
-  int const errno_value;
 };
