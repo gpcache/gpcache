@@ -26,6 +26,7 @@
 #include "backend/file.h"
 #include "execution.h"
 #include "execute_action.h"
+#include "utils/stacktrace.h"
 
 ABSL_FLAG(bool, verbose, false, "Add verbose output");
 ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
@@ -50,6 +51,8 @@ namespace gpcache
 
 int main(int argc, char **argv)
 {
+  std::set_terminate(gpcache::terminate_with_stacktrace);
+
   absl::SetProgramUsageMessage(
       "General Purpose Cache will speed up repetitios retesting, just as ccache speeds up repetitions recompilations.\n"
       "Examplory usage:\n"
@@ -105,6 +108,7 @@ int main(int argc, char **argv)
   catch (const char *error)
   {
     fmt::print("\nerror: {}\n\n", error);
+    gpcache::terminate_with_stacktrace();
   }
 
   // todo proper return code

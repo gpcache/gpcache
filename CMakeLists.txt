@@ -74,6 +74,7 @@ endif()
 
 add_library(gpcache_lib
   utils/flag_to_string.cpp
+  utils/stacktrace.cpp
   wrappers/hash.cpp
   wrappers/posix.cpp
   wrappers/ptrace.cpp
@@ -83,7 +84,7 @@ add_library(gpcache_lib
   execute_action.cpp
 )
 target_include_directories(gpcache_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(gpcache_lib ${CONAN_TARGETS})
+target_link_libraries(gpcache_lib ${CONAN_TARGETS} ${CMAKE_DL_LIBS})
 
 # GNU implementation prior to 9.1 requires linking with -lstdc++fs and LLVM implementation prior to LLVM 9.0 requires linking with -lc++fs.
 find_library(FS_LIB stdc++fs)

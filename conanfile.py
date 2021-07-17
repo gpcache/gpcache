@@ -3,7 +3,14 @@ from conans import ConanFile, CMake, tools
 
 class gpcache(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = "fmt/7.1.3", "abseil/20200923.3", "libb2/20190723", "spdlog/1.8.5", "nlohmann_json/3.9.1", "pfr/2.0.2"
+    requires = (
+        "fmt/7.1.3",
+        "abseil/20200923.3",
+        "libb2/20190723",
+        "spdlog/1.8.5",
+        "nlohmann_json/3.9.1",
+        "pfr/2.0.2",
+        "elfutils/0.180")
     build_requires = "catch2/2.13.4"
     generators = "cmake"  # cmake_paths
 
