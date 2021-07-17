@@ -90,11 +90,35 @@ int main(int argc, char **argv)
         {"params", params}};
 
     auto cached = backend.retrieve(backend.cache_path, params_json);
-    if (!cached.path.empty())
+    if (cached.ok())
     {
-      spdlog::info("Cached! Next action is {}", cached.next_action.dump());
-      auto result = gpcache::execute_action(cached.next_action);
-      auto cached2 = backend.retrieve(cached.path, result);
+      // Program was executed before! Now start iterating.
+      spdlog::info("Great, {} is cached. Now let's check all dependencies...", json(params).dump());
+
+      while (cached.ok())
+      {
+        spdlog::info("Cached action: {}", cached.next_action.dump());
+        auto execution_result = gpcache::execute_action(cached.next_action);
+        spdlog::info("Execution result is {}", execution_result.dump());
+
+        auto new_cached = backend.retrieve(cached.path, execution_result);
+
+        auto all_results = backend.get_all_possible_results(cached.path);
+        if (new_cached.ok())
+        {
+          for (auto const &possible_result : all_results)
+            if (possible_result != execution_result)
+              spdlog::info("other cached results: {}", possible_result.dump());
+        }
+        else
+        {
+          spdlog::info("This is new! Will have to actually run the executable :-(");
+          for (auto const &possible_result : backend.get_all_possible_results(cached.path))
+            spdlog::info("Cached results would have been: {}", possible_result.dump());
+        }
+
+        cached = new_cached;
+      }
     }
 
     // ToDo: move/hide to where the syscalls happen

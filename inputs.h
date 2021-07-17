@@ -112,7 +112,7 @@ namespace gpcache
 
     struct Result
     {
-      uint64_t result; // int? bool? SyscallDataType?
+      int result;
 
       CPP_SUCKS(Result, result)
     } result;

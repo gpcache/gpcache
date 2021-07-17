@@ -11,11 +11,6 @@
 
 namespace gpcache
 {
-  static auto make_safe_filename(const std::string_view input) -> std::string
-  {
-    return std::string(input); // todo
-  }
-
   // Is there some reasonable C++ convinience library that provides such functions?
   static auto read_file(const std::filesystem::path &path) -> std::variant<std::string, int>
   {
@@ -35,6 +30,17 @@ namespace gpcache
       in.close();
       return content;
     }
+  }
+
+  static auto read_file_to_json(const std::filesystem::path &path) -> std::variant<json, int>
+  {
+    auto res = read_file(path);
+    if (std::string const *const str = std::get_if<std::string>(&res))
+    {
+      // todo: handle parser errors
+      return json::parse(*str);
+    }
+    return std::get<int>(res);
   }
 
   // Is there some reasonable C++ convinience library that provides such functions?
@@ -59,7 +65,7 @@ namespace gpcache
     std::optional<std::string> old_file_content;
     std::optional<int> error;
 
-    bool ok() { !old_file_content && !error; }
+    bool ok() { return !old_file_content && !error; }
   };
 
   static auto is_file_content(const std::filesystem::path &file, const std::string &content) -> is_file_content_result
@@ -72,9 +78,9 @@ namespace gpcache
       if (existing_file_content == content)
         return {};
       else
-        return {.old_file_content = existing_file_content};
+        return {.old_file_content = existing_file_content, .error = {}};
     }
-    return {.error = std::get<int>(res)};
+    return {.old_file_content = {}, .error = std::get<int>(res)};
   }
 
   struct ensure_file_content_error
@@ -82,7 +88,7 @@ namespace gpcache
     std::optional<std::string> old_file_content;
     std::optional<int> error;
 
-    bool ok() { !old_file_content && !error; }
+    bool ok() { return !old_file_content && !error; }
   };
 
   static auto ensure_file_content(const std::filesystem::path &file, const std::string &content) -> ensure_file_content_error
@@ -102,7 +108,7 @@ namespace gpcache
           spdlog::warn("file content mismatch");
           spdlog::debug(existing_file_content);
           spdlog::debug(content);
-          return {.old_file_content = existing_file_content};
+          return {.old_file_content = existing_file_content, .error = {}};
         }
         else
         {
@@ -114,7 +120,7 @@ namespace gpcache
         auto const existing_file_error = std::get<int>(res);
         spdlog::warn("Cannot read cached file {} because of {}", file.string(), existing_file_error);
         // attempt to create it?
-        return {.error = existing_file_error};
+        return {.old_file_content = {}, .error = existing_file_error};
       }
     }
     else
@@ -227,11 +233,8 @@ namespace gpcache
     auto const result_file = result_path / "readable_result_for_debugging.txt";
     auto const action_file = result_path / "action.txt";
 
-    spdlog::info("retrieve() called");
-
     if (auto is = is_file_content(result_file, result.dump()); is.ok())
     {
-      spdlog::info("Found cache directory for executable with params: {}", result.dump());
       auto res = read_file(action_file);
       if (std::holds_alternative<std::string>(res))
       {
@@ -256,5 +259,27 @@ namespace gpcache
 
     // ToDo: result_path was partially constructed here! pass it along.
     return {};
+  }
+
+  auto FileBasedBackend::get_all_possible_results(const std::filesystem::path &pos) -> std::vector<json>
+  {
+    std::vector<json> result;
+    for (auto const &result_path : std::filesystem::directory_iterator(pos))
+    {
+      if (!result_path.is_directory())
+        continue;
+
+      auto const result_file = result_path.path() / "readable_result_for_debugging.txt";
+      auto const content = read_file_to_json(result_file);
+      if (json const *const data = std::get_if<json>(&content))
+      {
+        result.push_back(*data);
+      }
+      else
+      {
+        spdlog::warn("Error reading possible result {}: {}", result_file.string(), std::get<int>(content));
+      }
+    }
+    return result;
   }
 } // namespace gpcache

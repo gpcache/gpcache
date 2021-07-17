@@ -6,7 +6,9 @@
 #include <unistd.h>   // getpid
 #include <iostream>   // cerr
 #include <string>
+#include <sstream>
 #include <elfutils/libdwfl.h>
+#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -49,26 +51,25 @@ namespace
     DwflSession &operator=(DwflSession const &) = delete;
   };
 
-  struct DebugInfo
+  struct StackItem
   {
     std::string file;
     int line;
     std::string function;
   };
 
-  auto createDebugInfo(DwflSession const &dis, uintptr_t addr) -> DebugInfo
+  auto extractStackItemInfo(DwflSession const &dis, uintptr_t const addr) -> StackItem
   {
-    DebugInfo result;
+    StackItem result;
 
-    Dwfl_Module *module = dwfl_addrmodule(dis.session(), addr);
-    char const *name = dwfl_module_addrname(module, addr);
+    Dwfl_Module *const module = dwfl_addrmodule(dis.session(), addr);
+    char const *const name = dwfl_module_addrname(module, addr);
     result.function = name ? demangle(name) : "<unknown>";
 
-    // Get source filename and line number.
-    if (Dwfl_Line *dwfl_line = dwfl_module_getsrc(module, addr))
+    if (Dwfl_Line *line_record = dwfl_module_getsrc(module, addr))
     {
       Dwarf_Addr dwarf_addr;
-      result.file = dwfl_lineinfo(dwfl_line, &dwarf_addr, &result.line, nullptr, nullptr, nullptr);
+      result.file = dwfl_lineinfo(line_record, &dwarf_addr, &result.line, nullptr, nullptr, nullptr);
     }
     return result;
   }
@@ -103,7 +104,7 @@ namespace gpcache
     bool in_conan = false;
     for (int i = 0; i < stack_size; ++i)
     {
-      auto stack_item = createDebugInfo(dis, reinterpret_cast<uintptr_t>(stack[i]));
+      auto stack_item = extractStackItemInfo(dis, reinterpret_cast<uintptr_t>(stack[i]));
 
       if (stack_item.file.find("/.conan/") != std::string::npos)
       {
@@ -126,7 +127,9 @@ namespace gpcache
 
   void terminate_with_stacktrace()
   {
-    print_current_stacktrace(std::cerr);
+    std::stringstream ss;
+    print_current_stacktrace(ss);
+    spdlog::warn(ss.str());
     std::_Exit(EXIT_FAILURE);
   }
 }

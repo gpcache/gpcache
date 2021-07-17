@@ -15,10 +15,15 @@ namespace gpcache
       std::filesystem::path path;
       json next_action;
       // ToDo: output, especially intermixed with actions
+
+      auto ok() { return !path.empty(); }
     };
     auto retrieve(const std::filesystem::path &pos, const json &input_result) -> retrieve_result;
 
     auto store(json const &params_json, Inputs const &inputs, Outputs const &outputs, std::vector<std::string> const &sloppiness) -> void;
+
+    //auto get_all_possible_actions(const std::filesystem::path &pos) -> std::vector<json>;
+    auto get_all_possible_results(const std::filesystem::path &pos) -> std::vector<json>;
 
     // set via constructor!
     std::filesystem::path cache_path;
