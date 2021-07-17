@@ -25,6 +25,7 @@
 #include "wrappers/hash.h"
 #include "backend/file.h"
 #include "execution.h"
+#include "execute_action.h"
 
 ABSL_FLAG(bool, verbose, false, "Add verbose output");
 ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
@@ -85,17 +86,18 @@ int main(int argc, char **argv)
     json const params_json = {
         {"params", params}};
 
-    auto x = backend.retrieve(backend.cache_path, params_json);
-    if (!x.path.empty())
+    auto cached = backend.retrieve(backend.cache_path, params_json);
+    if (!cached.path.empty())
     {
-      spdlog::info("Cached! Next action is {}", x.next_action.dump());
-      !!--continue here-- !!
+      spdlog::info("Cached! Next action is {}", cached.next_action.dump());
+      auto result = gpcache::execute_action(cached.next_action);
+      auto cached2 = backend.retrieve(cached.path, result);
     }
 
     // ToDo: move/hide to where the syscalls happen
     params.push_back(nullptr); // required for syscalls so end of array can be detected.
 
-    auto [inputs, outputs] = gpcache::cache_execution(params);
+    auto [inputs, outputs] = gpcache::execute_program(params);
     //gpcache::print_inputs(inputs);
 
     backend.store(params_json, inputs, outputs, sloppiness);

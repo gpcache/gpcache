@@ -24,3 +24,14 @@ namespace gpcache
     std::filesystem::path cache_path;
   };
 }
+
+template <>
+struct fmt::formatter<gpcache::FileBasedBackend::retrieve_result>
+{
+  constexpr auto parse(auto &ctx) { return ctx.begin(); }
+
+  auto format(gpcache::FileBasedBackend::retrieve_result const &result, auto &ctx)
+  {
+    return fmt::format_to(ctx.out(), "{path: {}, next_action: {}}", result.path, result.next_action);
+  }
+};

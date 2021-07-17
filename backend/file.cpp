@@ -137,8 +137,6 @@ namespace gpcache
     // probably the correct way is to read the data, parse the json, compare while ignoring sloppy fields...
     if (input_name == "fstat" && contains(sloppiness, "time of fstat 1"))
     {
-      spdlog::info("Action: {}", action.dump());
-
       // currently fd is encoded in path... omfg
       auto fs_path = action["path"].get<std::filesystem::path>();
       if (fs_path == std::filesystem::path("1"))
