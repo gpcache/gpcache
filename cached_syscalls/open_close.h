@@ -36,9 +36,9 @@ namespace gpcache
   };
 
   /// execute_cached_syscall
-  auto execute_action(CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result;
+  auto execute_cached_syscall(CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result;
 
   /// cache_syscall
   /// covert_to_cachable_syscall
-  auto from_syscall(State &state, Syscall_openat const &syscall) -> std::optional<CachedSyscall_Open>;
+  auto covert_to_cachable_syscall(State &state, Syscall_openat const &syscall) -> std::optional<CachedSyscall_Open>;
 }

@@ -19,7 +19,7 @@ namespace gpcache
       O_RDONLY | O_CLOEXEC,
   };
 
-  auto execute_action(CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result
+  auto execute_cached_syscall(CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result
   {
     if (!gpcache::contains(mode_allowlist, cached_syscall.mode))
     {
@@ -36,7 +36,7 @@ namespace gpcache
     return result;
   }
 
-  auto from_syscall(State &state, Syscall_openat const &syscall) -> std::optional<CachedSyscall_Open>
+  auto covert_to_cachable_syscall(State &state, Syscall_openat const &syscall) -> std::optional<CachedSyscall_Open>
   {
     {
       const std::filesystem::path path = Ptrace::PEEKTEXT_string(syscall.pid, syscall.filename());

@@ -12,7 +12,7 @@
 namespace gpcache
 {
 
-  auto execute_action(CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result
+  auto execute_cached_syscall(CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result
   {
     CachedSyscall_Fstat::Result result;
     result.return_value = fstat(cached_syscall.fd, &result.stats);
@@ -20,7 +20,7 @@ namespace gpcache
     return result;
   }
 
-  auto from_syscall(State &, Syscall_fstat const &syscall) -> std::optional<CachedSyscall_Fstat>
+  auto covert_to_cachable_syscall(State &, Syscall_fstat const &syscall) -> std::optional<CachedSyscall_Fstat>
   {
     struct stat const s = Ptrace::PEEKTEXT<struct stat>(syscall.pid, syscall.statbuf());
     //auto const path = state.fds.get_open(syscall.fd()).filename;

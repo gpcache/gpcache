@@ -81,7 +81,7 @@ add_library(gpcache_lib
   wrappers/ptrace_linux_x64/SyscallMap.cpp
   backend/file.cpp
   execution.cpp
-  execute_action.cpp
+  execute_cached_syscall.cpp
   cached_syscalls/access.cpp
   cached_syscalls/fstat.cpp
   cached_syscalls/open_close.cpp

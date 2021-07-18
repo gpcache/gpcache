@@ -1,4 +1,4 @@
-#include "execute_action.h"
+#include "execute_cached_syscall.h"
 
 #include <unistd.h>
 
@@ -9,12 +9,12 @@
 template <class T>
 static auto run_execute_action(json const &action) -> json
 {
-  return json(gpcache::execute_action(static_cast<T::Parameters>(action)));
+  return json(gpcache::execute_cached_syscall(static_cast<T::Parameters>(action)));
 }
 
 namespace gpcache
 {
-  auto execute_action(json const &data) -> json
+  auto execute_cached_syscall(json const &data) -> json
   {
     // todo: gracefully handle all kinds of invalid json
     if (!data.contains("input") || !data.contains("action"))

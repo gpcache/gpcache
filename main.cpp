@@ -24,7 +24,7 @@
 #include "wrappers/hash.h"
 #include "backend/file.h"
 #include "execution.h"
-#include "execute_action.h"
+#include "execute_cached_syscall.h"
 #include "utils/stacktrace.h"
 
 ABSL_FLAG(bool, verbose, false, "Add verbose output");
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 
       while (cached.ok())
       {
-        auto execution_result = gpcache::execute_action(cached.next_action);
+        auto execution_result = gpcache::execute_cached_syscall(cached.next_action);
         spdlog::info("Cached {} -> Real {}", json_action_to_string(cached.next_action), execution_result.dump());
 
         // FIXME: retrieve should not assume that the next thing is an action.

@@ -88,7 +88,7 @@ namespace gpcache
     CONVENIENCE(CachedSyscall_Fstat, action, result)
   };
 
-  auto execute_action(CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result;
+  auto execute_cached_syscall(CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result;
 
-  auto from_syscall(State &state, Syscall_fstat const &syscall) -> std::optional<CachedSyscall_Fstat>;
+  auto covert_to_cachable_syscall(State &state, Syscall_fstat const &syscall) -> std::optional<CachedSyscall_Fstat>;
 }

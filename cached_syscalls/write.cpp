@@ -11,10 +11,10 @@
 
 namespace gpcache
 {
-  auto execute_action(CachedSyscall_Write::Parameters const &cached_syscall) -> CachedSyscall_Write::Result
+  auto execute_cached_syscall(CachedSyscall_Write::Parameters const &cached_syscall) -> CachedSyscall_Write::Result
   {
     // ToDo: execute syscall directly instead of libc wrapper?
-    // This would allow full reuse of from_syscall.
+    // This would allow full reuse of covert_to_cachable_syscall.
     // On the other hand: why bother? This is trivial enough.
     CachedSyscall_Write::Result result;
     result.return_value = write(cached_syscall.fd, cached_syscall.data.data(), cached_syscall.data.size());
@@ -24,7 +24,7 @@ namespace gpcache
     return result;
   }
 
-  auto from_syscall(State &, Syscall_write const &syscall) -> CachedSyscall_Write
+  auto covert_to_cachable_syscall(State &, Syscall_write const &syscall) -> CachedSyscall_Write
   {
     std::string const data = Ptrace::PEEKTEXT(syscall.pid, syscall.buf(), syscall.count());
     CachedSyscall_Write::Parameters const action{(int)syscall.fd(), data}; // ToDo: binary data... store as separate file?

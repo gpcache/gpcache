@@ -4,5 +4,5 @@
 
 namespace gpcache
 {
-  auto execute_action(json const &) -> json;
+  auto execute_cached_syscall(json const &) -> json;
 }

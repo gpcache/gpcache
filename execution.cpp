@@ -57,12 +57,12 @@ namespace gpcache
       return SyscallResult{true};
     case Syscall_access::syscall_id:
     {
-      auto const cached_syscall = from_syscall(state, static_cast<Syscall_access>(syscall));
+      auto const cached_syscall = covert_to_cachable_syscall(state, static_cast<Syscall_access>(syscall));
       return Parameters{cached_syscall};
     }
     case Syscall_openat::syscall_id:
     {
-      auto const cached_syscall = from_syscall(state, static_cast<Syscall_openat>(syscall));
+      auto const cached_syscall = covert_to_cachable_syscall(state, static_cast<Syscall_openat>(syscall));
 
       if (cached_syscall)
         return Parameters{cached_syscall.value()};
@@ -78,7 +78,7 @@ namespace gpcache
     }
     case Syscall_fstat::syscall_id:
     {
-      auto const cached_syscall = from_syscall(state, static_cast<Syscall_fstat>(syscall));
+      auto const cached_syscall = covert_to_cachable_syscall(state, static_cast<Syscall_fstat>(syscall));
       return Parameters{cached_syscall.value()};
     }
     case Syscall_read::syscall_id:

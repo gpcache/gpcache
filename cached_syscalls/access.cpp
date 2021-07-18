@@ -11,10 +11,10 @@
 
 namespace gpcache
 {
-  auto execute_action(CachedSyscall_Access::Parameters const &cached_syscall) -> CachedSyscall_Access::Result
+  auto execute_cached_syscall(CachedSyscall_Access::Parameters const &cached_syscall) -> CachedSyscall_Access::Result
   {
     // ToDo: execute syscall directly instead of libc wrapper?
-    // This would allow full reuse of from_syscall.
+    // This would allow full reuse of covert_to_cachable_syscall.
     // On the other hand: why bother? This is trivial enough.
     CachedSyscall_Access::Result result;
     result.return_value = access(cached_syscall.filename.c_str(), cached_syscall.mode);
@@ -22,7 +22,7 @@ namespace gpcache
     return result;
   }
 
-  auto from_syscall(State &, Syscall_access const &syscall) -> CachedSyscall_Access
+  auto covert_to_cachable_syscall(State &, Syscall_access const &syscall) -> CachedSyscall_Access
   {
     std::string const filename = Ptrace::PEEKTEXT_string(syscall.pid, syscall.filename());
     CachedSyscall_Access::Parameters const action{filename, syscall.mode()};
