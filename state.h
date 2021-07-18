@@ -24,7 +24,7 @@ namespace gpcache
     };
     struct FiledescriptorData
     {
-      file_descriptor_t fd;
+      file_descriptor_t fd; // orig_fd and actual_fd for replay?
       std::filesystem::path filename;
       int flags;
       State state;
@@ -48,6 +48,7 @@ namespace gpcache
     auto dump_data(auto const level, FiledescriptorData const &data) const -> void;
   };
 
+  // kernel state? application state? Handles?
   struct State
   {
     FiledescriptorState fds;

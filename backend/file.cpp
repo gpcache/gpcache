@@ -190,31 +190,18 @@ namespace gpcache
     throw std::runtime_error("cannot store cached data in cache");
   }
 
-  // traverse_inputs?
-  auto create_output_path(std::filesystem::path path, json const &params_json, const CachedSyscall &input, std::vector<std::string> const &sloppiness)
-  {
-    fmt::print("\n");
-
-    path = cache_input(path, "params", json(), params_json, sloppiness);
-
-    std::visit(
-        [&path, &sloppiness](auto &&typed_input)
-        {
-          path = cache_input(path, typed_input.name, json(typed_input.action), json(typed_input.result), sloppiness);
-        },
-        input);
-
-    return path;
-  }
-
-  auto FileBasedBackend::store(json const &params_json, const std::vector<CachedSyscall> &execution_cache, std::vector<std::string> const &sloppiness) -> void
+  auto FileBasedBackend::store(json const &executable_and_params, std::vector<CachedSyscall> const &syscalls, std::vector<std::string> const &sloppiness) -> void
   {
     auto directory = this->cache_path;
-    for (const CachedSyscall &cache_item : execution_cache)
+    directory = cache_input(directory, "params", json(), executable_and_params, sloppiness);
+    for (const CachedSyscall &syscall : syscalls)
     {
-      spdlog::debug("Supported syscall {}", *syscall);
-
-      directory = create_output_path(directory, params_json, cache_item, sloppiness);
+      std::visit(
+          [&directory, &sloppiness](auto &&typed_syscall)
+          {
+            directory = cache_input(directory, typed_syscall.name, json(typed_syscall.action), json(typed_syscall.result), sloppiness);
+          },
+          syscall);
     }
     spdlog::info("FileBasedBackend::store has cached all syscalls");
   }

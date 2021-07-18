@@ -100,10 +100,10 @@ int main(int argc, char **argv)
       // Program was executed before! Now start iterating.
       spdlog::info("Great, {} is cached. Now let's check all dependencies...", json(params).dump());
 
-      while (cached.ok())
+      while (cached.next_syscall)
       {
-        auto execution_result = gpcache::execute_cached_syscall(cached.next_action);
-        spdlog::info("Cached {} -> Real {}", json_action_to_string(cached.next_action), execution_result.dump());
+        auto execution_result = gpcache::execute_cached_syscall(cached.next_syscall.value());
+        spdlog::info("Cached {} -> Real {}", json_action_to_string(cached.next_syscall.value()), execution_result.dump());
 
         // FIXME: retrieve should not assume that the next thing is an action.
         //        Instead here write something like backend.get_action(path) -> optional (same as get_output)

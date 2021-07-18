@@ -9,17 +9,16 @@ namespace gpcache
   class FileBasedBackend
   {
   public:
-    /// @returns input.action
     struct retrieve_result
     {
-      std::filesystem::path path;
-      json next_action;
+      std::filesystem::path path; // this exposes FileBasedBackend detail... bad idea...
+      std::optional<json> next_syscall;
 
       auto ok() { return !path.empty(); }
     };
-    auto retrieve(const std::filesystem::path &pos, const json &input_result) -> retrieve_result;
+    auto retrieve(const std::filesystem::path &pos, const json &syscall_result) -> retrieve_result;
 
-    auto store(json const &params_json, const std::vector<CachedSyscall> &execution_cache, std::vector<std::string> const &sloppiness) -> void;
+    auto store(json const &executable_and_params, std::vector<CachedSyscall> const &syscalls, std::vector<std::string> const &sloppiness) -> void;
 
     //auto get_all_possible_actions(const std::filesystem::path &pos) -> std::vector<json>;
     auto get_all_possible_results(const std::filesystem::path &pos) -> std::vector<json>;
@@ -36,6 +35,6 @@ struct fmt::formatter<gpcache::FileBasedBackend::retrieve_result>
 
   auto format(gpcache::FileBasedBackend::retrieve_result const &result, auto &ctx)
   {
-    return fmt::format_to(ctx.out(), "{path: {}, next_action: {}}", result.path, result.next_action);
+    return fmt::format_to(ctx.out(), "{path: {}, next_action: {}}", result.path, result.next_syscall ? result.next_syscall->dump() : "<END>");
   }
 };

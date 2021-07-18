@@ -20,7 +20,7 @@ namespace gpcache
       int mode;
 
       CONVENIENCE(Parameters, filename, mode);
-    } action;
+    } action; // FIXME -> parameters
 
     struct Result
     {
