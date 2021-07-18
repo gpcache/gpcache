@@ -14,12 +14,12 @@ namespace gpcache
   {
     static constexpr char name[] = "write";
 
-    struct Action
+    struct Parameters
     {
       int fd;
       std::string data; // ToDo: string vs vector
 
-      CONVENIENCE(Action, fd, data);
+      CONVENIENCE(Parameters, fd, data);
     } action;
 
     struct Result
@@ -34,7 +34,7 @@ namespace gpcache
   };
 
   /// execute_cached_syscall
-  auto execute_action(CachedSyscall_Write::Action const &) -> CachedSyscall_Write::Result;
+  auto execute_action(CachedSyscall_Write::Parameters const &) -> CachedSyscall_Write::Result;
 
   /// cache_syscall
   /// covert_to_cachable_syscall

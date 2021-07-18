@@ -19,7 +19,7 @@ namespace gpcache
       O_RDONLY | O_CLOEXEC,
   };
 
-  auto execute_action(CachedSyscall_Open::Action const &cached_syscall) -> CachedSyscall_Open::Result
+  auto execute_action(CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result
   {
     if (!gpcache::contains(mode_allowlist, cached_syscall.mode))
     {

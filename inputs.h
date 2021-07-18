@@ -23,10 +23,10 @@ namespace gpcache
   {
     static constexpr char name[] = "filehash";
 
-    struct Action
+    struct Parameters
     {
       std::filesystem::path path;
-      CONVENIENCE(Action, path)
+      CONVENIENCE(Parameters, path)
     } action;
 
     struct Result
@@ -42,10 +42,10 @@ namespace gpcache
   {
     static constexpr char name[] = "params";
 
-    struct Action
+    struct Parameters
     {
       bool dummy = true;
-      CONVENIENCE(Action, dummy)
+      CONVENIENCE(Parameters, dummy)
     } action;
 
     struct Result
@@ -64,10 +64,10 @@ namespace gpcache
   {
     static constexpr char name[] = "unsupported";
 
-    struct Action
+    struct Parameters
     {
       bool thisIsJustCrazy;
-      CONVENIENCE(Action, thisIsJustCrazy)
+      CONVENIENCE(Parameters, thisIsJustCrazy)
     } action;
 
     struct Result
@@ -80,7 +80,7 @@ namespace gpcache
   };
 
   // ToDo: rename to "Input"
-  using Action = std::variant<
+  using Parameters = std::variant<
       CachedSyscall_Access,
       CachedSyscall_Fstat,
       CachedSyscall_Open,
@@ -90,6 +90,6 @@ namespace gpcache
       UnsupportedInput>;
 
   // Holds collection of all inputs which should lead to the same output.
-  using Inputs = std::vector<Action>;
+  using Inputs = std::vector<Parameters>;
 
 } // namespace gpcache

@@ -36,7 +36,7 @@ namespace gpcache
 
   // bool true = ignore
   // bool false = unsupported
-  using SyscallResult = std::variant<Action, bool>;
+  using SyscallResult = std::variant<Parameters, bool>;
 
   auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &ptrace_syscall, State &state, MmapState &mmaps) -> SyscallResult
   {
@@ -58,14 +58,14 @@ namespace gpcache
     case Syscall_access::syscall_id:
     {
       auto const cached_syscall = from_syscall(state, static_cast<Syscall_access>(syscall));
-      return Action{cached_syscall};
+      return Parameters{cached_syscall};
     }
     case Syscall_openat::syscall_id:
     {
       auto const cached_syscall = from_syscall(state, static_cast<Syscall_openat>(syscall));
 
       if (cached_syscall)
-        return Action{cached_syscall.value()};
+        return Parameters{cached_syscall.value()};
       else
         return false;
       break; // unreachable, but g++ complains otherwise
@@ -79,21 +79,21 @@ namespace gpcache
     case Syscall_fstat::syscall_id:
     {
       auto const cached_syscall = from_syscall(state, static_cast<Syscall_fstat>(syscall));
-      return Action{cached_syscall.value()};
+      return Parameters{cached_syscall.value()};
     }
     case Syscall_read::syscall_id:
     {
       auto const syscall_read = static_cast<Syscall_close>(syscall);
       // In theory only the actually read parts of the file...
       FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
-      return Action{hash};
+      return Parameters{hash};
     }
     case Syscall_pread64::syscall_id:
     {
       auto const syscall_read = static_cast<Syscall_pread64>(syscall);
       // In theory only the actually read parts of the file...
       FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
-      return Action{hash};
+      return Parameters{hash};
     }
     case Syscall_write::syscall_id:
     {
@@ -105,7 +105,7 @@ namespace gpcache
                             Ptrace::PEEKTEXT(p.get_pid(),
                                              syscall_write.buf(),
                                              syscall_write.count())};
-      return Action{w};
+      return Parameters{w};
     }
     case Syscall_mmap::syscall_id:
     {
@@ -121,14 +121,14 @@ namespace gpcache
       {
         FileHash hash{file_data->filename, "ToDo"};
         mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
-        return Action{hash};
+        return Parameters{hash};
       }
       else if (file_data.has_value() && (syscall_mmap.prot() == (PROT_READ | PROT_WRITE)) && ((file_data->flags & (O_RDONLY | O_WRONLY | O_RDWR)) == O_RDONLY))
       {
         // Well this should not work... but it seems to work... let's assume it's read only?!
         FileHash hash{file_data->filename, "ToDo"};
         mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
-        return Action{hash};
+        return Parameters{hash};
       }
       else if (!file_data.has_value())
       {
@@ -194,7 +194,7 @@ namespace gpcache
       // add p to SysCall!
       auto result = handle_syscall(p, *syscall, state, mmaps);
 
-      if (const Action *const new_action = std::get_if<Action>(&result))
+      if (const Parameters *const new_action = std::get_if<Parameters>(&result))
       {
         spdlog::debug("Supported syscall {}", *syscall);
 

@@ -14,14 +14,14 @@ namespace gpcache
   {
     static constexpr char name[] = "open";
 
-    struct Action
+    struct Parameters
     {
       int dirfd;
       std::string filename;
       int flags;
       mode_t mode;
 
-      CONVENIENCE(Action, dirfd, filename, flags, mode)
+      CONVENIENCE(Parameters, dirfd, filename, flags, mode)
     } action;
 
     struct Result
@@ -36,7 +36,7 @@ namespace gpcache
   };
 
   /// execute_cached_syscall
-  auto execute_action(CachedSyscall_Open::Action const &cached_syscall) -> CachedSyscall_Open::Result;
+  auto execute_action(CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result;
 
   /// cache_syscall
   /// covert_to_cachable_syscall

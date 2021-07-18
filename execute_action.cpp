@@ -9,7 +9,7 @@
 template <class T>
 static auto run_execute_action(json const &action) -> json
 {
-  return json(gpcache::execute_action(static_cast<T::Action>(action)));
+  return json(gpcache::execute_action(static_cast<T::Parameters>(action)));
 }
 
 namespace gpcache
