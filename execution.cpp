@@ -193,9 +193,9 @@ namespace gpcache
       // add p to SysCall!
       auto result = handle_syscall(p, *syscall, state, mmaps);
 
-      if (const CachedSyscall *const new_action = std::get_if<CachedSyscall>(&result))
+      if (const CachedSyscall *const cached_syscall = std::get_if<CachedSyscall>(&result))
       {
-        execution_cache.push_back(*new_action);
+        execution_cache.push_back(*cached_syscall);
       }
       else if (bool const supported = std::get<bool>(result); !supported)
       {
