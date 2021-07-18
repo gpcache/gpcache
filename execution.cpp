@@ -180,9 +180,7 @@ namespace gpcache
       auto syscall = p.restart_child_and_wait_for_next_syscall();
       if (!syscall)
       {
-        // child has exited
-        // ToDo: exit code
-        spdlog::debug("!syscall");
+        spdlog::debug("child has exited (ToDo: exit code)");
         break;
       }
 
@@ -197,10 +195,6 @@ namespace gpcache
 
       if (const CachedSyscall *const new_action = std::get_if<CachedSyscall>(&result))
       {
-        spdlog::debug("Supported syscall {}", *syscall);
-
-        // Only the most trivial optimization for now
-        //if (execution_cache.empty() || execution_cache.back() != *new_action)
         execution_cache.push_back(*new_action);
       }
       else if (bool const supported = std::get<bool>(result); !supported)

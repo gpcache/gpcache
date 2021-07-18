@@ -19,6 +19,7 @@
 
 namespace gpcache
 {
+  // ToDo: move to new structure
   struct FileHash
   {
     static constexpr char name[] = "filehash";
@@ -38,6 +39,7 @@ namespace gpcache
     CONVENIENCE(FileHash, parameters, result)
   };
 
+  // ToDo: move to new structure
   struct ParamsInput
   {
     static constexpr char name[] = "params";
@@ -60,6 +62,7 @@ namespace gpcache
     CONVENIENCE(ParamsInput, parameters, result)
   };
 
+  // ToDo: hmm
   struct UnsupportedInput
   {
     static constexpr char name[] = "unsupported";
