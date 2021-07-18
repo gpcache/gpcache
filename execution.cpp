@@ -1,3 +1,5 @@
+#include "execution.h"
+
 #include <string>
 #include <vector>
 #include <optional>
@@ -5,8 +7,6 @@
 #include <spdlog/spdlog.h>
 #include <sys/mman.h> // mmap PROT_READ
 
-#include "inputs.h"
-#include "outputs.h"
 #include "wrappers/hash.h"
 #include "wrappers/posix.h"
 #include "wrappers/ptrace.h"
@@ -34,13 +34,9 @@ namespace gpcache
     auto munmap(void *) {}
   };
 
-  struct SyscallResult
-  {
-    bool supported;
-    // todo: variant
-    std::optional<Action> input;
-    std::optional<Output> output;
-  };
+  // bool true = ignore
+  // bool false = unsupported
+  using SyscallResult = std::variant<Action, Output, bool>;
 
   auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &ptrace_syscall, State &state, MmapState &mmaps) -> SyscallResult
   {
@@ -61,44 +57,43 @@ namespace gpcache
       return SyscallResult{true};
     case Syscall_access::syscall_id:
     {
-      auto syscall_access = static_cast<Syscall_access>(syscall);
-      std::string const filename = Ptrace::PEEKTEXT_string(p.get_pid(), syscall_access.filename());
-      return SyscallResult{true, Input_Access{filename, syscall_access.mode(), (int)syscall.return_value()}};
+      auto const cached_syscall = from_syscall(state, static_cast<Syscall_access>(syscall));
+      return Action{cached_syscall};
     }
     case Syscall_openat::syscall_id:
     {
       auto const cached_syscall = from_syscall(state, static_cast<Syscall_openat>(syscall));
 
       if (cached_syscall)
-        return SyscallResult{true, cached_syscall.value()};
+        return Action{cached_syscall.value()};
       else
-        return SyscallResult{false};
+        return false;
       break; // unreachable, but g++ complains otherwise
     }
     case Syscall_close::syscall_id:
     {
       auto const syscall_close = static_cast<Syscall_close>(syscall);
       state.fds.close(syscall_close.fd(), fmt::format("close via {}", json(syscall).dump()));
-      return SyscallResult{.supported = true};
+      return true;
     }
     case Syscall_fstat::syscall_id:
     {
       auto const cached_syscall = from_syscall(state, static_cast<Syscall_fstat>(syscall));
-      return SyscallResult{true, cached_syscall};
+      return Action{cached_syscall.value()};
     }
     case Syscall_read::syscall_id:
     {
       auto const syscall_read = static_cast<Syscall_close>(syscall);
       // In theory only the actually read parts of the file...
       FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
-      return SyscallResult{true, hash};
+      return Action{hash};
     }
     case Syscall_pread64::syscall_id:
     {
       auto const syscall_read = static_cast<Syscall_pread64>(syscall);
       // In theory only the actually read parts of the file...
       FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
-      return SyscallResult{true, hash};
+      return Action{hash};
     }
     case Syscall_write::syscall_id:
     {
@@ -106,14 +101,11 @@ namespace gpcache
 
       auto const filename = state.fds.get_open(syscall_write.fd()).filename;
 
-      json const ftw{
-          {"fd", syscall_write.fd()},
-          {"filename", state.fds.get_open(syscall_write.fd()).filename},
-          {"content", Ptrace::PEEKTEXT(p.get_pid(),
-                                       syscall_write.buf(),
-                                       syscall_write.count())}};
-
-      return SyscallResult{.supported = true, .output = ftw};
+      FdOutput fd_output{(int)syscall_write.fd(),
+                         Ptrace::PEEKTEXT(p.get_pid(),
+                                          syscall_write.buf(),
+                                          syscall_write.count())};
+      return fd_output;
     }
     case Syscall_mmap::syscall_id:
     {
@@ -129,19 +121,19 @@ namespace gpcache
       {
         FileHash hash{file_data->filename, "ToDo"};
         mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
-        return SyscallResult{true, hash};
+        return Action{hash};
       }
       else if (file_data.has_value() && (syscall_mmap.prot() == (PROT_READ | PROT_WRITE)) && ((file_data->flags & (O_RDONLY | O_WRONLY | O_RDWR)) == O_RDONLY))
       {
         // Well this should not work... but it seems to work... let's assume it's read only?!
         FileHash hash{file_data->filename, "ToDo"};
         mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
-        return SyscallResult{true, hash};
+        return Action{hash};
       }
       else if (!file_data.has_value())
       {
         // Shared memory without a file is just memory until the process forks.
-        return SyscallResult{true};
+        return true;
       }
       else
       {
@@ -156,7 +148,7 @@ namespace gpcache
         // ToDo: handle length correctly
         mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), {});
 
-        return SyscallResult{.supported = false};
+        return false;
       }
       break; // unreachable, but g++ complains otherwise
     }
@@ -167,25 +159,18 @@ namespace gpcache
 
       // Who cares...?
       mmaps.munmap(addr);
-      return SyscallResult{.supported = true};
+      return true;
     }
     } // switch
-    return SyscallResult{.supported = false};
+    return false;
   }
 
-  struct ExecutionCache
-  {
-    Inputs inputs;
-    Outputs outputs;
-  };
-
-  auto execute_program(std::vector<char *> const &prog_and_arguments) -> ExecutionCache
+  auto execute_program(std::vector<char *> const &prog_and_arguments) -> gpcache::ExecutionCache
   {
     Ptrace::PtraceProcess p = Ptrace::createChildProcess(prog_and_arguments);
     spdlog::debug("after createChildProcess");
 
-    Inputs inputs;
-    Outputs outputs;
+    gpcache::ExecutionCache execution_cache;
     State state;
     MmapState mmaps;
 
@@ -209,27 +194,24 @@ namespace gpcache
       // add p to SysCall!
       auto result = handle_syscall(p, *syscall, state, mmaps);
 
-      if (result.supported)
+      if (Action *new_action = std::get_if<Action>(&result))
       {
         spdlog::debug("Supported syscall {}", *syscall);
-        if (result.input)
-        {
-          auto &new_action = *result.input;
 
-          // Only the most trivial optimization for now
-          if (inputs.empty() || inputs.back() != new_action)
-            inputs.push_back(new_action);
-        }
-        else if (result.output)
-        {
-          auto &new_output = *result.output;
-          outputs.push_back(new_output);
-        }
+        // Only the most trivial optimization for now
+        //if (execution_cache.empty() || execution_cache.back() != *new_action)
+        execution_cache.push_back(*new_action);
       }
-      else
+      else if (Output *new_output = std::get_if<Output>(&result))
+      {
+        execution_cache.push_back(*new_output);
+      }
+      else if (bool supported = std::get<bool>(result); !supported)
+      {
         spdlog::warn("Unsupported syscall {}", *syscall);
+      }
     }
 
-    return ExecutionCache{inputs, outputs};
+    return execution_cache;
   }
 }

@@ -1,3 +1,4 @@
+#include "execution.h"
 #include "backend/file.h"
 #include "wrappers/hash.h"
 #include "utils/enumerate.h"
@@ -190,38 +191,46 @@ namespace gpcache
   }
 
   // traverse_inputs?
-  auto create_output_path(std::filesystem::path path, json const &params_json, const Inputs inputs, std::vector<std::string> const &sloppiness)
+  auto create_output_path(std::filesystem::path path, json const &params_json, const Action &input, std::vector<std::string> const &sloppiness)
   {
     fmt::print("\n");
 
     path = cache_input(path, "params", json(), params_json, sloppiness);
 
-    for (const Action &input : inputs)
-    {
-      std::visit(
-          [&path, &sloppiness](auto &&typed_input)
-          {
-            path = cache_input(path, typed_input.name, json(typed_input.action), json(typed_input.result), sloppiness);
-          },
-          input);
-    }
+    std::visit(
+        [&path, &sloppiness](auto &&typed_input)
+        {
+          path = cache_input(path, typed_input.name, json(typed_input.action), json(typed_input.result), sloppiness);
+        },
+        input);
 
     return path;
   }
 
-  auto store_outputs(const std::filesystem::path path, const Outputs &outputs)
+  auto store_outputs(const std::filesystem::path path, const Output &output)
   {
-    for (auto const &[index, data] : enumerate(outputs))
-    {
-      ensure_file_content(path / fmt::format("output_{}.json", index), data.dump());
-    }
+    // FIXME extend file instead of overwriting.
+    // handle changes... maybe output_{fd} ?
+    ensure_file_content(path / fmt::format("output.json"), json(output).dump());
   }
 
-  auto FileBasedBackend::store(json const &params_json, Inputs const &inputs, Outputs const &outputs, std::vector<std::string> const &sloppiness) -> void
+  auto FileBasedBackend::store(json const &params_json, const gpcache::ExecutionCache &execution_cache, std::vector<std::string> const &sloppiness) -> void
   {
-    // ToDo: intermixed inpiuts and outputs...
-    auto handle = create_output_path(this->cache_path, params_json, inputs, sloppiness);
-    store_outputs(handle, outputs);
+    auto directory = this->cache_path;
+    for (auto &cache_item : execution_cache)
+    {
+      if (const Action *new_action = std::get_if<Action>(&cache_item))
+      {
+        spdlog::debug("Supported syscall {}", *syscall);
+
+        directory = create_output_path(directory, params_json, *new_action, sloppiness);
+      }
+      else
+      {
+        const Output new_output = std::get<Output>(cache_item);
+        store_outputs(directory, new_output);
+      }
+    }
     spdlog::info("FileBasedBackend::store has cached inputs and outputs");
   }
 

@@ -49,6 +49,12 @@ namespace gpcache
   }
 }
 
+auto json_action_to_string(const json &action)
+{
+  // FIXME: rename 'action' to 'parameters'
+  return action.at("input").get<std::string>() + action.at("action").dump();
+}
+
 int main(int argc, char **argv)
 {
   std::set_terminate(gpcache::terminate_with_stacktrace);
@@ -97,9 +103,8 @@ int main(int argc, char **argv)
 
       while (cached.ok())
       {
-        spdlog::info("Cached action: {}", cached.next_action.dump());
         auto execution_result = gpcache::execute_action(cached.next_action);
-        spdlog::info("Execution result is {}", execution_result.dump());
+        spdlog::info("Cached {} -> Real {}", json_action_to_string(cached.next_action), execution_result.dump());
 
         auto new_cached = backend.retrieve(cached.path, execution_result);
 
@@ -124,10 +129,10 @@ int main(int argc, char **argv)
     // ToDo: move/hide to where the syscalls happen
     params.push_back(nullptr); // required for syscalls so end of array can be detected.
 
-    auto [inputs, outputs] = gpcache::execute_program(params);
+    gpcache::ExecutionCache execution_cache = gpcache::execute_program(params);
     //gpcache::print_inputs(inputs);
 
-    backend.store(params_json, inputs, outputs, sloppiness);
+    backend.store(params_json, execution_cache, sloppiness);
   }
   catch (const char *error)
   {

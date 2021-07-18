@@ -84,6 +84,7 @@ add_library(gpcache_lib
   execute_action.cpp
   cached_syscalls/open_close.cpp
   cached_syscalls/fstat.cpp
+  cached_syscalls/access.cpp
   state.cpp
 )
 set_source_files_properties(execution.cpp PROPERTIES COMPILE_FLAGS -Wno-missing-field-initializers)

@@ -12,33 +12,12 @@
 
 #include "utils/flag_to_string.h"
 
+#include "cached_syscalls/access.h"
 #include "cached_syscalls/open_close.h"
 #include "cached_syscalls/fstat.h"
 
 namespace gpcache
 {
-  struct Input_Access
-  {
-    static constexpr char name[] = "access";
-
-    struct Action
-    {
-      std::string filename;
-      int mode;
-
-      CONVENIENCE(Action, filename, mode);
-    } action;
-
-    struct Result
-    {
-      int result;
-
-      CONVENIENCE(Result, result)
-    } result;
-
-    CONVENIENCE(Input_Access, action, result)
-  };
-
   struct FileHash
   {
     static constexpr char name[] = "filehash";
@@ -100,7 +79,7 @@ namespace gpcache
   };
 
   // ToDo: rename to "Input"
-  using Action = std::variant<Input_Access, CachedSyscall_Open, CachedSyscall_Fstat, FileHash, ParamsInput, UnsupportedInput>;
+  using Action = std::variant<CachedSyscall_Access, CachedSyscall_Open, CachedSyscall_Fstat, FileHash, ParamsInput, UnsupportedInput>;
 
   // Holds collection of all inputs which should lead to the same output.
   using Inputs = std::vector<Action>;
