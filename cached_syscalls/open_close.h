@@ -22,7 +22,7 @@ namespace gpcache
       mode_t mode;
 
       CONVENIENCE(Parameters, dirfd, filename, flags, mode)
-    } action;
+    } parameters;
 
     struct Result
     {
@@ -32,7 +32,7 @@ namespace gpcache
       CONVENIENCE(Result, fd, errno_code)
     } result;
 
-    CONVENIENCE(CachedSyscall_Open, action, result)
+    CONVENIENCE(CachedSyscall_Open, parameters, result)
   };
 
   /// execute_cached_syscall

@@ -27,8 +27,8 @@ namespace gpcache
   auto covert_to_cachable_syscall(State &, Syscall_write const &syscall) -> CachedSyscall_Write
   {
     std::string const data = Ptrace::PEEKTEXT(syscall.pid, syscall.buf(), syscall.count());
-    CachedSyscall_Write::Parameters const action{(int)syscall.fd(), data}; // ToDo: binary data... store as separate file?
+    CachedSyscall_Write::Parameters const parameters{(int)syscall.fd(), data}; // ToDo: binary data... store as separate file?
     CachedSyscall_Write::Result const result{(int)syscall.return_value(), syscall.errno_value()};
-    return {action, result};
+    return {parameters, result};
   }
 }

@@ -20,7 +20,7 @@ namespace gpcache
       std::string data; // ToDo: string vs vector
 
       CONVENIENCE(Parameters, fd, data);
-    } action;
+    } parameters;
 
     struct Result
     {
@@ -30,7 +30,7 @@ namespace gpcache
       CONVENIENCE(Result, return_value, errno_value)
     } result;
 
-    CONVENIENCE(CachedSyscall_Write, action, result)
+    CONVENIENCE(CachedSyscall_Write, parameters, result)
   };
 
   /// execute_cached_syscall

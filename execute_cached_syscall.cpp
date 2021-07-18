@@ -7,9 +7,9 @@
 #include "utils/Utils.h"
 
 template <class T>
-static auto run_execute_action(json const &action) -> json
+static auto execute_typed_cached_syscall(json const &parameters) -> json
 {
-  return json(gpcache::execute_cached_syscall(static_cast<T::Parameters>(action)));
+  return json(gpcache::execute_cached_syscall(static_cast<T::Parameters>(parameters)));
 }
 
 namespace gpcache
@@ -17,22 +17,22 @@ namespace gpcache
   auto execute_cached_syscall(json const &data) -> json
   {
     // todo: gracefully handle all kinds of invalid json
-    if (!data.contains("input") || !data.contains("action"))
+    if (!data.contains("syscall_name") || !data.contains("parameters"))
     {
-      spdlog::warn("Missing key 'action'/'input' in {}", data.dump());
+      spdlog::warn("Missing key 'parameters'/'syscall_name' in {}", data.dump());
     }
 
-    auto input_type = data.at("input").get<std::string>();
-    auto &action = data.at("action");
+    auto syscall_name = data.at("syscall_name").get<std::string>();
+    auto &parameters = data.at("parameters");
 
-    if (input_type == "access")
-      return run_execute_action<CachedSyscall_Access>(action);
-    if (input_type == "fstat")
-      return run_execute_action<CachedSyscall_Fstat>(action);
-    if (input_type == "open")
-      return run_execute_action<CachedSyscall_Open>(action);
-    if (input_type == "write")
-      return run_execute_action<CachedSyscall_Write>(action);
+    if (syscall_name == "access")
+      return execute_typed_cached_syscall<CachedSyscall_Access>(parameters);
+    if (syscall_name == "fstat")
+      return execute_typed_cached_syscall<CachedSyscall_Fstat>(parameters);
+    if (syscall_name == "open")
+      return execute_typed_cached_syscall<CachedSyscall_Open>(parameters);
+    if (syscall_name == "write")
+      return execute_typed_cached_syscall<CachedSyscall_Write>(parameters);
 
     return {};
   }

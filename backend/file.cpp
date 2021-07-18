@@ -135,7 +135,7 @@ namespace gpcache
 
   auto cache_input(const std::filesystem::path &path,
                    const std::string &input_name,
-                   const json &action,
+                   const json &parameters,
                    json result,
                    std::vector<std::string> const &sloppiness)
   {
@@ -145,7 +145,7 @@ namespace gpcache
     // at least move this to fstat...
     if (input_name == "fstat" && contains(sloppiness, "time of fstat 1"))
     {
-      auto fd = action.at("fd").get<int>();
+      auto fd = parameters.at("fd").get<int>();
       if (fd == 1)
       {
         result.at("stats").at("st_atim.tv_sec") = 0;
@@ -161,10 +161,10 @@ namespace gpcache
     auto const result_hash = calculate_hash_of_str(result.dump(), 3);
     auto const result_path = path / result_hash;
 
-    const json action_file_content = {{"input", input_name}, {"action", action}};
+    const json action_file_content = {{"syscall_name", input_name}, {"parameters", parameters}};
 
-    auto const action_file = path / "action.txt";
-    auto const result_file = result_path / "readable_result_for_debugging.txt";
+    auto const action_file = path / "next_syscall.txt";
+    auto const result_file = result_path / "readable_result.txt";
 
     if (auto action_match = ensure_file_content(action_file, action_file_content.dump()); action_match.ok())
     {
@@ -177,7 +177,7 @@ namespace gpcache
     {
       if (action_match.old_file_content)
       {
-        spdlog::warn("Same application is suddenly performing a different action for no obvious reason. ToDo: Will no longer cache it!");
+        spdlog::warn("Same application is suddenly performing a different syscall for no obvious reason. ToDo: Will no longer cache it!");
         spdlog::warn("Old: {}", *action_match.old_file_content);
         spdlog::warn("New: {}", action_file_content.dump());
       }
@@ -199,7 +199,7 @@ namespace gpcache
       std::visit(
           [&directory, &sloppiness](auto &&typed_syscall)
           {
-            directory = cache_input(directory, typed_syscall.name, json(typed_syscall.action), json(typed_syscall.result), sloppiness);
+            directory = cache_input(directory, typed_syscall.name, json(typed_syscall.parameters), json(typed_syscall.result), sloppiness);
           },
           syscall);
     }
@@ -211,8 +211,8 @@ namespace gpcache
     auto const result_hash = calculate_hash_of_str(result.dump(), 3);
     auto const result_path = path / result_hash;
 
-    auto const result_file = result_path / "readable_result_for_debugging.txt";
-    auto const action_file = result_path / "action.txt";
+    auto const result_file = result_path / "readable_result.txt";
+    auto const action_file = result_path / "next_syscall.txt";
 
     if (auto is = is_file_content(result_file, result.dump()); is.ok())
     {
@@ -250,7 +250,7 @@ namespace gpcache
       if (!result_path.is_directory())
         continue;
 
-      auto const result_file = result_path.path() / "readable_result_for_debugging.txt";
+      auto const result_file = result_path.path() / "readable_result.txt";
       auto const content = read_file_to_json(result_file);
       if (json const *const data = std::get_if<json>(&content))
       {

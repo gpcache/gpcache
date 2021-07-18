@@ -20,7 +20,7 @@ namespace gpcache
       int mode;
 
       CONVENIENCE(Parameters, filename, mode);
-    } action; // FIXME -> parameters
+    } parameters; // FIXME -> parameters
 
     struct Result
     {
@@ -30,7 +30,7 @@ namespace gpcache
       CONVENIENCE(Result, return_value, errno_value)
     } result;
 
-    CONVENIENCE(CachedSyscall_Access, action, result)
+    CONVENIENCE(CachedSyscall_Access, parameters, result)
   };
 
   auto execute_cached_syscall(CachedSyscall_Access::Parameters const &) -> CachedSyscall_Access::Result;

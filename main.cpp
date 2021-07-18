@@ -31,27 +31,9 @@ ABSL_FLAG(bool, verbose, false, "Add verbose output");
 ABSL_FLAG(std::string, cache_dir, "~/.gpcache", "cache dir");
 ABSL_FLAG(std::string, sloppy, "", "sloppiness");
 
-namespace gpcache
+auto json_cached_syscall_to_string(const json &cached_syscall)
 {
-  void print_inputs(auto inputs)
-  {
-    fmt::print("\n");
-    for (auto &action : inputs.actions)
-    {
-      std::visit(
-          [](auto &&cached_syscall)
-          {
-            fmt::print("Cached syscall: {}\n", json(cached_syscall).dump());
-          },
-          action);
-    }
-  }
-}
-
-auto json_action_to_string(const json &action)
-{
-  // FIXME: rename 'action' to 'parameters'
-  return action.at("input").get<std::string>() + action.at("action").dump();
+  return cached_syscall.at("syscall_name").get<std::string>() + cached_syscall.at("parameters").dump();
 }
 
 int main(int argc, char **argv)
@@ -103,10 +85,8 @@ int main(int argc, char **argv)
       while (cached.next_syscall)
       {
         auto execution_result = gpcache::execute_cached_syscall(cached.next_syscall.value());
-        spdlog::info("Cached {} -> Real {}", json_action_to_string(cached.next_syscall.value()), execution_result.dump());
+        spdlog::info("Cached {} -> Real {}", json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
 
-        // FIXME: retrieve should not assume that the next thing is an action.
-        //        Instead here write something like backend.get_action(path) -> optional (same as get_output)
         auto new_cached = backend.retrieve(cached.path, execution_result);
 
         auto all_results = backend.get_all_possible_results(cached.path);
@@ -132,7 +112,6 @@ int main(int argc, char **argv)
     params.push_back(nullptr); // required for syscalls so end of array can be detected.
 
     std::vector<gpcache::CachedSyscall> execution_cache = gpcache::execute_program(params);
-    //gpcache::print_inputs(inputs);
 
     backend.store(params_json, execution_cache, sloppiness);
   }

@@ -25,8 +25,8 @@ namespace gpcache
   auto covert_to_cachable_syscall(State &, Syscall_access const &syscall) -> CachedSyscall_Access
   {
     std::string const filename = Ptrace::PEEKTEXT_string(syscall.pid, syscall.filename());
-    CachedSyscall_Access::Parameters const action{filename, syscall.mode()};
+    CachedSyscall_Access::Parameters const parameters{filename, syscall.mode()};
     CachedSyscall_Access::Result const result{(int)syscall.return_value(), syscall.errno_value()};
-    return {action, result};
+    return {parameters, result};
   }
 }

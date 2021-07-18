@@ -26,8 +26,8 @@ namespace gpcache
     //auto const path = state.fds.get_open(syscall.fd()).filename;
 
     // assert fd is actually known?
-    CachedSyscall_Fstat::Parameters const action{static_cast<int>(syscall.fd())};
+    CachedSyscall_Fstat::Parameters const parameters{static_cast<int>(syscall.fd())};
     CachedSyscall_Fstat::Result const result{s, (int)syscall.return_value(), syscall.errno_value()};
-    return CachedSyscall_Fstat{action, result};
+    return CachedSyscall_Fstat{parameters, result};
   }
 }

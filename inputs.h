@@ -27,7 +27,7 @@ namespace gpcache
     {
       std::filesystem::path path;
       CONVENIENCE(Parameters, path)
-    } action;
+    } parameters;
 
     struct Result
     {
@@ -35,7 +35,7 @@ namespace gpcache
       CONVENIENCE(Result, hash)
     } result;
 
-    CONVENIENCE(FileHash, action, result)
+    CONVENIENCE(FileHash, parameters, result)
   };
 
   struct ParamsInput
@@ -46,7 +46,7 @@ namespace gpcache
     {
       bool dummy = true;
       CONVENIENCE(Parameters, dummy)
-    } action;
+    } parameters;
 
     struct Result
     {
@@ -57,7 +57,7 @@ namespace gpcache
       CONVENIENCE(Result, path, params, cwd)
     } result;
 
-    CONVENIENCE(ParamsInput, action, result)
+    CONVENIENCE(ParamsInput, parameters, result)
   };
 
   struct UnsupportedInput
@@ -68,7 +68,7 @@ namespace gpcache
     {
       bool thisIsJustCrazy;
       CONVENIENCE(Parameters, thisIsJustCrazy)
-    } action;
+    } parameters;
 
     struct Result
     {
@@ -76,7 +76,7 @@ namespace gpcache
       CONVENIENCE(Result, thisIsJustCrazy)
     } result;
 
-    CONVENIENCE(UnsupportedInput, action, result)
+    CONVENIENCE(UnsupportedInput, parameters, result)
   };
 
   using CachedSyscall = std::variant<

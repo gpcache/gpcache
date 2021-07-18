@@ -74,7 +74,7 @@ namespace gpcache
       FiledescriptorState::file_descriptor_t fd;
 
       CONVENIENCE(Parameters, fd)
-    } action;
+    } parameters;
 
     struct Result
     {
@@ -85,7 +85,7 @@ namespace gpcache
       CONVENIENCE(Result, stats, return_value, errno_value)
     } result;
 
-    CONVENIENCE(CachedSyscall_Fstat, action, result)
+    CONVENIENCE(CachedSyscall_Fstat, parameters, result)
   };
 
   auto execute_cached_syscall(CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result;
