@@ -13,8 +13,9 @@
 #include "utils/flag_to_string.h"
 
 #include "cached_syscalls/access.h"
-#include "cached_syscalls/open_close.h"
 #include "cached_syscalls/fstat.h"
+#include "cached_syscalls/open_close.h"
+#include "cached_syscalls/write.h"
 
 namespace gpcache
 {
@@ -79,7 +80,14 @@ namespace gpcache
   };
 
   // ToDo: rename to "Input"
-  using Action = std::variant<CachedSyscall_Access, CachedSyscall_Open, CachedSyscall_Fstat, FileHash, ParamsInput, UnsupportedInput>;
+  using Action = std::variant<
+      CachedSyscall_Access,
+      CachedSyscall_Fstat,
+      CachedSyscall_Open,
+      CachedSyscall_Write,
+      FileHash,
+      ParamsInput,
+      UnsupportedInput>;
 
   // Holds collection of all inputs which should lead to the same output.
   using Inputs = std::vector<Action>;

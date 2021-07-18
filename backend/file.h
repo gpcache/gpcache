@@ -1,5 +1,4 @@
 #include "inputs.h"
-#include "outputs.h"
 #include "execution.h" // ExecutionCache
 
 #include <string_view>
@@ -15,7 +14,6 @@ namespace gpcache
     {
       std::filesystem::path path;
       json next_action;
-      // ToDo: output, especially intermixed with actions
 
       auto ok() { return !path.empty(); }
     };

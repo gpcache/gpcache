@@ -27,10 +27,12 @@ namespace gpcache
 
     if (input_type == "access")
       return run_execute_action<CachedSyscall_Access>(action);
-    if (input_type == "open")
-      return run_execute_action<CachedSyscall_Open>(action);
     if (input_type == "fstat")
       return run_execute_action<CachedSyscall_Fstat>(action);
+    if (input_type == "open")
+      return run_execute_action<CachedSyscall_Open>(action);
+    if (input_type == "write")
+      return run_execute_action<CachedSyscall_Write>(action);
 
     return {};
   }

@@ -20,7 +20,6 @@
 #include "utils/Utils.h"
 #include <spdlog/spdlog.h>
 #include "inputs.h"
-#include "outputs.h"
 #include <sys/mman.h> // mmap PROT_READ
 #include "wrappers/hash.h"
 #include "backend/file.h"

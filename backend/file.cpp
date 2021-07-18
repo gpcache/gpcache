@@ -207,31 +207,16 @@ namespace gpcache
     return path;
   }
 
-  auto store_outputs(const std::filesystem::path path, const Output &output)
-  {
-    // FIXME extend file instead of overwriting.
-    // handle changes... maybe output_{fd} ?
-    ensure_file_content(path / fmt::format("output.json"), json(output).dump());
-  }
-
   auto FileBasedBackend::store(json const &params_json, const gpcache::ExecutionCache &execution_cache, std::vector<std::string> const &sloppiness) -> void
   {
     auto directory = this->cache_path;
-    for (auto &cache_item : execution_cache)
+    for (const Action &cache_item : execution_cache)
     {
-      if (const Action *new_action = std::get_if<Action>(&cache_item))
-      {
-        spdlog::debug("Supported syscall {}", *syscall);
+      spdlog::debug("Supported syscall {}", *syscall);
 
-        directory = create_output_path(directory, params_json, *new_action, sloppiness);
-      }
-      else
-      {
-        const Output new_output = std::get<Output>(cache_item);
-        store_outputs(directory, new_output);
-      }
+      directory = create_output_path(directory, params_json, cache_item, sloppiness);
     }
-    spdlog::info("FileBasedBackend::store has cached inputs and outputs");
+    spdlog::info("FileBasedBackend::store has cached all syscalls");
   }
 
   auto FileBasedBackend::retrieve(const std::filesystem::path &path, const json &result) -> retrieve_result

@@ -36,7 +36,7 @@ namespace gpcache
 
   // bool true = ignore
   // bool false = unsupported
-  using SyscallResult = std::variant<Action, Output, bool>;
+  using SyscallResult = std::variant<Action, bool>;
 
   auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &ptrace_syscall, State &state, MmapState &mmaps) -> SyscallResult
   {
@@ -101,11 +101,11 @@ namespace gpcache
 
       auto const filename = state.fds.get_open(syscall_write.fd()).filename;
 
-      FdOutput fd_output{(int)syscall_write.fd(),
-                         Ptrace::PEEKTEXT(p.get_pid(),
-                                          syscall_write.buf(),
-                                          syscall_write.count())};
-      return fd_output;
+      CachedSyscall_Write w{(int)syscall_write.fd(),
+                            Ptrace::PEEKTEXT(p.get_pid(),
+                                             syscall_write.buf(),
+                                             syscall_write.count())};
+      return Action{w};
     }
     case Syscall_mmap::syscall_id:
     {
@@ -194,7 +194,7 @@ namespace gpcache
       // add p to SysCall!
       auto result = handle_syscall(p, *syscall, state, mmaps);
 
-      if (Action *new_action = std::get_if<Action>(&result))
+      if (const Action *const new_action = std::get_if<Action>(&result))
       {
         spdlog::debug("Supported syscall {}", *syscall);
 
@@ -202,11 +202,7 @@ namespace gpcache
         //if (execution_cache.empty() || execution_cache.back() != *new_action)
         execution_cache.push_back(*new_action);
       }
-      else if (Output *new_output = std::get_if<Output>(&result))
-      {
-        execution_cache.push_back(*new_output);
-      }
-      else if (bool supported = std::get<bool>(result); !supported)
+      else if (bool const supported = std::get<bool>(result); !supported)
       {
         spdlog::warn("Unsupported syscall {}", *syscall);
       }
