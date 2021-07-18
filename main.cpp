@@ -106,11 +106,14 @@ int main(int argc, char **argv)
         auto execution_result = gpcache::execute_action(cached.next_action);
         spdlog::info("Cached {} -> Real {}", json_action_to_string(cached.next_action), execution_result.dump());
 
+        // FIXME: retrieve should not assume that the next thing is an action.
+        //        Instead here write something like backend.get_action(path) -> optional (same as get_output)
         auto new_cached = backend.retrieve(cached.path, execution_result);
 
         auto all_results = backend.get_all_possible_results(cached.path);
         if (new_cached.ok())
         {
+          spdlog::info("Cached!");
           for (auto const &possible_result : all_results)
             if (possible_result != execution_result)
               spdlog::info("other cached results: {}", possible_result.dump());
