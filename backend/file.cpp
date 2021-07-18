@@ -191,7 +191,7 @@ namespace gpcache
   }
 
   // traverse_inputs?
-  auto create_output_path(std::filesystem::path path, json const &params_json, const Parameters &input, std::vector<std::string> const &sloppiness)
+  auto create_output_path(std::filesystem::path path, json const &params_json, const CachedSyscall &input, std::vector<std::string> const &sloppiness)
   {
     fmt::print("\n");
 
@@ -207,10 +207,10 @@ namespace gpcache
     return path;
   }
 
-  auto FileBasedBackend::store(json const &params_json, const gpcache::ExecutionCache &execution_cache, std::vector<std::string> const &sloppiness) -> void
+  auto FileBasedBackend::store(json const &params_json, const std::vector<CachedSyscall> &execution_cache, std::vector<std::string> const &sloppiness) -> void
   {
     auto directory = this->cache_path;
-    for (const Parameters &cache_item : execution_cache)
+    for (const CachedSyscall &cache_item : execution_cache)
     {
       spdlog::debug("Supported syscall {}", *syscall);
 

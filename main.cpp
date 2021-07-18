@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     // ToDo: move/hide to where the syscalls happen
     params.push_back(nullptr); // required for syscalls so end of array can be detected.
 
-    gpcache::ExecutionCache execution_cache = gpcache::execute_program(params);
+    std::vector<gpcache::CachedSyscall> execution_cache = gpcache::execute_program(params);
     //gpcache::print_inputs(inputs);
 
     backend.store(params_json, execution_cache, sloppiness);

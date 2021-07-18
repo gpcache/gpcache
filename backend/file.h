@@ -19,7 +19,7 @@ namespace gpcache
     };
     auto retrieve(const std::filesystem::path &pos, const json &input_result) -> retrieve_result;
 
-    auto store(json const &params_json, const gpcache::ExecutionCache &execution_cache, std::vector<std::string> const &sloppiness) -> void;
+    auto store(json const &params_json, const std::vector<CachedSyscall> &execution_cache, std::vector<std::string> const &sloppiness) -> void;
 
     //auto get_all_possible_actions(const std::filesystem::path &pos) -> std::vector<json>;
     auto get_all_possible_results(const std::filesystem::path &pos) -> std::vector<json>;

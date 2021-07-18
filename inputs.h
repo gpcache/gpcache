@@ -79,8 +79,7 @@ namespace gpcache
     CONVENIENCE(UnsupportedInput, action, result)
   };
 
-  // ToDo: rename to "Input"
-  using Parameters = std::variant<
+  using CachedSyscall = std::variant<
       CachedSyscall_Access,
       CachedSyscall_Fstat,
       CachedSyscall_Open,
@@ -88,8 +87,5 @@ namespace gpcache
       FileHash,
       ParamsInput,
       UnsupportedInput>;
-
-  // Holds collection of all inputs which should lead to the same output.
-  using Inputs = std::vector<Parameters>;
 
 } // namespace gpcache
