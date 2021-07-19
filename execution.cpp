@@ -79,15 +79,11 @@ namespace gpcache
     }
     case Syscall_fstat::syscall_id:
     {
-      auto const cached_syscall = covert_to_cachable_syscall(state, static_cast<Syscall_fstat>(syscall));
-      return CachedSyscall{cached_syscall.value()};
+      return CachedSyscall{covert_to_cachable_syscall(state, static_cast<Syscall_fstat>(syscall))};
     }
     case Syscall_read::syscall_id:
     {
-      auto const syscall_read = static_cast<Syscall_close>(syscall);
-      // In theory only the actually read parts of the file...
-      FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
-      return CachedSyscall{hash};
+      return CachedSyscall{covert_to_cachable_syscall(state, static_cast<Syscall_read>(syscall))};
     }
     case Syscall_pread64::syscall_id:
     {
@@ -98,15 +94,7 @@ namespace gpcache
     }
     case Syscall_write::syscall_id:
     {
-      auto const syscall_write = static_cast<Syscall_write>(syscall);
-
-      auto const filename = state.fds.get_open(syscall_write.fd()).filename;
-
-      CachedSyscall_Write w{(int)syscall_write.fd(),
-                            Ptrace::PEEKTEXT(p.get_pid(),
-                                             syscall_write.buf(),
-                                             syscall_write.count())};
-      return CachedSyscall{w};
+      return CachedSyscall{covert_to_cachable_syscall(state, static_cast<Syscall_write>(syscall))};
     }
     case Syscall_mmap::syscall_id:
     {

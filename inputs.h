@@ -15,6 +15,7 @@
 #include "cached_syscalls/access.h"
 #include "cached_syscalls/fstat.h"
 #include "cached_syscalls/open_close.h"
+#include "cached_syscalls/read.h"
 #include "cached_syscalls/write.h"
 
 namespace gpcache
@@ -86,6 +87,7 @@ namespace gpcache
       CachedSyscall_Access,
       CachedSyscall_Fstat,
       CachedSyscall_Open,
+      CachedSyscall_Read,
       CachedSyscall_Write,
       FileHash,
       ParamsInput,

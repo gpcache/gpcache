@@ -85,23 +85,22 @@ int main(int argc, char **argv)
       while (cached.next_syscall)
       {
         auto execution_result = gpcache::execute_cached_syscall(cached.next_syscall.value());
-        spdlog::info("Cached {} -> Real {}", json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
 
         auto new_cached = backend.retrieve(cached.path, execution_result);
 
         auto all_results = backend.get_all_possible_results(cached.path);
         if (new_cached.ok())
         {
-          spdlog::info("Cached!");
+          spdlog::info("Cached {} -> Real {} -> Cache Hit", json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
           for (auto const &possible_result : all_results)
             if (possible_result != execution_result)
               spdlog::info("other cached results: {}", possible_result.dump());
         }
         else
         {
-          spdlog::info("This is new! Will have to actually run the executable :-(");
+          spdlog::warn("Cached {} -> Real {} -> Cache MISS", json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
           for (auto const &possible_result : backend.get_all_possible_results(cached.path))
-            spdlog::info("Cached results would have been: {}", possible_result.dump());
+            spdlog::warn("Cached results would have been: {}", possible_result.dump());
         }
 
         cached = new_cached;

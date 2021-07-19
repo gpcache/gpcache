@@ -203,7 +203,7 @@ namespace gpcache
           },
           syscall);
     }
-    spdlog::info("FileBasedBackend::store has cached all syscalls");
+    spdlog::info("Execution cached in FileBasedBackend");
   }
 
   auto FileBasedBackend::retrieve(const std::filesystem::path &path, const json &result) -> retrieve_result
@@ -234,7 +234,10 @@ namespace gpcache
       }
       else
       {
-        spdlog::warn("Cannot use cached results because of error {}", is.error.value());
+        if (is.error.value() == 2)
+          spdlog::info("Not cached");
+        else
+          spdlog::warn("Cannot use cached results because of error {}", is.error.value());
       }
     }
 
