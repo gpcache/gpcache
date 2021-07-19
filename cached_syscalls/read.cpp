@@ -11,12 +11,12 @@
 
 namespace gpcache
 {
-  auto execute_cached_syscall(CachedSyscall_Read::Parameters const &cached_syscall) -> CachedSyscall_Read::Result
+  auto execute_cached_syscall(State &, CachedSyscall_Read::Parameters const &cached_syscall) -> CachedSyscall_Read::Result
   {
     CachedSyscall_Read::Result result;
     result.data.resize(cached_syscall.count);
 
-    if(cached_syscall.is_pread64)
+    if (cached_syscall.is_pread64)
     {
       result.return_value = pread64(cached_syscall.fd, result.data.data(), cached_syscall.count, cached_syscall.pread64_offset);
     }

@@ -36,7 +36,7 @@ namespace gpcache
     CONVENIENCE(CachedSyscall_Read, parameters, result)
   };
 
-  auto execute_cached_syscall(CachedSyscall_Read::Parameters const &) -> CachedSyscall_Read::Result;
+  auto execute_cached_syscall(State &, CachedSyscall_Read::Parameters const &) -> CachedSyscall_Read::Result;
   auto covert_to_cachable_syscall(State &, Syscall_read const &) -> CachedSyscall_Read;
   auto covert_to_cachable_syscall(State &, Syscall_pread64 const &) -> CachedSyscall_Read;
 }

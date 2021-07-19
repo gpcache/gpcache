@@ -81,10 +81,11 @@ int main(int argc, char **argv)
     {
       // Program was executed before! Now start iterating.
       spdlog::info("Great, {} is cached. Now let's check all dependencies...", json(params).dump());
+      gpcache::State state;
 
       while (cached.next_syscall)
       {
-        auto execution_result = gpcache::execute_cached_syscall(cached.next_syscall.value());
+        auto execution_result = gpcache::execute_cached_json_syscall(state, cached.next_syscall.value());
 
         auto new_cached = backend.retrieve(cached.path, execution_result);
 

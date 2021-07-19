@@ -7,14 +7,14 @@
 #include "utils/Utils.h"
 
 template <class T>
-static auto execute_typed_cached_syscall(json const &parameters) -> json
+static auto execute_typed_cached_syscall(gpcache::State& state, json const &parameters) -> json
 {
-  return json(gpcache::execute_cached_syscall(static_cast<T::Parameters>(parameters)));
+  return json(gpcache::execute_cached_syscall(state, static_cast<T::Parameters>(parameters)));
 }
 
 namespace gpcache
 {
-  auto execute_cached_syscall(json const &data) -> json
+  auto execute_cached_json_syscall(State& state, json const &data) -> json
   {
     // todo: gracefully handle all kinds of invalid json
     if (!data.contains("syscall_name") || !data.contains("parameters"))
@@ -26,19 +26,19 @@ namespace gpcache
     auto &parameters = data.at("parameters");
 
     if (syscall_name == "access")
-      return execute_typed_cached_syscall<CachedSyscall_Access>(parameters);
+      return execute_typed_cached_syscall<CachedSyscall_Access>(state, parameters);
     if (syscall_name == "fstat")
-      return execute_typed_cached_syscall<CachedSyscall_Fstat>(parameters);
+      return execute_typed_cached_syscall<CachedSyscall_Fstat>(state, parameters);
     if (syscall_name == "open")
-      return execute_typed_cached_syscall<CachedSyscall_Open>(parameters);
+      return execute_typed_cached_syscall<CachedSyscall_Open>(state, parameters);
 
     if (syscall_name == "read" || syscall_name == "pread64")
-      return execute_typed_cached_syscall<CachedSyscall_Read>(parameters);
+      return execute_typed_cached_syscall<CachedSyscall_Read>(state, parameters);
     if (syscall_name == "write")
-      return execute_typed_cached_syscall<CachedSyscall_Write>(parameters);
+      return execute_typed_cached_syscall<CachedSyscall_Write>(state, parameters);
 
     if (syscall_name == "mmap")
-      return execute_typed_cached_syscall<CachedSyscall_Mmap>(parameters);
+      return execute_typed_cached_syscall<CachedSyscall_Mmap>(state, parameters);
 
     return {};
   }

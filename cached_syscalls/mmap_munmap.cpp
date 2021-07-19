@@ -6,6 +6,7 @@
 #include "wrappers/ptrace.h"
 #include "wrappers/json.h"
 #include "wrappers/filesystem.h"
+#include "wrappers/hash.h"
 
 #include "utils/flag_to_string.h"
 #include "utils/Utils.h"
@@ -18,9 +19,19 @@ namespace gpcache
       PROT_READ | PROT_EXEC // dynamic libraries
   };
 
-  auto execute_cached_syscall(CachedSyscall_Mmap::Parameters const &cached_syscall) -> CachedSyscall_Mmap::Result
+  auto execute_cached_syscall(State & state, CachedSyscall_Mmap::Parameters const &cached_syscall) -> CachedSyscall_Mmap::Result
   {
-    CachedSyscall_Mmap::Result result;
+    CachedSyscall_Mmap::Result result{};
+    errno = 0;
+    void *addr = mmap(nullptr, cached_syscall.length, cached_syscall.prot, cached_syscall.flags, cached_syscall.fd, cached_syscall.offset);
+    result.is_addr_nullptr = addr == nullptr;
+    result.errno_code = errno;
+    auto file_data = state.fds.get_open_opt(cached_syscall.fd);
+    if(!file_data) {
+      spdlog::warn("Unknown fd {}", cached_syscall.fd);
+    }
+    result.file_hash = calculate_hash_of_file(file_data.value().filename); // maybe a little overkill...
+    state.mmaps.mmap(addr, cached_syscall.prot, cached_syscall.flags, file_data.value().filename);
     return result;
   }
 
@@ -40,6 +51,7 @@ namespace gpcache
 
     if (is_readonly)
     {
+      auto const file_hash = calculate_hash_of_file(file_data.value().filename); // maybe a little overkill...
       CachedSyscall_Mmap::Parameters parameters{
           addr == nullptr,
           syscall_mmap.len(),
@@ -47,7 +59,7 @@ namespace gpcache
           static_cast<int>(syscall_mmap.flags()),
           static_cast<int>(syscall_mmap.fd()),
           syscall_mmap.pgoff()};
-      CachedSyscall_Mmap::Result result{syscall_mmap.return_value() == 0, syscall_mmap.errno_value()};
+      CachedSyscall_Mmap::Result result{syscall_mmap.return_value() == 0, syscall_mmap.errno_value(), file_hash};
       state.mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
       return CachedSyscall_Mmap{parameters, result};
     }

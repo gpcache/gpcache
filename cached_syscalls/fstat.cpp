@@ -12,7 +12,7 @@
 namespace gpcache
 {
 
-  auto execute_cached_syscall(CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result
+  auto execute_cached_syscall(State &, CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result
   {
     CachedSyscall_Fstat::Result result;
     result.return_value = fstat(cached_syscall.fd, &result.stats);

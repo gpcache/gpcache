@@ -34,7 +34,7 @@ namespace gpcache
   };
 
   /// execute_cached_syscall
-  auto execute_cached_syscall(CachedSyscall_Write::Parameters const &) -> CachedSyscall_Write::Result;
+  auto execute_cached_syscall(State &, CachedSyscall_Write::Parameters const &) -> CachedSyscall_Write::Result;
 
   /// cache_syscall
   /// covert_to_cachable_syscall

@@ -11,7 +11,7 @@
 
 namespace gpcache
 {
-  auto execute_cached_syscall(CachedSyscall_Write::Parameters const &cached_syscall) -> CachedSyscall_Write::Result
+  auto execute_cached_syscall(State &, CachedSyscall_Write::Parameters const &cached_syscall) -> CachedSyscall_Write::Result
   {
     // ToDo: execute syscall directly instead of libc wrapper?
     // This would allow full reuse of covert_to_cachable_syscall.

@@ -30,13 +30,14 @@ namespace gpcache
     {
       bool is_addr_nullptr;
       int errno_code;
+      std::string file_hash;
 
-      CONVENIENCE(Result, is_addr_nullptr, errno_code)
+      CONVENIENCE(Result, is_addr_nullptr, errno_code, file_hash)
     } result;
 
     CONVENIENCE(CachedSyscall_Mmap, parameters, result)
   };
 
-  auto execute_cached_syscall(CachedSyscall_Mmap::Parameters const &cached_syscall) -> CachedSyscall_Mmap::Result;
-  auto covert_to_cachable_syscall(State &state, Syscall_mmap const &syscall) -> std::variant<bool, CachedSyscall_Mmap>;
+  auto execute_cached_syscall(State &, CachedSyscall_Mmap::Parameters const &) -> CachedSyscall_Mmap::Result;
+  auto covert_to_cachable_syscall(State &, Syscall_mmap const &) -> std::variant<bool, CachedSyscall_Mmap>;
 }

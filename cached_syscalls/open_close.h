@@ -35,10 +35,6 @@ namespace gpcache
     CONVENIENCE(CachedSyscall_Open, parameters, result)
   };
 
-  /// execute_cached_syscall
-  auto execute_cached_syscall(CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result;
-
-  /// cache_syscall
-  /// covert_to_cachable_syscall
+  auto execute_cached_syscall(State &, CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result;
   auto covert_to_cachable_syscall(State &state, Syscall_openat const &syscall) -> std::optional<CachedSyscall_Open>;
 }
