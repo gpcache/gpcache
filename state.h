@@ -48,10 +48,31 @@ namespace gpcache
     auto dump_data(auto const level, FiledescriptorData const &data) const -> void;
   };
 
+
+  class MmapState
+  {
+  private:
+    struct MmapData
+    {
+      void *addr;
+      int prot;
+      int flags;
+      std::optional<int> fd;
+    };
+    std::vector<MmapData> mmaps;
+
+  public:
+    //auto mmap(void *addr, int prot, int flags, std::filesystem::path path) {}
+    auto mmap(void *, int, int, std::filesystem::path) {}
+    //auto munmap(void *addr) {}
+    auto munmap(void *) {}
+  };
+
+
   // kernel state? application state? Handles?
   struct State
   {
     FiledescriptorState fds;
-    //MmapState mmaps;
+    MmapState mmaps;
   };
 }

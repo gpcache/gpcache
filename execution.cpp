@@ -14,32 +14,12 @@
 
 namespace gpcache
 {
-
-  class MmapState
-  {
-  private:
-    struct MmapData
-    {
-      void *addr;
-      int prot;
-      int flags;
-      std::optional<int> fd;
-    };
-    std::vector<MmapData> mmaps;
-
-  public:
-    //auto mmap(void *addr, int prot, int flags, std::filesystem::path path) {}
-    auto mmap(void *, int, int, std::filesystem::path) {}
-    //auto munmap(void *addr) {}
-    auto munmap(void *) {}
-  };
-
   // bool true = ignore
   // bool false = unsupported
   // ToDo: consider adding CachedSyscall_Unsupported with bool flag or CachedSyscall_Unsupported and CachedSyscall_Ignore
   using SyscallResult = std::variant<CachedSyscall, bool>;
 
-  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &ptrace_syscall, State &state, MmapState &mmaps) -> SyscallResult
+  auto handle_syscall(Ptrace::PtraceProcess const p, Ptrace::SysCall const &ptrace_syscall, State &state) -> SyscallResult
   {
     Syscall_Base syscall{
         .pid = p.get_pid(),
@@ -94,48 +74,12 @@ namespace gpcache
     }
     case Syscall_mmap::syscall_id:
     {
-      auto const syscall_mmap = static_cast<Syscall_mmap>(syscall);
-      auto const addr = reinterpret_cast<void *>(syscall_mmap.addr());
-
-      // Yes this will truncate! and wrap around 4294967295 to -1!
-      int const fd = static_cast<int>(syscall_mmap.fd());
-
-      auto file_data = state.fds.get_open_opt(fd);
-
-      if (file_data.has_value() && (syscall_mmap.prot() == PROT_READ || syscall_mmap.prot() == (PROT_READ | PROT_EXEC)))
-      {
-        FileHash hash{file_data->filename, "ToDo"};
-        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
-        return CachedSyscall{hash};
-      }
-      else if (file_data.has_value() && (syscall_mmap.prot() == (PROT_READ | PROT_WRITE)) && ((file_data->flags & (O_RDONLY | O_WRONLY | O_RDWR)) == O_RDONLY))
-      {
-        // Well this should not work... but it seems to work... let's assume it's read only?!
-        FileHash hash{file_data->filename, "ToDo"};
-        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), file_data->filename);
-        return CachedSyscall{hash};
-      }
-      else if (!file_data.has_value())
-      {
-        // Shared memory without a file is just memory until the process forks.
-        return true;
-      }
+      // Wow.. C++... In caes of a return a, in case of b return b.
+      auto result = covert_to_cachable_syscall(state, static_cast<Syscall_mmap>(syscall));
+      if (bool const *b = std::get_if<bool>(&result))
+        return *b;
       else
-      {
-        spdlog::warn("flags {} = {}", syscall_mmap.flags(), mmap_flag_to_string(syscall_mmap.flags()));
-        spdlog::warn("prot {} = {}", syscall_mmap.prot(), mmap_prot_to_string(syscall_mmap.prot()));
-        if (file_data.has_value())
-        {
-          spdlog::warn("fd.path {}", file_data->filename.string());
-          spdlog::warn("fd.flags {}", openat_flag_to_string(file_data->flags));
-        }
-
-        // ToDo: handle length correctly
-        mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(), {});
-
-        return false;
-      }
-      break; // unreachable, but g++ complains otherwise
+        return std::get<CachedSyscall_Mmap>(result);
     }
     case Syscall_munmap::syscall_id:
     {
@@ -143,7 +87,7 @@ namespace gpcache
       auto const addr = reinterpret_cast<void *>(syscall_munmap.addr());
 
       // Who cares...?
-      mmaps.munmap(addr);
+      state.mmaps.munmap(addr);
       return true;
     }
     } // switch
@@ -157,7 +101,6 @@ namespace gpcache
 
     std::vector<CachedSyscall> execution_cache;
     State state;
-    MmapState mmaps;
 
     while (true)
     {
@@ -175,7 +118,7 @@ namespace gpcache
       }
 
       // add p to SysCall!
-      auto result = handle_syscall(p, *syscall, state, mmaps);
+      auto result = handle_syscall(p, *syscall, state);
 
       if (const CachedSyscall *const cached_syscall = std::get_if<CachedSyscall>(&result))
       {

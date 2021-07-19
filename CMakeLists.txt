@@ -84,6 +84,7 @@ add_library(gpcache_lib
   execute_cached_syscall.cpp
   cached_syscalls/access.cpp
   cached_syscalls/fstat.cpp
+  cached_syscalls/mmap_munmap.cpp
   cached_syscalls/open_close.cpp
   cached_syscalls/read.cpp
   cached_syscalls/write.cpp
