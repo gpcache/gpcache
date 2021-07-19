@@ -58,8 +58,7 @@ namespace gpcache
       return SyscallResult{true};
     case Syscall_access::syscall_id:
     {
-      auto const cached_syscall = covert_to_cachable_syscall(state, static_cast<Syscall_access>(syscall));
-      return CachedSyscall{cached_syscall};
+      return covert_to_cachable_syscall(state, static_cast<Syscall_access>(syscall));
     }
     case Syscall_openat::syscall_id:
     {
@@ -79,22 +78,19 @@ namespace gpcache
     }
     case Syscall_fstat::syscall_id:
     {
-      return CachedSyscall{covert_to_cachable_syscall(state, static_cast<Syscall_fstat>(syscall))};
+      return covert_to_cachable_syscall(state, static_cast<Syscall_fstat>(syscall));
     }
     case Syscall_read::syscall_id:
     {
-      return CachedSyscall{covert_to_cachable_syscall(state, static_cast<Syscall_read>(syscall))};
+      return covert_to_cachable_syscall(state, static_cast<Syscall_read>(syscall));
     }
     case Syscall_pread64::syscall_id:
     {
-      auto const syscall_read = static_cast<Syscall_pread64>(syscall);
-      // In theory only the actually read parts of the file...
-      FileHash hash{state.fds.get_open(syscall_read.fd()).filename, "ToDo"};
-      return CachedSyscall{hash};
+      return covert_to_cachable_syscall(state, static_cast<Syscall_pread64>(syscall));
     }
     case Syscall_write::syscall_id:
     {
-      return CachedSyscall{covert_to_cachable_syscall(state, static_cast<Syscall_write>(syscall))};
+      return covert_to_cachable_syscall(state, static_cast<Syscall_write>(syscall));
     }
     case Syscall_mmap::syscall_id:
     {

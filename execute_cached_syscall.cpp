@@ -31,7 +31,7 @@ namespace gpcache
       return execute_typed_cached_syscall<CachedSyscall_Fstat>(parameters);
     if (syscall_name == "open")
       return execute_typed_cached_syscall<CachedSyscall_Open>(parameters);
-    if (syscall_name == "read")
+    if (syscall_name == "read" || syscall_name == "pread64")
       return execute_typed_cached_syscall<CachedSyscall_Read>(parameters);
     if (syscall_name == "write")
       return execute_typed_cached_syscall<CachedSyscall_Write>(parameters);

@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <linux/time_types.h>
 #include <sys/uio.h>
+#include <concepts>
 
 #include "wrappers/json.h"
 
@@ -23,6 +24,16 @@ namespace gpcache
 {
 
   using SyscallDataType = decltype(user_regs_struct{}.rax);
+
+  template <std::integral ReturnValueType>
+  struct ReturnValueAndErrno
+  {
+    ReturnValueType return_value;
+    int errno_value;
+
+    CONVENIENCE(ReturnValueAndErrno, return_value, errno_value)
+  };
+
   struct Syscall_Base
   {
     pid_t pid;
@@ -49,6 +60,12 @@ namespace gpcache
         return static_cast<int>(-real_return_value);
       else
         return 0;
+    }
+
+    template <std::integral ReturnValueType>
+    inline auto return_value_and_errno() const -> ReturnValueAndErrno<ReturnValueType>
+    {
+      return {static_cast<ReturnValueType>(return_value()), errno_value()};
     }
 
     // skip pid?
