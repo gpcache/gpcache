@@ -98,15 +98,14 @@ jobs:
               echo "CXX=clang++" >> $GITHUB_ENV
             fi
           fi
+          pip3 install conan
 
       - name: Get source
         uses: actions/checkout@v2
 
       - name: Build
         run: |
-          pip3 install conan
           mkdir build
           cd build
-          conan install etc
           conan install .. --settings compiler.cppstd=20 --build=missing
           conan build ..
