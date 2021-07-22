@@ -1,7 +1,7 @@
 [![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/gpcache/gpcache)
 
 # gpcache
-General Purpose Cache will speed up repetitios retesting, just as ccache speeds up repetitions recompilations.
+General Purpose Cache will speed up repetitios testing, just as ccache speeds up repetitios compilations.
 
 ## How gpcache helps
 - gpcache will execute your test in a debugger-like mode.
