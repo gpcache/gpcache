@@ -23,48 +23,58 @@ jobs:
           # this should not work
           - os: ubuntu-18.04
             compiler: gcc
-            version: "8"
+            compiler_version: "8"
+            build_type: "debug"
 
           # this might not work
           - os: ubuntu-18.04
             compiler: gcc
-            version: "9"
+            compiler_version: "9"
+            build_type: "debug"
 
           - os: ubuntu-20.04
             compiler: gcc
-            version: "10"
+            compiler_version: "10"
+            build_type: "debug"
 
           # this should not work
           - os: ubuntu-18.04
             compiler: clang
-            version: "8"
+            compiler_version: "8"
+            build_type: "debug"
 
           # this might not work
           - os: ubuntu-20.04
             compiler: clang
-            version: "9"
+            compiler_version: "9"
+            build_type: "debug"
 
           - os: ubuntu-20.04
             compiler: clang
-            version: "10"
+            compiler_version: "10"
+            build_type: "debug"
 
           - os: ubuntu-20.04
             compiler: clang
-            version: "11"
+            compiler_version: "11"
+            build_type: "debug"
 
           # this should not work
           - os: macOS-latest
             compiler: xcode
-            version: "10.3"
+            compiler_version: "10.3"
+            build_type: "debug"
 
           # this might not work
           - os: macOS-latest
             compiler: xcode
-            version: "11.7"
+            compiler_version: "11.7"
+            build_type: "debug"
 
           - os: macOS-latest
             compiler: xcode
-            version: "12.2"
+            compiler_version: "12.2"
+            build_type: "debug"
     steps:
       - name: Install dependencies
         run: |
@@ -76,15 +86,15 @@ jobs:
             packages="ninja-build pkg-config python3 python3-setuptools"
 
             if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-              echo "CC=gcc-${{ matrix.config.version }}" >> $GITHUB_ENV
-              echo "CXX=g++-${{ matrix.config.version }}" >> $GITHUB_ENV
+              echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+              echo "CXX=g++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
 
-              packages="$packages g++-${{ matrix.config.version }}"
+              packages="$packages g++-${{ matrix.config.compiler_version }}"
             else
-              echo "CC=clang-${{ matrix.config.version }}" >> $GITHUB_ENV
-              echo "CXX=clang++-${{ matrix.config.version }}" >> $GITHUB_ENV
+              echo "CC=clang-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+              echo "CXX=clang++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
 
-              packages="$packages clang-${{ matrix.config.version }}"
+              packages="$packages clang-${{ matrix.config.compiler_version }}"
             fi
             sudo apt install -y $packages
 
@@ -94,24 +104,37 @@ jobs:
               brew install ninja pkg-config
 
             if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-              brew install gcc@${{ matrix.config.version }}
-              echo "CC=gcc-${{ matrix.config.version }}" >> $GITHUB_ENV
-              echo "CXX=g++-${{ matrix.config.version }}" >> $GITHUB_ENV
+              brew install gcc@${{ matrix.config.compiler_version }}
+              echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+              echo "CXX=g++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
             else
-              sudo xcode-select -switch /Applications/Xcode_${{ matrix.config.version }}.app
+              sudo xcode-select -switch /Applications/Xcode_${{ matrix.config.compiler_version }}.app
               echo "CC=clang" >> $GITHUB_ENV
               echo "CXX=clang++" >> $GITHUB_ENV
             fi
 
           fi
-          pip3 install conan
+          
+          # alternative: conan_package_tools
+          # why --upgrade?
+          pip3 install --upgrade conan
 
       - name: Get source
         uses: actions/checkout@v2
 
-      - name: Build
+      - name: Conan Install
         run: |
           mkdir build
           cd build
-          conan install .. --settings compiler.cppstd=20 --build=missing
+          conan install .. \
+            --settings build_type=${{ matrix.build_type }} \
+            --settings compiler=${{ matrix.compiler }} \
+            --settings compiler.version=${{ matrix.compiler_version }} \
+            --settings compiler.cppstd=20 \
+            --build missing \
+            --build outdated
+
+      - name: Build
+        run: |
+          cd build
           conan build ..
