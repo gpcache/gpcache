@@ -24,57 +24,57 @@ jobs:
           - os: ubuntu-18.04
             compiler: gcc
             compiler_version: "8"
-            build_type: "debug"
+            build_type: "Debug"
 
           # this might not work
           - os: ubuntu-18.04
             compiler: gcc
             compiler_version: "9"
-            build_type: "debug"
+            build_type: "Debug"
 
           - os: ubuntu-20.04
             compiler: gcc
             compiler_version: "10"
-            build_type: "debug"
+            build_type: "Debug"
 
           # this should not work
           - os: ubuntu-18.04
             compiler: clang
             compiler_version: "8"
-            build_type: "debug"
+            build_type: "Debug"
 
           # this might not work
           - os: ubuntu-20.04
             compiler: clang
             compiler_version: "9"
-            build_type: "debug"
+            build_type: "Debug"
 
           - os: ubuntu-20.04
             compiler: clang
             compiler_version: "10"
-            build_type: "debug"
+            build_type: "Debug"
 
           - os: ubuntu-20.04
             compiler: clang
             compiler_version: "11"
-            build_type: "debug"
+            build_type: "Debug"
 
           # this should not work
           - os: macOS-latest
             compiler: xcode
             compiler_version: "10.3"
-            build_type: "debug"
+            build_type: "Debug"
 
           # this might not work
           - os: macOS-latest
             compiler: xcode
             compiler_version: "11.7"
-            build_type: "debug"
+            build_type: "Debug"
 
           - os: macOS-latest
             compiler: xcode
             compiler_version: "12.2"
-            build_type: "debug"
+            build_type: "Debug"
     steps:
       - name: Install dependencies
         run: |
@@ -127,6 +127,7 @@ jobs:
           mkdir build
           cd build
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+            conan profile new default --detect
             conan profile update settings.compiler.libcxx=libstdc++11 default
           fi
           conan install .. \
