@@ -20,16 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # this should not work
           - os: ubuntu-18.04
             compiler: gcc
-            compiler_version: "8"
-            build_type: "Debug"
-
-          # this might not work
-          - os: ubuntu-18.04
-            compiler: gcc
-            compiler_version: "9"
+            compiler_version: "10"
             build_type: "Debug"
 
           - os: ubuntu-20.04
@@ -37,13 +30,11 @@ jobs:
             compiler_version: "10"
             build_type: "Debug"
 
-          # this should not work
           - os: ubuntu-18.04
             compiler: clang
-            compiler_version: "8"
+            compiler_version: "10"
             build_type: "Debug"
 
-          # this might not work
           - os: ubuntu-20.04
             compiler: clang
             compiler_version: "9"
@@ -62,19 +53,29 @@ jobs:
           # this should not work
           - os: macOS-latest
             compiler: apple-clang
-            compiler_version: "10.3"
+            xcode_version: "10.3"
+            compiler_version: "10.0"
             build_type: "Debug"
 
           # this might not work
           - os: macOS-latest
             compiler: apple-clang
-            compiler_version: "11.7"
+            xcode_version: "11.7"
+            compiler_version: "11.0"
             build_type: "Debug"
 
           - os: macOS-latest
             compiler: apple-clang
-            compiler_version: "12.2"
+            xcode_version: "12.2"
+            compiler_version: "12.0"
             build_type: "Debug"
+
+          - os: macOS-latest
+            compiler: gcc
+            xcode_version: "12.2"
+            compiler_version: "10.0"
+            build_type: "Debug"
+
     steps:
       - name: Install dependencies
         run: |
@@ -108,7 +109,7 @@ jobs:
               echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
               echo "CXX=g++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
             else
-              sudo xcode-select -switch /Applications/Xcode_${{ matrix.config.compiler_version }}.app
+              sudo xcode-select -switch /Applications/Xcode_${{ matrix.config.xcode_version }}.app
               echo "CC=clang" >> $GITHUB_ENV
               echo "CXX=clang++" >> $GITHUB_ENV
             fi
