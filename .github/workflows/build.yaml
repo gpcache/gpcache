@@ -103,7 +103,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build
-        run:
-          - mkdir build
-          - cd build
-          - conan install etc
+        run: |
+          pip3 install conan
+          mkdir build
+          cd build
+          conan install etc
+          conan install .. --settings compiler.cppstd=20 --build=missing
+          conan build ..
