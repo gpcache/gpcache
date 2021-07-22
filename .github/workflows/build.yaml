@@ -14,66 +14,67 @@ defaults:
 
 jobs:
   build:
-    name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.compiler_version }}-${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.config.compiler_version }}-${{ matrix.config.build_type }}
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        # this should not work
-        - os: ubuntu-18.04
-          compiler: gcc
-          compiler_version: "8"
-          build_type: "debug"
+        config:
+          # this should not work
+          - os: ubuntu-18.04
+            compiler: gcc
+            compiler_version: "8"
+            build_type: "debug"
 
-        # this might not work
-        - os: ubuntu-18.04
-          compiler: gcc
-          compiler_version: "9"
-          build_type: "debug"
+          # this might not work
+          - os: ubuntu-18.04
+            compiler: gcc
+            compiler_version: "9"
+            build_type: "debug"
 
-        - os: ubuntu-20.04
-          compiler: gcc
-          compiler_version: "10"
-          build_type: "debug"
+          - os: ubuntu-20.04
+            compiler: gcc
+            compiler_version: "10"
+            build_type: "debug"
 
-        # this should not work
-        - os: ubuntu-18.04
-          compiler: clang
-          compiler_version: "8"
-          build_type: "debug"
+          # this should not work
+          - os: ubuntu-18.04
+            compiler: clang
+            compiler_version: "8"
+            build_type: "debug"
 
-        # this might not work
-        - os: ubuntu-20.04
-          compiler: clang
-          compiler_version: "9"
-          build_type: "debug"
+          # this might not work
+          - os: ubuntu-20.04
+            compiler: clang
+            compiler_version: "9"
+            build_type: "debug"
 
-        - os: ubuntu-20.04
-          compiler: clang
-          compiler_version: "10"
-          build_type: "debug"
+          - os: ubuntu-20.04
+            compiler: clang
+            compiler_version: "10"
+            build_type: "debug"
 
-        - os: ubuntu-20.04
-          compiler: clang
-          compiler_version: "11"
-          build_type: "debug"
+          - os: ubuntu-20.04
+            compiler: clang
+            compiler_version: "11"
+            build_type: "debug"
 
-        # this should not work
-        - os: macOS-latest
-          compiler: xcode
-          compiler_version: "10.3"
-          build_type: "debug"
+          # this should not work
+          - os: macOS-latest
+            compiler: xcode
+            compiler_version: "10.3"
+            build_type: "debug"
 
-        # this might not work
-        - os: macOS-latest
-          compiler: xcode
-          compiler_version: "11.7"
-          build_type: "debug"
+          # this might not work
+          - os: macOS-latest
+            compiler: xcode
+            compiler_version: "11.7"
+            build_type: "debug"
 
-        - os: macOS-latest
-          compiler: xcode
-          compiler_version: "12.2"
-          build_type: "debug"
+          - os: macOS-latest
+            compiler: xcode
+            compiler_version: "12.2"
+            build_type: "debug"
     steps:
       - name: Install dependencies
         run: |
@@ -84,16 +85,16 @@ jobs:
             # Ubuntu 18 requires python3-setuptools
             packages="ninja-build pkg-config python3 python3-setuptools"
 
-            if [ "${{ matrix.compiler }}" = "gcc" ]; then
-              echo "CC=gcc-${{ matrix.compiler_version }}" >> $GITHUB_ENV
-              echo "CXX=g++-${{ matrix.compiler_version }}" >> $GITHUB_ENV
+            if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+              echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+              echo "CXX=g++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
 
-              packages="$packages g++-${{ matrix.compiler_version }}"
+              packages="$packages g++-${{ matrix.config.compiler_version }}"
             else
-              echo "CC=clang-${{ matrix.compiler_version }}" >> $GITHUB_ENV
-              echo "CXX=clang++-${{ matrix.compiler_version }}" >> $GITHUB_ENV
+              echo "CC=clang-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+              echo "CXX=clang++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
 
-              packages="$packages clang-${{ matrix.compiler_version }}"
+              packages="$packages clang-${{ matrix.config.compiler_version }}"
             fi
             sudo apt install -y $packages
 
@@ -102,12 +103,12 @@ jobs:
             HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 \
               brew install ninja pkg-config
 
-            if [ "${{ matrix.compiler }}" = "gcc" ]; then
-              brew install gcc@${{ matrix.compiler_version }}
-              echo "CC=gcc-${{ matrix.compiler_version }}" >> $GITHUB_ENV
-              echo "CXX=g++-${{ matrix.compiler_version }}" >> $GITHUB_ENV
+            if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+              brew install gcc@${{ matrix.config.compiler_version }}
+              echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+              echo "CXX=g++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
             else
-              sudo xcode-select -switch /Applications/Xcode_${{ matrix.compiler_version }}.app
+              sudo xcode-select -switch /Applications/Xcode_${{ matrix.config.compiler_version }}.app
               echo "CC=clang" >> $GITHUB_ENV
               echo "CXX=clang++" >> $GITHUB_ENV
             fi
@@ -125,13 +126,13 @@ jobs:
         run: |
           mkdir build
           cd build
-          if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
             conan profile update settings.compiler.libcxx=libstdc++11 default
           fi
           conan install .. \
-            --settings build_type=${{ matrix.build_type }} \
-            --settings compiler=${{ matrix.compiler }} \
-            --settings compiler.version=${{ matrix.compiler_version }} \
+            --settings build_type=${{ matrix.config.build_type }} \
+            --settings compiler=${{ matrix.config.compiler }} \
+            --settings compiler.version=${{ matrix.config.compiler_version }} \
             --settings compiler.cppstd=20 \
             --build missing \
             --build outdated
