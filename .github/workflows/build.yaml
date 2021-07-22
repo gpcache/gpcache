@@ -61,18 +61,18 @@ jobs:
 
           # this should not work
           - os: macOS-latest
-            compiler: xcode
+            compiler: apple-clang
             compiler_version: "10.3"
             build_type: "Debug"
 
           # this might not work
           - os: macOS-latest
-            compiler: xcode
+            compiler: apple-clang
             compiler_version: "11.7"
             build_type: "Debug"
 
           - os: macOS-latest
-            compiler: xcode
+            compiler: apple-clang
             compiler_version: "12.2"
             build_type: "Debug"
     steps:
