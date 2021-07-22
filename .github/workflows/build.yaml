@@ -1,0 +1,109 @@
+name: Build
+on:
+  push:
+  pull_request:
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: ON
+  VERBOSE: 1
+  CMAKE_GENERATOR: Ninja
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.config.version }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          # this should not work
+          - os: ubuntu-18.04
+            compiler: gcc
+            version: "8"
+
+          # this might not work
+          - os: ubuntu-18.04
+            compiler: gcc
+            version: "9"
+
+          - os: ubuntu-20.04
+            compiler: gcc
+            version: "10"
+
+          # this should not work
+          - os: ubuntu-18.04
+            compiler: clang
+            version: "8"
+
+          # this might not work
+          - os: ubuntu-20.04
+            compiler: clang
+            version: "9"
+
+          - os: ubuntu-20.04
+            compiler: clang
+            version: "10"
+
+          - os: ubuntu-20.04
+            compiler: clang
+            version: "11"
+
+          # this should not work
+          - os: macOS-latest
+            compiler: xcode
+            version: "10.3"
+
+          # this might not work
+          - os: macOS-latest
+            compiler: xcode
+            version: "11.7"
+
+          - os: macOS-latest
+            compiler: xcode
+            version: "12.2"
+    steps:
+      - name: Install dependencies
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            sudo apt-get update
+
+            packages="ninja-build pkg-config python3"
+
+            if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+              echo "CC=gcc-${{ matrix.config.version }}" >> $GITHUB_ENV
+              echo "CXX=g++-${{ matrix.config.version }}" >> $GITHUB_ENV
+
+              sudo apt install -y g++-${{ matrix.config.version }}
+            else
+              echo "CC=clang-${{ matrix.config.version }}" >> $GITHUB_ENV
+              echo "CXX=clang++-${{ matrix.config.version }}" >> $GITHUB_ENV
+
+              sudo apt install -y clang-${{ matrix.config.version }}
+            fi
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 \
+              brew install ninja pkg-config
+
+            if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+              brew install gcc@${{ matrix.config.version }}
+              echo "CC=gcc-${{ matrix.config.version }}" >> $GITHUB_ENV
+              echo "CXX=g++-${{ matrix.config.version }}" >> $GITHUB_ENV
+            else
+              sudo xcode-select -switch /Applications/Xcode_${{ matrix.config.version }}.app
+              echo "CC=clang" >> $GITHUB_ENV
+              echo "CXX=clang++" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Get source
+        uses: actions/checkout@v2
+
+      - name: Build
+        run:
+          - mkdir build
+          - cd build
+          - conan install etc
