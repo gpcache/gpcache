@@ -69,6 +69,7 @@ jobs:
       - name: Install dependencies
         run: |
           if [ "${{ runner.os }}" = "Linux" ]; then
+
             sudo apt-get update
 
             # Ubuntu 18 requires python3-setuptools
@@ -78,14 +79,17 @@ jobs:
               echo "CC=gcc-${{ matrix.config.version }}" >> $GITHUB_ENV
               echo "CXX=g++-${{ matrix.config.version }}" >> $GITHUB_ENV
 
-              sudo apt install -y g++-${{ matrix.config.version }}
+              packages="$packages g++-${{ matrix.config.version }}"
             else
               echo "CC=clang-${{ matrix.config.version }}" >> $GITHUB_ENV
               echo "CXX=clang++-${{ matrix.config.version }}" >> $GITHUB_ENV
 
-              sudo apt install -y clang-${{ matrix.config.version }}
+              packages="$packages clang-${{ matrix.config.version }}"
             fi
+            sudo apt install -y $packages
+
           elif [ "${{ runner.os }}" = "macOS" ]; then
+
             HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 \
               brew install ninja pkg-config
 
@@ -98,6 +102,7 @@ jobs:
               echo "CC=clang" >> $GITHUB_ENV
               echo "CXX=clang++" >> $GITHUB_ENV
             fi
+
           fi
           pip3 install conan
 
