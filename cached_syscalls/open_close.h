@@ -21,7 +21,7 @@ namespace gpcache
       int flags;
       mode_t mode;
 
-      CONVENIENCE(Parameters, dirfd, filename, flags, mode)
+      BOILERPLATE(Parameters, dirfd, filename, flags, mode)
     } parameters;
 
     struct Result
@@ -29,10 +29,10 @@ namespace gpcache
       int fd;
       int errno_code;
 
-      CONVENIENCE(Result, fd, errno_code)
+      BOILERPLATE(Result, fd, errno_code)
     } result;
 
-    CONVENIENCE(CachedSyscall_Open, parameters, result)
+    BOILERPLATE(CachedSyscall_Open, parameters, result)
   };
 
   auto execute_cached_syscall(State &, CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result;

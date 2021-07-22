@@ -31,7 +31,7 @@ namespace gpcache
     ReturnValueType return_value;
     int errno_value;
 
-    CONVENIENCE(ReturnValueAndErrno, return_value, errno_value)
+    BOILERPLATE(ReturnValueAndErrno, return_value, errno_value)
   };
 
   struct Syscall_Base
@@ -69,7 +69,7 @@ namespace gpcache
     }
 
     // skip pid?
-    CONVENIENCE(Syscall_Base, pid, args, real_return_value)
+    BOILERPLATE(Syscall_Base, pid, args, real_return_value)
   };
 
   struct Syscall_read : public Syscall_Base

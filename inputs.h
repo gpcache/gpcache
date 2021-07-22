@@ -29,16 +29,16 @@ namespace gpcache
     struct Parameters
     {
       std::filesystem::path path;
-      CONVENIENCE(Parameters, path)
+      BOILERPLATE(Parameters, path)
     } parameters;
 
     struct Result
     {
       std::string hash;
-      CONVENIENCE(Result, hash)
+      BOILERPLATE(Result, hash)
     } result;
 
-    CONVENIENCE(FileHash, parameters, result)
+    BOILERPLATE(FileHash, parameters, result)
   };
 
   // ToDo: move to new structure
@@ -49,7 +49,7 @@ namespace gpcache
     struct Parameters
     {
       bool dummy = true;
-      CONVENIENCE(Parameters, dummy)
+      BOILERPLATE(Parameters, dummy)
     } parameters;
 
     struct Result
@@ -58,10 +58,10 @@ namespace gpcache
       std::vector<std::string> params;
       std::string cwd; // etc... ENV?
 
-      CONVENIENCE(Result, path, params, cwd)
+      BOILERPLATE(Result, path, params, cwd)
     } result;
 
-    CONVENIENCE(ParamsInput, parameters, result)
+    BOILERPLATE(ParamsInput, parameters, result)
   };
 
   // ToDo: hmm
@@ -72,16 +72,16 @@ namespace gpcache
     struct Parameters
     {
       bool thisIsJustCrazy;
-      CONVENIENCE(Parameters, thisIsJustCrazy)
+      BOILERPLATE(Parameters, thisIsJustCrazy)
     } parameters;
 
     struct Result
     {
       bool thisIsJustCrazy;
-      CONVENIENCE(Result, thisIsJustCrazy)
+      BOILERPLATE(Result, thisIsJustCrazy)
     } result;
 
-    CONVENIENCE(UnsupportedInput, parameters, result)
+    BOILERPLATE(UnsupportedInput, parameters, result)
   };
 
   using CachedSyscall = std::variant<

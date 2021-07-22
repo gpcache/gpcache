@@ -73,7 +73,7 @@ namespace gpcache
     {
       FiledescriptorState::file_descriptor_t fd;
 
-      CONVENIENCE(Parameters, fd)
+      BOILERPLATE(Parameters, fd)
     } parameters;
 
     struct Result
@@ -82,10 +82,10 @@ namespace gpcache
       int return_value;
       int errno_value;
 
-      CONVENIENCE(Result, stats, return_value, errno_value)
+      BOILERPLATE(Result, stats, return_value, errno_value)
     } result;
 
-    CONVENIENCE(CachedSyscall_Fstat, parameters, result)
+    BOILERPLATE(CachedSyscall_Fstat, parameters, result)
   };
 
   auto execute_cached_syscall(State &, CachedSyscall_Fstat::Parameters const &cached_syscall) -> CachedSyscall_Fstat::Result;

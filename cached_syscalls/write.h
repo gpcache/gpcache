@@ -19,7 +19,7 @@ namespace gpcache
       int fd;
       std::string data; // ToDo: string vs vector
 
-      CONVENIENCE(Parameters, fd, data);
+      BOILERPLATE(Parameters, fd, data);
     } parameters;
 
     struct Result
@@ -27,10 +27,10 @@ namespace gpcache
       int return_value;
       int errno_value;
 
-      CONVENIENCE(Result, return_value, errno_value)
+      BOILERPLATE(Result, return_value, errno_value)
     } result;
 
-    CONVENIENCE(CachedSyscall_Write, parameters, result)
+    BOILERPLATE(CachedSyscall_Write, parameters, result)
   };
 
   /// execute_cached_syscall

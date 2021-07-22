@@ -21,7 +21,7 @@ namespace gpcache
       bool is_pread64; // This is quite stupid, but it avoids some boilerplate code here for now.
       off_t pread64_offset;
 
-      CONVENIENCE(Parameters, fd, count, is_pread64, pread64_offset);
+      BOILERPLATE(Parameters, fd, count, is_pread64, pread64_offset);
     } parameters;
 
     struct Result
@@ -30,10 +30,10 @@ namespace gpcache
       ssize_t return_value;
       int errno_value;
 
-      CONVENIENCE(Result, data, return_value, errno_value);
+      BOILERPLATE(Result, data, return_value, errno_value);
     } result;
 
-    CONVENIENCE(CachedSyscall_Read, parameters, result)
+    BOILERPLATE(CachedSyscall_Read, parameters, result)
   };
 
   auto execute_cached_syscall(State &, CachedSyscall_Read::Parameters const &) -> CachedSyscall_Read::Result;

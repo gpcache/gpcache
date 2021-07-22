@@ -19,7 +19,7 @@ namespace gpcache
       std::string filename;
       int mode;
 
-      CONVENIENCE(Parameters, filename, mode);
+      BOILERPLATE(Parameters, filename, mode);
     } parameters; // FIXME -> parameters
 
     struct Result
@@ -27,10 +27,10 @@ namespace gpcache
       int return_value;
       int errno_value;
 
-      CONVENIENCE(Result, return_value, errno_value)
+      BOILERPLATE(Result, return_value, errno_value)
     } result;
 
-    CONVENIENCE(CachedSyscall_Access, parameters, result)
+    BOILERPLATE(CachedSyscall_Access, parameters, result)
   };
 
   auto execute_cached_syscall(State &, CachedSyscall_Access::Parameters const &) -> CachedSyscall_Access::Result;

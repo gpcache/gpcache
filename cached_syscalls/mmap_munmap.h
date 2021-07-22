@@ -23,7 +23,7 @@ namespace gpcache
       int fd;
       off_t offset;
 
-      CONVENIENCE(Parameters, is_addr_nullptr, length, prot, flags, fd, offset)
+      BOILERPLATE(Parameters, is_addr_nullptr, length, prot, flags, fd, offset)
     } parameters;
 
     struct Result
@@ -32,10 +32,10 @@ namespace gpcache
       int errno_code;
       std::string file_hash;
 
-      CONVENIENCE(Result, is_addr_nullptr, errno_code, file_hash)
+      BOILERPLATE(Result, is_addr_nullptr, errno_code, file_hash)
     } result;
 
-    CONVENIENCE(CachedSyscall_Mmap, parameters, result)
+    BOILERPLATE(CachedSyscall_Mmap, parameters, result)
   };
 
   auto execute_cached_syscall(State &, CachedSyscall_Mmap::Parameters const &) -> CachedSyscall_Mmap::Result;
