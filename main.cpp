@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
   try
   {
-    auto backend = gpcache::FileBasedBackend(std::filesystem::path(".gpcache"));
+    auto backend = gpcache::FileBasedBackend{std::filesystem::path(".gpcache")};
 
     // ToDo: add cwd tec
     json const params_json = {

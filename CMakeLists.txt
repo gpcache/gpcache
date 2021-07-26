@@ -95,6 +95,10 @@ set_source_files_properties(execution.cpp PROPERTIES COMPILE_FLAGS -Wno-missing-
 target_include_directories(gpcache_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gpcache_lib ${CONAN_TARGETS} ${CMAKE_DL_LIBS})
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_definitions(gpcache_lib USE_ELFUTILS)
+endif()
+
 # GNU implementation prior to 9.1 requires linking with -lstdc++fs and LLVM implementation prior to LLVM 9.0 requires linking with -lc++fs.
 find_library(FS_LIB stdc++fs)
 if(NOT FS_LIB)

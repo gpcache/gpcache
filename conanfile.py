@@ -9,10 +9,13 @@ class gpcache(ConanFile):
         "libb2/20190723",
         "spdlog/1.8.5",
         "nlohmann_json/3.9.1",
-        "pfr/2.0.2",
-        "elfutils/0.180")
-    build_requires = "catch2/2.13.4"
+        "pfr/2.0.2")
     generators = "cmake"  # cmake_paths
+
+    def build_requirements(self):
+        self.build_requires("catch2/2.13.4")
+        if self.settings.compiler == "gcc":
+            self.build_requires("elfutils/0.180")
 
     def configure(self):
         # This is just terrible.
@@ -34,7 +37,7 @@ class gpcache(ConanFile):
         pass
 
     def build(self):
-        cmake = CMake(self, generator="Ninja", build_type="Debug")
+        cmake = CMake(self)  # generator="Ninja", build_type="Debug"
         cmake.definitions["FORCE_COLORED_OUTPUT"] = "ON"
         cmake.configure()
         cmake.build()

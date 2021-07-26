@@ -7,8 +7,10 @@
 #include <iostream>   // cerr
 #include <string>
 #include <sstream>
-#include <elfutils/libdwfl.h>
 #include <spdlog/spdlog.h>
+
+#ifdef USE_ELFUTILS
+#include <elfutils/libdwfl.h>
 
 namespace
 {
@@ -133,3 +135,13 @@ namespace gpcache
     std::_Exit(EXIT_FAILURE);
   }
 }
+#else
+namespace gpcache
+{
+  void terminate_with_stacktrace()
+  {
+    spdlog::warn("terminating (currently no additional information available when compioled with clang)");
+    std::_Exit(EXIT_FAILURE);
+  }
+}
+#endif
