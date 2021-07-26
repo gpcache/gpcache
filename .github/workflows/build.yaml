@@ -46,8 +46,8 @@ jobs:
         run: |
           sudo apt-get update
 
-          # Ubuntu 18 requires python3-setuptools and build-essential/linux-libc-dev/libc6-dev
-          packages="ninja-build pkg-config python3 python3-setuptools build-essential linux-libc-dev libc6-dev"
+          # Ubuntu 18 requires python3-setuptools
+          packages="ninja-build pkg-config python3 python3-setuptools"
 
           if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
             echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
