@@ -13,9 +13,10 @@
 #include "utils/flag_to_string.h"
 
 #include "cached_syscalls/access.h"
+#include "cached_syscalls/close.h"
 #include "cached_syscalls/fstat.h"
 #include "cached_syscalls/mmap_munmap.h"
-#include "cached_syscalls/open_close.h"
+#include "cached_syscalls/open.h"
 #include "cached_syscalls/read.h"
 #include "cached_syscalls/write.h"
 
@@ -86,6 +87,7 @@ namespace gpcache
 
   using CachedSyscall = std::variant<
       CachedSyscall_Access,
+      CachedSyscall_Close,
       CachedSyscall_Fstat,
       CachedSyscall_Mmap,
       CachedSyscall_Open,

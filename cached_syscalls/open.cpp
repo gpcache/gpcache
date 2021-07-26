@@ -1,4 +1,4 @@
-#include "cached_syscalls/open_close.h"
+#include "cached_syscalls/open.h"
 
 #include <fcntl.h> // O_RDONLY
 
@@ -19,7 +19,7 @@ namespace gpcache
       O_RDONLY | O_CLOEXEC,
   };
 
-  auto execute_cached_syscall(State & state, CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result
+  auto execute_cached_syscall(State &state, CachedSyscall_Open::Parameters const &cached_syscall) -> CachedSyscall_Open::Result
   {
     if (!gpcache::contains(mode_allowlist, cached_syscall.mode))
     {
@@ -34,7 +34,7 @@ namespace gpcache
     result.fd = fd; // todo: fd is dynamic
     result.errno_code = errno;
 
-    if(fd >= 0)
+    if (fd >= 0)
       state.fds.open(fd, cached_syscall.filename, cached_syscall.flags, "cached syscall");
     return result;
   }

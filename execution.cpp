@@ -52,9 +52,7 @@ namespace gpcache
     }
     case Syscall_close::syscall_id:
     {
-      auto const syscall_close = static_cast<Syscall_close>(syscall);
-      state.fds.close(syscall_close.fd(), fmt::format("close via {}", json(syscall).dump()));
-      return true;
+      return covert_to_cachable_syscall(state, static_cast<Syscall_close>(syscall));
     }
     case Syscall_fstat::syscall_id:
     {

@@ -31,6 +31,8 @@ namespace gpcache
       return execute_typed_cached_syscall<CachedSyscall_Fstat>(state, parameters);
     if (syscall_name == "open")
       return execute_typed_cached_syscall<CachedSyscall_Open>(state, parameters);
+    if (syscall_name == "close")
+      return execute_typed_cached_syscall<CachedSyscall_Close>(state, parameters);
 
     if (syscall_name == "read" || syscall_name == "pread64")
       return execute_typed_cached_syscall<CachedSyscall_Read>(state, parameters);
