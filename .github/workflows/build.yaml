@@ -40,50 +40,28 @@ jobs:
             compiler_version: "11"
             build_type: "Debug"
 
-          - os: macOS-latest
-            compiler: gcc
-            compiler_version: "10"
-            build_type: "Debug"
 
     steps:
       - name: Install dependencies
         run: |
-          if [ "${{ runner.os }}" = "Linux" ]; then
+          sudo apt-get update
 
-            sudo apt-get update
+          # Ubuntu 18 requires python3-setuptools and build-essential/linux-libc-dev
+          packages="ninja-build pkg-config python3 python3-setuptools build-essential linux-libc-dev"
 
-            # Ubuntu 18 requires python3-setuptools and build-essential/linux-libc-dev
-            packages="ninja-build pkg-config python3 python3-setuptools build-essential linux-libc-dev"
+          if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
+            echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+            echo "CXX=g++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
 
-            if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-              echo "CC=gcc-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
-              echo "CXX=g++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+            packages="$packages g++-${{ matrix.config.compiler_version }}"
+          else
+            echo "CC=clang-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
+            echo "CXX=clang++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
 
-              packages="$packages g++-${{ matrix.config.compiler_version }}"
-            else
-              echo "CC=clang-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
-              echo "CXX=clang++-${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
-
-              packages="$packages clang-${{ matrix.config.compiler_version }}"
-            fi
-            sudo apt install -y $packages
-
-          elif [ "${{ runner.os }}" = "macOS" ]; then
-
-            HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 \
-              brew install ninja pkg-config
-
-            if [ "${{ matrix.config.compiler }}" = "gcc" ]; then
-              brew install gcc@${{ matrix.config.compiler_version }}
-              echo "CC=gcc@${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
-              echo "CXX=g++@${{ matrix.config.compiler_version }}" >> $GITHUB_ENV
-            else
-              sudo xcode-select -switch /Applications/Xcode_${{ matrix.config.xcode_version }}.app
-              echo "CC=clang" >> $GITHUB_ENV
-              echo "CXX=clang++" >> $GITHUB_ENV
-            fi
-
+            packages="$packages clang-${{ matrix.config.compiler_version }}"
           fi
+          sudo apt install -y $packages
+
           
           # alternative: conan_package_tools
           # why --upgrade?
