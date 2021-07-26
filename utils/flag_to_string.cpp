@@ -47,13 +47,17 @@ namespace gpcache
     flags &= ~x;         \
   }
     FLAG(MAP_SHARED);
+#ifdef MAP_SHARED_VALIDATE
     FLAG(MAP_SHARED_VALIDATE);
+#endif
     FLAG(MAP_PRIVATE);
     FLAG(MAP_32BIT);
     FLAG(MAP_ANONYMOUS);
     FLAG2(MAP_DENYWRITE, " (ignored)");
     FLAG(MAP_FIXED);
+#ifdef MAP_FIXED_NOREPLACE
     FLAG(MAP_FIXED_NOREPLACE);
+#endif
     FLAG(MAP_GROWSDOWN);
     FLAG(MAP_HUGETLB);
     FLAG(MAP_LOCKED);
@@ -61,7 +65,9 @@ namespace gpcache
     FLAG(MAP_NORESERVE);
     FLAG(MAP_POPULATE);
     FLAG(MAP_STACK);
+#ifdef MAP_SYNC
     FLAG(MAP_SYNC);
+#endif
     if (flags)
       s.push_back(fmt::format("Remaining flags: {}", flags));
 
