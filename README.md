@@ -25,33 +25,27 @@ Preconditions:
 ---
 
 # Current state of gpcache
-Proof of concept written in python (see history) and C++.
-C++ looks more promising, but is not a clear winner so far.
-Both languages have advantages... and more importantly huge disadvantages.
+1. [x] :heavy_check_mark: Proof of concept in python
+2. [x] :heavy_check_mark: Proof of concept in C++
+3. [ ] Prototype (in C++)
+4. [ ] Production usable 1.0 with small feature set
 
-Pro Python (see history):
-* The amount of code required compared to C++ is so much smaller, it's astonishing (I'm a C++ programmer).
-
-### Pro C++
-* Main trigger was stats. I was not able to figure out how to use stats result in python and had to issue a second stats call from python.
-  Besides performance problems this results in asynchronities since sometimes differnt values will be cached than actually used by the to-be-cached-tool.
-* Works on any machine (e.g. actual target hardware)
 
 ---
-# Installation
-
-## C++: Build gpcache from source
-Demonstrating with an in source build, although that is not really encouraged.
-Not sure I'm using conan correctly here, but hey... "it works on my machine".
+# Build gpcache from source
 
 #### Prerequisites:
-Conan
-`pip3 install conan`
+C++: g++10 or clang-10
+System: tested on Ubuntu 18 and Ubuntu 20
+Conan: `pip3 install conan`
 
-Why Conan?
+For more (and guaranteed to work) details have a look at [CI](.github/workflows/build.yaml)
+
+##### Why Conan?
 C++ lacks a package manager. Currently/finally some have appeared.
 It's not clear yet (to me) which one is the best.
 However as I do need to get started and not using a package manager is not an option, let's use conan for now.
+
 
 #### Getting and compiling gpcache
 ```
@@ -80,6 +74,6 @@ Debugging clang:
 conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
 ```
 
-
-## Python: Build gpcache from source
-Ensure python3 is available.
+# Installation
+gpcache does not really have any usable mode at the moment.
+The goal will be to use it like ccache.
