@@ -34,20 +34,20 @@ Preconditions:
 ---
 # Build gpcache from source
 
-#### Prerequisites:
-C++: g++10 or clang-10
-System: tested on Ubuntu 18 and Ubuntu 20
-Conan: `pip3 install conan`
+## Prerequisites:
+- C++: g++10 or clang-10
+- System: tested on Ubuntu 18 and Ubuntu 20
+- Conan: `pip3 install conan`
 
 For more (and guaranteed to work) details have a look at [CI](.github/workflows/build.yaml)
 
-##### Why Conan?
+### Why Conan?
 C++ lacks a package manager. Currently/finally some have appeared.
 It's not clear yet (to me) which one is the best.
 However as I do need to get started and not using a package manager is not an option, let's use conan for now.
 
 
-#### Getting and compiling gpcache
+## Getting and compiling gpcache
 ```
 git clone https://github.com/gpcache/gpcache.git
 mkdir gpcache_build
@@ -58,7 +58,7 @@ conan install ../gpcache --settings compiler.cppstd=20 --build=missing
 conan build ../gpcache
 ```
 
-#### Other options
+### Other options
 Building with clang++:
 ```
 conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++
