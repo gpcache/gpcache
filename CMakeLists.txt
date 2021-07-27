@@ -27,9 +27,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
-if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5) # 10 is ok
-   OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5) # 9.3.0 does not work, 10.2.0 is ok
-   OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)) # todo
+if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
+   OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
+   OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
   message(FATAL_ERROR "The compiler you are using is too old, sorry.")
 endif()
 
@@ -40,8 +40,28 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 # ToDo
 option(ASAN "Enable ASAN" TRUE)
 if(ASAN)
-  add_compile_options(-fsanitize=address)
-  add_link_options(-fsanitize=address)
+  add_compile_options(
+    -fsanitize=address
+    -fsanitize=leak
+    -fsanitize=bounds
+    -fsanitize=bool
+    -fsanitize=enum
+    -fsanitize=vptr
+    -fsanitize=float-divide-by-zero
+    -fsanitize=undefined
+    -fno-sanitize-recover
+  )
+  add_link_options(
+    -fsanitize=address
+    -fsanitize=leak
+    -fsanitize=bounds
+    -fsanitize=bool
+    -fsanitize=enum
+    -fsanitize=vptr
+    -fsanitize=float-divide-by-zero
+    -fsanitize=undefined
+    -fno-sanitize-recover
+  )
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -75,21 +95,25 @@ endif()
 add_library(gpcache_lib
   utils/flag_to_string.cpp
   utils/stacktrace.cpp
+
   wrappers/hash.cpp
   wrappers/posix.cpp
   wrappers/ptrace.cpp
   wrappers/ptrace_linux_x64/SyscallMap.cpp
+
   backend/file.cpp
-  execution.cpp
-  execute_cached_syscall.cpp
-  cached_syscalls/access.cpp
-  cached_syscalls/close.cpp
-  cached_syscalls/fstat.cpp
-  cached_syscalls/mmap_munmap.cpp
-  cached_syscalls/open.cpp
-  cached_syscalls/read.cpp
-  cached_syscalls/write.cpp
-  state.cpp
+
+  main/cache_executed_syscall.cpp
+  main/execute_cached_syscall.cpp
+  main/state.cpp
+
+  syscalls/access.cpp
+  syscalls/close.cpp
+  syscalls/fstat.cpp
+  syscalls/mmap_munmap.cpp
+  syscalls/open.cpp
+  syscalls/read.cpp
+  syscalls/write.cpp
 )
 set_source_files_properties(execution.cpp PROPERTIES COMPILE_FLAGS -Wno-missing-field-initializers)
 
@@ -106,7 +130,7 @@ if(NOT FS_LIB)
   find_library(FS_LIB c++fs)
 endif()
 if(FS_LIB)
-  target_link_libraries(gpcache_lib ${FS_LIB})
+  #target_link_libraries(gpcache_lib ${FS_LIB})
 endif()
 
 add_executable(gpcache main.cpp)
