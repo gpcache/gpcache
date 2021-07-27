@@ -25,10 +25,10 @@ Preconditions:
 ---
 
 # Current state of gpcache
-1. [x] :heavy_check_mark: Proof of concept in python
-2. [x] :heavy_check_mark: Proof of concept in C++
-3. [ ] Prototype (in C++)
-4. [ ] Production usable 1.0 with small feature set
+1. Proof of concept in python :heavy_check_mark:
+2. Proof of concept in C++ :heavy_check_mark:
+3. Prototype (in C++) <-- current focus
+4. Production usable 1.0 with small feature set
 
 
 ---
