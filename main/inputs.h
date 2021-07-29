@@ -1,100 +1,84 @@
 #pragma once
 
-#include "wrappers/json.h"
-#include "wrappers/filesystem.h"
-#include <boost/pfr/core.hpp>
-#include <fmt/format.h>
+#include "syscalls/access.h"
+#include "syscalls/close.h"
+#include "syscalls/fstat.h"
+#include "syscalls/mmap_munmap.h"
+#include "syscalls/open.h"
+#include "syscalls/read.h"
+#include "syscalls/write.h"
 
-#include <string>
-#include <variant>
-#include <vector>
-#include <sys/stat.h>
+#include "wrappers/filesystem.h"
+#include "wrappers/json.h"
 
 #include "utils/flag_to_string.h"
 
-#include "cached_syscalls/access.h"
-#include "cached_syscalls/close.h"
-#include "cached_syscalls/fstat.h"
-#include "cached_syscalls/mmap_munmap.h"
-#include "cached_syscalls/open.h"
-#include "cached_syscalls/read.h"
-#include "cached_syscalls/write.h"
+#include <fmt/format.h>
 
-namespace gpcache
-{
-  // ToDo: move to new structure
-  struct FileHash
-  {
-    static constexpr char name[] = "filehash";
+#include <boost/pfr/core.hpp>
+#include <string>
+#include <sys/stat.h>
+#include <variant>
+#include <vector>
 
-    struct Parameters
-    {
-      std::filesystem::path path;
-      BOILERPLATE(Parameters, path)
-    } parameters;
+namespace gpcache {
+// ToDo: move to new structure
+struct FileHash {
+  static constexpr char name[] = "filehash";
 
-    struct Result
-    {
-      std::string hash;
-      BOILERPLATE(Result, hash)
-    } result;
+  struct Parameters {
+    std::filesystem::path path;
+    BOILERPLATE(Parameters, path)
+  } parameters;
 
-    BOILERPLATE(FileHash, parameters, result)
-  };
+  struct Result {
+    std::string hash;
+    BOILERPLATE(Result, hash)
+  } result;
 
-  // ToDo: move to new structure
-  struct ParamsInput
-  {
-    static constexpr char name[] = "params";
+  BOILERPLATE(FileHash, parameters, result)
+};
 
-    struct Parameters
-    {
-      bool dummy = true;
-      BOILERPLATE(Parameters, dummy)
-    } parameters;
+// ToDo: move to new structure
+struct ParamsInput {
+  static constexpr char name[] = "params";
 
-    struct Result
-    {
-      std::filesystem::path path; // cache this?
-      std::vector<std::string> params;
-      std::string cwd; // etc... ENV?
+  struct Parameters {
+    bool dummy = true;
+    BOILERPLATE(Parameters, dummy)
+  } parameters;
 
-      BOILERPLATE(Result, path, params, cwd)
-    } result;
+  struct Result {
+    std::filesystem::path path; // cache this?
+    std::vector<std::string> params;
+    std::string cwd; // etc... ENV?
 
-    BOILERPLATE(ParamsInput, parameters, result)
-  };
+    BOILERPLATE(Result, path, params, cwd)
+  } result;
 
-  // ToDo: hmm
-  struct UnsupportedInput
-  {
-    static constexpr char name[] = "unsupported";
+  BOILERPLATE(ParamsInput, parameters, result)
+};
 
-    struct Parameters
-    {
-      bool thisIsJustCrazy;
-      BOILERPLATE(Parameters, thisIsJustCrazy)
-    } parameters;
+// ToDo: hmm
+struct UnsupportedInput {
+  static constexpr char name[] = "unsupported";
 
-    struct Result
-    {
-      bool thisIsJustCrazy;
-      BOILERPLATE(Result, thisIsJustCrazy)
-    } result;
+  struct Parameters {
+    bool thisIsJustCrazy;
+    BOILERPLATE(Parameters, thisIsJustCrazy)
+  } parameters;
 
-    BOILERPLATE(UnsupportedInput, parameters, result)
-  };
+  struct Result {
+    bool thisIsJustCrazy;
+    BOILERPLATE(Result, thisIsJustCrazy)
+  } result;
 
-  using CachedSyscall = std::variant<
-      CachedSyscall_Access,
-      CachedSyscall_Close,
-      CachedSyscall_Fstat,
-      CachedSyscall_Mmap,
-      CachedSyscall_Open,
-      CachedSyscall_Read,
-      CachedSyscall_Write,
-      FileHash,
-      ParamsInput,
-      UnsupportedInput>;
+  BOILERPLATE(UnsupportedInput, parameters, result)
+};
+
+using CachedSyscall =
+    std::variant<CachedSyscall_Access, CachedSyscall_Close, CachedSyscall_Fstat,
+                 CachedSyscall_Mmap, CachedSyscall_Open, CachedSyscall_Read,
+                 CachedSyscall_Write, FileHash, ParamsInput, UnsupportedInput>;
 
 } // namespace gpcache

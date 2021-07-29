@@ -7,7 +7,7 @@ class gpcache(ConanFile):
         "fmt/7.1.3",
         "abseil/20200923.3",
         "libb2/20190723",
-        "spdlog/1.8.5",
+        "spdlog/1.9.0",
         "nlohmann_json/3.9.1",
         "pfr/2.0.2")
     generators = "cmake"  # cmake_paths
