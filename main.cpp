@@ -92,6 +92,7 @@ int main(int argc, char **argv) {
             state, cached.next_syscall.value());
 
         auto new_cached = backend.retrieve(cached.path, execution_result);
+        spdlog::debug("path: {}", new_cached.path.string());
 
         auto all_results = backend.get_all_possible_results(cached.path);
         if (new_cached.ok()) {

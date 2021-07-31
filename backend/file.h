@@ -7,8 +7,9 @@ namespace gpcache {
 class FileBasedBackend {
 public:
   struct retrieve_result {
-    std::filesystem::path
-        path; // this exposes FileBasedBackend detail... bad idea...
+    // this exposes FileBasedBackend detail... bad idea...
+    // make it stateful instead?
+    std::filesystem::path path;
     std::optional<json> next_syscall;
 
     auto ok() { return !path.empty(); }

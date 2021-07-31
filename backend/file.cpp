@@ -194,7 +194,6 @@ auto FileBasedBackend::store(json const &executable_and_params,
 
 auto FileBasedBackend::retrieve(const std::filesystem::path &path,
                                 const json &result) -> retrieve_result {
-  spdlog::info(result.dump());
   auto const result_hash = calculate_hash_of_str(result.dump(), 3);
   auto const result_path = path / result_hash;
 

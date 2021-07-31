@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm> // std::ranges::find
+
 namespace gpcache {
 auto contains(auto container, auto item) {
   return std::ranges::find(container, item) != std::end(container);
