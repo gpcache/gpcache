@@ -42,7 +42,8 @@ auto execute_cached_syscall(
   return result;
 }
 
-auto covert_to_cachable_syscall(State &state, Syscall_openat const &syscall)
+auto covert_real_to_cachable_syscall(State &state,
+                                     Syscall_openat const &syscall)
     -> std::optional<CachedSyscall_Open> {
   {
     const std::filesystem::path path =

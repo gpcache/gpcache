@@ -37,6 +37,6 @@ struct CachedSyscall_Mmap {
 
 auto execute_cached_syscall(State &, CachedSyscall_Mmap::Parameters const &)
     -> CachedSyscall_Mmap::Result;
-auto covert_to_cachable_syscall(State &, Syscall_mmap const &)
+auto covert_real_to_cachable_syscall(State &, Syscall_mmap const &)
     -> std::variant<bool, CachedSyscall_Mmap>;
 } // namespace gpcache

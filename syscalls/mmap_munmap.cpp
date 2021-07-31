@@ -39,7 +39,8 @@ auto execute_cached_syscall(
   return result;
 }
 
-auto covert_to_cachable_syscall(State &state, Syscall_mmap const &syscall_mmap)
+auto covert_real_to_cachable_syscall(State &state,
+                                     Syscall_mmap const &syscall_mmap)
     -> std::variant<bool, CachedSyscall_Mmap> {
   auto const addr = reinterpret_cast<void *>(syscall_mmap.addr());
   int const fd = static_cast<int>(syscall_mmap.fd());

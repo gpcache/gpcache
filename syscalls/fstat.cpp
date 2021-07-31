@@ -20,7 +20,7 @@ auto execute_cached_syscall(
   return result;
 }
 
-auto covert_to_cachable_syscall(State &, Syscall_fstat const &syscall)
+auto covert_real_to_cachable_syscall(State &, Syscall_fstat const &syscall)
     -> CachedSyscall_Fstat {
   struct stat const s =
       Ptrace::PEEKTEXT<struct stat>(syscall.pid, syscall.statbuf());

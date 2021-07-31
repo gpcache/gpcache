@@ -31,6 +31,6 @@ struct CachedSyscall_Close {
 auto execute_cached_syscall(
     State &, CachedSyscall_Close::Parameters const &cached_syscall)
     -> CachedSyscall_Close::Result;
-auto covert_to_cachable_syscall(State &state, Syscall_close const &syscall)
+auto covert_real_to_cachable_syscall(State &state, Syscall_close const &syscall)
     -> CachedSyscall_Close;
 } // namespace gpcache

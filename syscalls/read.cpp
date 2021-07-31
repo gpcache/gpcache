@@ -47,7 +47,7 @@ auto execute_cached_syscall(
   return result;
 }
 
-auto covert_to_cachable_syscall(State &, Syscall_read const &syscall)
+auto covert_real_to_cachable_syscall(State &, Syscall_read const &syscall)
     -> CachedSyscall_Read {
   std::string const data =
       Ptrace::PEEKTEXT(syscall.pid, syscall.buf(), syscall.count());
@@ -58,7 +58,7 @@ auto covert_to_cachable_syscall(State &, Syscall_read const &syscall)
   return {parameters, result};
 }
 
-auto covert_to_cachable_syscall(State &, Syscall_pread64 const &syscall)
+auto covert_real_to_cachable_syscall(State &, Syscall_pread64 const &syscall)
     -> CachedSyscall_Read {
   std::string const data =
       Ptrace::PEEKTEXT(syscall.pid, syscall.buf(), syscall.count());

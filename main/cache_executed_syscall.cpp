@@ -38,12 +38,12 @@ auto handle_syscall(Ptrace::PtraceProcess const p,
                                      // mmap calls... ignore for now
     return SyscallResult{true};
   case Syscall_access::syscall_id: {
-    return covert_to_cachable_syscall(state,
-                                      static_cast<Syscall_access>(syscall));
+    return covert_real_to_cachable_syscall(
+        state, static_cast<Syscall_access>(syscall));
   }
   case Syscall_openat::syscall_id: {
-    auto const cached_syscall =
-        covert_to_cachable_syscall(state, static_cast<Syscall_openat>(syscall));
+    auto const cached_syscall = covert_real_to_cachable_syscall(
+        state, static_cast<Syscall_openat>(syscall));
 
     if (cached_syscall)
       return CachedSyscall{cached_syscall.value()};
@@ -52,29 +52,29 @@ auto handle_syscall(Ptrace::PtraceProcess const p,
     break; // unreachable, but g++ complains otherwise
   }
   case Syscall_close::syscall_id: {
-    return covert_to_cachable_syscall(state,
-                                      static_cast<Syscall_close>(syscall));
+    return covert_real_to_cachable_syscall(state,
+                                           static_cast<Syscall_close>(syscall));
   }
   case Syscall_fstat::syscall_id: {
-    return covert_to_cachable_syscall(state,
-                                      static_cast<Syscall_fstat>(syscall));
+    return covert_real_to_cachable_syscall(state,
+                                           static_cast<Syscall_fstat>(syscall));
   }
   case Syscall_read::syscall_id: {
-    return covert_to_cachable_syscall(state,
-                                      static_cast<Syscall_read>(syscall));
+    return covert_real_to_cachable_syscall(state,
+                                           static_cast<Syscall_read>(syscall));
   }
   case Syscall_pread64::syscall_id: {
-    return covert_to_cachable_syscall(state,
-                                      static_cast<Syscall_pread64>(syscall));
+    return covert_real_to_cachable_syscall(
+        state, static_cast<Syscall_pread64>(syscall));
   }
   case Syscall_write::syscall_id: {
-    return covert_to_cachable_syscall(state,
-                                      static_cast<Syscall_write>(syscall));
+    return covert_real_to_cachable_syscall(state,
+                                           static_cast<Syscall_write>(syscall));
   }
   case Syscall_mmap::syscall_id: {
     // Wow.. C++... In caes of a return a, in case of b return b.
-    auto result =
-        covert_to_cachable_syscall(state, static_cast<Syscall_mmap>(syscall));
+    auto result = covert_real_to_cachable_syscall(
+        state, static_cast<Syscall_mmap>(syscall));
     if (bool const *b = std::get_if<bool>(&result))
       return *b;
     else

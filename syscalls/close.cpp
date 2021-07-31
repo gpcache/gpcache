@@ -20,7 +20,7 @@ auto execute_cached_syscall(
   return CachedSyscall_Close::Result{errno};
 }
 
-auto covert_to_cachable_syscall(State &state, Syscall_close const &syscall)
+auto covert_real_to_cachable_syscall(State &state, Syscall_close const &syscall)
     -> CachedSyscall_Close {
   state.fds.close(syscall.fd(), json(syscall).dump());
   return CachedSyscall_Close{{(int)syscall.fd()}, {syscall.errno_value()}};

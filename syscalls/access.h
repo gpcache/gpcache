@@ -32,6 +32,6 @@ struct CachedSyscall_Access {
 
 auto execute_cached_syscall(State &, CachedSyscall_Access::Parameters const &)
     -> CachedSyscall_Access::Result;
-auto covert_to_cachable_syscall(State &, Syscall_access const &)
+auto covert_real_to_cachable_syscall(State &, Syscall_access const &)
     -> CachedSyscall_Access;
 } // namespace gpcache
