@@ -2,6 +2,8 @@
 
 #include "blake2.h"
 
+#include <spdlog/spdlog.h>
+
 #include <vector>
 
 namespace gpcache {
@@ -21,10 +23,21 @@ auto hash_to_hex(const auto &hash) -> std::string {
 
 auto calculate_hash_of_str(const std::string_view string, const int digest_size)
     -> std::string {
+  if (digest_size < 1 || digest_size > 64)
+    throw "invalid digest_size";
+
   std::vector<uint8_t> hash;
   hash.resize(digest_size);
 
-  blake2b(hash.data(), digest_size, string.data(), string.length(), nullptr, 0);
+  int x = blake2b(hash.data(), digest_size, string.data(), string.length(),
+                  nullptr, 0);
+  if (x != 0) {
+    spdlog::warn("Hash Error");
+    spdlog::warn("digest_size: {}", digest_size);
+    spdlog::warn("string: {}", string);
+    spdlog::warn("string.length(): {}", string.length());
+    throw "hash error";
+  }
 
   return hash_to_hex(hash);
 }

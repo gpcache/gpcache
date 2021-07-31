@@ -213,9 +213,7 @@ auto FileBasedBackend::retrieve(const std::filesystem::path &path,
       spdlog::warn("Old: {}", result.dump());
       spdlog::warn("New: {}", is.old_file_content.value());
     } else {
-      if (is.error.value() == 2)
-        spdlog::info("Not cached");
-      else
+      if (is.error.value() != 2) // no such file
         spdlog::warn("Cannot use cached results because of error {}",
                      is.error.value());
     }

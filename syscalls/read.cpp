@@ -22,7 +22,8 @@ template <class T> static auto limit(const T min, const T value, const T max) {
 static auto hash_of_data(auto data) {
   // Idea: return data itself in case it's printable ASCII only (and short
   // enough).
-  const auto hash_length = limit(10UL, data.size() / 10, 1000UL);
+  // blake2b is limited to 64
+  const auto hash_length = limit(10UL, data.size() / 20, 64UL);
   return gpcache::calculate_hash_of_str(data, hash_length);
 }
 
@@ -41,6 +42,7 @@ auto execute_cached_syscall(
     result.return_value =
         read(cached_syscall.fd, result.data.data(), cached_syscall.count);
   }
+
   result.data = hash_of_data(result.data);
   result.data.shrink_to_fit();
   result.errno_value = result.return_value > 0 ? 0 : errno;

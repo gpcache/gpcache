@@ -120,7 +120,7 @@ auto SETOPTIONS(const int pid, const int options) -> void {
 auto PEEKTEXT(const int pid, const char *const begin, const size_t count)
     -> std::string {
   std::string result; // vector?
-  result.reserve(count);
+  result.resize(count);
 
   for (size_t pos_in_string = 0; pos_in_string < count;
        pos_in_string += sizeof(intptr_t)) {

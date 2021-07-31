@@ -72,7 +72,7 @@ auto handle_syscall(Ptrace::PtraceProcess const p,
                                            static_cast<Syscall_write>(syscall));
   }
   case Syscall_mmap::syscall_id: {
-    // Wow.. C++... In caes of a return a, in case of b return b.
+    // Wow.. C++... In caes of 'a' return 'a', in case of 'b' return 'b'.
     auto result = covert_real_to_cachable_syscall(
         state, static_cast<Syscall_mmap>(syscall));
     if (bool const *b = std::get_if<bool>(&result))
