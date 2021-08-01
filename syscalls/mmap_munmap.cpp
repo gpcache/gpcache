@@ -23,14 +23,21 @@ auto execute_cached_syscall(
     -> CachedSyscall_Mmap::Result {
   CachedSyscall_Mmap::Result result{};
   errno = 0;
-  void *addr =
-      mmap(nullptr, cached_syscall.length, cached_syscall.prot,
-           cached_syscall.flags, cached_syscall.fd, cached_syscall.offset);
+
+  // drop MAP_FIXED
+  auto const flags = cached_syscall.flags & ~MAP_FIXED;
+  void *addr = mmap(nullptr, cached_syscall.length, cached_syscall.prot, flags,
+                    cached_syscall.fd, cached_syscall.offset);
   result.is_addr_nullptr = addr == nullptr;
   result.errno_code = errno;
+  spdlog::debug("mmap proto: {}", mmap_prot_to_string(cached_syscall.prot));
+  spdlog::debug("mmap flags: {} --> {}",
+                mmap_flag_to_string(cached_syscall.flags), flags);
+  spdlog::debug("mmap result: {} / {}", addr, result.errno_code);
+
   auto file_data = state.fds.get_open_opt(cached_syscall.fd);
   if (!file_data) {
-    spdlog::warn("Unknown fd {}", cached_syscall.fd);
+    spdlog::error("Unknown fd {}", cached_syscall.fd);
   }
   result.file_hash = calculate_hash_of_file(
       file_data.value().filename); // maybe a little overkill...
