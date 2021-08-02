@@ -18,6 +18,23 @@ static const std::vector<int> prot_readonly_list = {
     PROT_READ | PROT_EXEC // dynamic libraries
 };
 
+auto is_mmap_prot_readonly(int const prot) {
+  return gpcache::contains(prot_readonly_list, prot);
+}
+
+/// PROT_WRITE on O_RDONLY file seems ok, contradicting to documentation.
+auto is_mmap_prot_readonly(
+    int const prot,
+    std::optional<FiledescriptorState::FiledescriptorData> file_data) {
+  bool syscall_is_readonly = is_mmap_prot_readonly(prot);
+
+  if (file_data && file_data->is_readonly() &&
+      is_mmap_prot_readonly(prot & ~PROT_WRITE))
+    syscall_is_readonly = true;
+
+  return syscall_is_readonly;
+}
+
 auto execute_cached_syscall(
     State &state, CachedSyscall_Mmap::Parameters const &cached_syscall)
     -> CachedSyscall_Mmap::Result {
@@ -54,17 +71,18 @@ auto covert_real_to_cachable_syscall(State &state,
 
   auto file_data = state.fds.get_open_opt(fd);
 
-  bool is_readonly = gpcache::contains(prot_readonly_list, syscall_mmap.prot());
+  if (!file_data) {
+    // Shared memory without a file is just memory until the process forks.
+    if (fd > 0) {
+      state.fds.dump(spdlog::level::err);
+      spdlog::error("Unknown fd: {}", fd);
+      return false;
+    } else {
+      return true;
+    }
+  }
 
-  // PROT_WRITE on O_RDONLY file seems ok contradicting documentation
-  bool const file_readonly =
-      file_data.has_value() &&
-      ((file_data->flags & (O_RDONLY | O_WRONLY | O_RDWR)) == O_RDONLY);
-  if (file_readonly &&
-      gpcache::contains(prot_readonly_list, syscall_mmap.prot() & ~PROT_WRITE))
-    is_readonly = true;
-
-  if (is_readonly) {
+  if (is_mmap_prot_readonly(syscall_mmap.prot(), file_data)) {
     auto const file_hash = calculate_hash_of_file(
         file_data.value().filename); // maybe a little overkill...
     CachedSyscall_Mmap::Parameters parameters{
@@ -79,9 +97,6 @@ auto covert_real_to_cachable_syscall(State &state,
     state.mmaps.mmap(addr, syscall_mmap.prot(), syscall_mmap.flags(),
                      file_data->filename);
     return CachedSyscall_Mmap{parameters, result};
-  } else if (!file_data.has_value()) {
-    // Shared memory without a file is just memory until the process forks.
-    return true;
   } else {
     spdlog::warn("flags {} = {}", syscall_mmap.flags(),
                  mmap_flag_to_string(syscall_mmap.flags()));
@@ -98,4 +113,5 @@ auto covert_real_to_cachable_syscall(State &state,
     return false;
   }
 }
+
 } // namespace gpcache

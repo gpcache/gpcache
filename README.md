@@ -32,6 +32,17 @@ Preconditions:
 
 
 ---
+# Installation
+gpcache does not really have any usable mode at the moment.
+The goal will be to use it like ccache.
+
+Supported OS:
+* Tested on Ubuntu 18
+* Tested on Ubuntu 20
+* Windows will not be supported (at least until 3.0)
+
+
+---
 # Build gpcache from source
 
 ## Prerequisites:
@@ -73,7 +84,3 @@ Debugging clang:
 ```
 conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
 ```
-
-# Installation
-gpcache does not really have any usable mode at the moment.
-The goal will be to use it like ccache.

@@ -4,6 +4,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <fcntl.h> // O_RDONLY
 #include <map>
 #include <vector>
 
@@ -23,6 +24,10 @@ public:
     int flags;
     State state;
     std::vector<std::string> source; ///< for debugging only
+
+    auto is_readonly() {
+      return (flags & (O_RDONLY | O_WRONLY | O_RDWR)) == O_RDONLY;
+    }
   };
 
   FiledescriptorState();
