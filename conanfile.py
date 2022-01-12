@@ -4,16 +4,16 @@ from conans import ConanFile, CMake, tools
 class gpcache(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     requires = (
-        "fmt/7.1.3",
-        "abseil/20200923.3",
+        "fmt/8.1.1",
+        "abseil/20211102.0",
         "libb2/20190723",
-        "spdlog/1.9.0",
-        "nlohmann_json/3.9.1",
+        "spdlog/1.9.2",
+        "nlohmann_json/3.10.5",
         "pfr/2.0.2")
     generators = "cmake"  # cmake_paths
 
     def build_requirements(self):
-        self.build_requires("catch2/2.13.4")
+        self.build_requires("catch2/2.13.8")
         if self.settings.compiler == "gcc":
             self.build_requires("elfutils/0.180")
 
