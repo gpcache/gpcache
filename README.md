@@ -58,29 +58,37 @@ It's not clear yet (to me) which one is the best.
 However as I do need to get started and not using a package manager is not an option, let's use conan for now.
 
 
-## Getting and compiling gpcache
+## Getting gpcache
+### Prerequisites
+
 ```
 git clone https://github.com/gpcache/gpcache.git
 mkdir gpcache_build
 cd gpcache_build
-conan install ../gpcache --settings compiler.cppstd=20 --build=missing
-
-# You'll need to run the first build via conan, afterwards you can use make/ninja.
-conan build ../gpcache
 ```
 
-### Other options
-Building with clang++:
+If your default compiler supports C++20:
+```
+conan install ../gpcache --settings compiler.cppstd=20 --build=missing
+```
+
+Example: switch with clang++:
 ```
 conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++
 ```
 
-Debugging g++:
+Example: switch to clang++, build debug version:
+```
+conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
+```
+
+Example: switch to g++, build debug version:
 ```
 conan install ../gpcache -s compiler=gcc -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CC=gcc-10 -e CXX=g++-10 -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
 ```
 
-Debugging clang:
+### Compiling
+You'll need to run the first build via conan, afterwards you can use make/ninja.
 ```
-conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
+conan build ../gpcache
 ```

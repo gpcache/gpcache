@@ -30,7 +30,11 @@ set(CMAKE_CXX_EXTENSIONS NO)
 if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
    OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
    OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-  message(FATAL_ERROR "The compiler you are using is too old, sorry.")
+  message(FATAL_ERROR
+          "The compiler you are using "
+          "(${CMAKE_CXX_COMPILER_ID}, ${CMAKE_CXX_COMPILER_VERSION}) is too old, "
+          "it does not support all required features. Please use at least "
+          "gcc 10 or clang 10.")
 endif()
 
 
@@ -49,7 +53,7 @@ if(ASAN)
     -fsanitize=vptr
     -fsanitize=float-divide-by-zero
     -fsanitize=undefined
-    -fno-sanitize-recover
+    -fno-sanitize-recover=all
   )
   add_link_options(
     -fsanitize=address
@@ -60,7 +64,7 @@ if(ASAN)
     -fsanitize=vptr
     -fsanitize=float-divide-by-zero
     -fsanitize=undefined
-    -fno-sanitize-recover
+    -fno-sanitize-recover=all
   )
 endif()
 
