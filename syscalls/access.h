@@ -9,29 +9,31 @@
 
 #include <spdlog/spdlog.h>
 
-namespace gpcache {
-struct CachedSyscall_Access {
-  static constexpr char name[] = "access";
+namespace gpcache
+{
+struct CachedSyscall_Access
+{
+    static constexpr char name[] = "access";
 
-  struct Parameters {
-    std::string filename;
-    int mode;
+    struct Parameters
+    {
+        std::string filename;
+        int mode;
 
-    BOILERPLATE(Parameters, filename, mode);
-  } parameters; // FIXME -> parameters
+        BOILERPLATE(Parameters, filename, mode);
+    } parameters; // FIXME -> parameters
 
-  struct Result {
-    int return_value;
-    int errno_value;
+    struct Result
+    {
+        int return_value;
+        int errno_value;
 
-    BOILERPLATE(Result, return_value, errno_value)
-  } result;
+        BOILERPLATE(Result, return_value, errno_value)
+    } result;
 
-  BOILERPLATE(CachedSyscall_Access, parameters, result)
+    BOILERPLATE(CachedSyscall_Access, parameters, result)
 };
 
-auto execute_cached_syscall(State &, CachedSyscall_Access::Parameters const &)
-    -> CachedSyscall_Access::Result;
-auto covert_real_to_cachable_syscall(State &, Syscall_access const &)
-    -> CachedSyscall_Access;
+auto execute_cached_syscall(State &, CachedSyscall_Access::Parameters const &) -> CachedSyscall_Access::Result;
+auto covert_real_to_cachable_syscall(State &, Syscall_access const &) -> CachedSyscall_Access;
 } // namespace gpcache

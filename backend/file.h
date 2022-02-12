@@ -3,41 +3,51 @@
 #include <string>
 #include <string_view>
 
-namespace gpcache {
-class FileBasedBackend {
-public:
-  struct retrieve_result {
-    // this exposes FileBasedBackend detail... bad idea...
-    // make it stateful instead?
-    std::filesystem::path path;
-    std::optional<json> next_syscall;
+namespace gpcache
+{
+class FileBasedBackend
+{
+  public:
+    FileBasedBackend(const std::filesystem::path &path) : cache_path(path)
+    {
+    }
 
-    auto ok() { return !path.empty(); }
-  };
-  auto retrieve(const std::filesystem::path &pos, const json &syscall_result)
-      -> retrieve_result;
+    struct retrieve_result
+    {
+        std::optional<json> next_syscall;
+        auto ok()
+        {
+            return !detail_path.empty();
+        }
 
-  auto store(json const &executable_and_params,
-             std::vector<CachedSyscall> const &syscalls,
-             std::vector<std::string> const &sloppiness) -> void;
+        // FileBasedBackend details
+        std::filesystem::path detail_path;
+    };
+    auto retrieve_from_cache(const std::optional<retrieve_result> &previous_result, const json &syscall_result)
+        -> retrieve_result;
 
-  // auto get_all_possible_actions(const std::filesystem::path &pos) ->
-  // std::vector<json>;
-  auto get_all_possible_results(const std::filesystem::path &pos)
-      -> std::vector<json>;
+    auto store_to_cache(json const &executable_and_params, std::vector<CachedSyscall> const &syscalls,
+                        std::vector<std::string> const &sloppiness) -> void;
 
-  // set via constructor!
-  std::filesystem::path cache_path;
+    // auto get_all_possible_actions(const std::filesystem::path &pos) ->
+    // std::vector<json>;
+    auto get_all_possible_results(const std::filesystem::path &pos) -> std::vector<json>;
+
+  private:
+    std::filesystem::path cache_path;
 };
 } // namespace gpcache
 
-template <> struct fmt::formatter<gpcache::FileBasedBackend::retrieve_result> {
-  constexpr auto parse(auto &ctx) { return ctx.begin(); }
+template <> struct fmt::formatter<gpcache::FileBasedBackend::retrieve_result>
+{
+    constexpr auto parse(auto &ctx)
+    {
+        return ctx.begin();
+    }
 
-  auto format(gpcache::FileBasedBackend::retrieve_result const &result,
-              auto &ctx) {
-    return fmt::format_to(ctx.out(), "{path: {}, next_action: {}}", result.path,
-                          result.next_syscall ? result.next_syscall->dump()
-                                              : "<END>");
-  }
+    auto format(gpcache::FileBasedBackend::retrieve_result const &result, auto &ctx)
+    {
+        return fmt::format_to(ctx.out(), "{path: {}, next_action: {}}", result.path,
+                              result.next_syscall ? result.next_syscall->dump() : "<END>");
+    }
 };
