@@ -4,7 +4,8 @@
 #include <experimental/filesystem>
 // ToDo: proide instructions how to update libc++
 // fails for me even fpr clang++10 (with g++-10 installed)
-namespace std {
+namespace std
+{
 using filesystem = ::std::experimental::filesystem;
 }
 #else
