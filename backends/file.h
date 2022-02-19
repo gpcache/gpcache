@@ -15,7 +15,7 @@ class FileBasedBackend
     struct retrieve_result
     {
         std::optional<json> next_syscall;
-        auto ok()
+        operator bool() const
         {
             return !detail_path.empty();
         }
@@ -47,7 +47,7 @@ template <> struct fmt::formatter<gpcache::FileBasedBackend::retrieve_result>
 
     auto format(gpcache::FileBasedBackend::retrieve_result const &result, auto &ctx)
     {
-        return fmt::format_to(ctx.out(), "{path: {}, next_action: {}}", result.path,
+        return fmt::format_to(ctx.out(), "{path: {}, next_action: {}}", result.detail_path,
                               result.next_syscall ? result.next_syscall->dump() : "<END>");
     }
 };

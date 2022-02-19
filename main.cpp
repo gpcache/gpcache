@@ -1,5 +1,5 @@
 // ToDo: cleanup includes
-#include "backend/file.h"
+#include "backends/file.h"
 
 #include "main/cache_executed_syscall.h"
 #include "main/execute_cached_syscall.h"
@@ -40,86 +40,125 @@ auto json_cached_syscall_to_string(const json &cached_syscall)
     return cached_syscall.at("syscall_name").get<std::string>() + cached_syscall.at("parameters").dump();
 }
 
-int main(int argc, char **argv)
+auto set_terminate_handler()
 {
     std::set_terminate(gpcache::terminate_with_stacktrace);
+}
 
+struct Config
+{
+    bool verbose;
+    std::vector<char *> params;
+};
+
+auto parse_command_line(int argc, char **argv)
+{
     absl::SetProgramUsageMessage("General Purpose Cache will speed up repetitios retesting, just as "
                                  "ccache speeds up repetitions recompilations.\n"
                                  "Examplory usage:\n"
                                  "* gpcache --version\n"
                                  "* gpcache echo 'This will be cached'\n");
 
-    std::vector<char *> params = absl::ParseCommandLine(argc, argv);
+    Config config;
+    absl::ParseCommandLine(argc, argv);
+    config.verbose = absl::GetFlag(FLAGS_verbose);
+    config.params = std::vector<char *>(argv + 1, argv + argc);
+    return config;
+}
 
-    // unless we set up some in-place replacement logic like ccache just drop the
-    // first parameter
-    params.erase(params.begin(), params.begin() + 1);
-
-    spdlog::set_level(absl::GetFlag(FLAGS_verbose) ? spdlog::level::debug : spdlog::level::info);
-
+auto dump_command_line(std::vector<char *> params)
+{
     spdlog::debug("gpcache called with:");
     for (auto param : params)
         spdlog::debug("* {}", param);
     spdlog::debug("--------------------");
+}
 
-    if (params.empty())
+// ToDo: proper return type... exit code? What is the return type??
+auto retrieve_from_cache(auto backend, auto params) -> std::optional<std::string>
+{
+    // ToDo: add current user, cwd and whatever else is important
+    json const cache_uid = {{"params", params}};
+
+    auto cached = backend.retrieve_by_uid(cache_uid);
+    if (cached)
+    {
+        // Program was executed before! Now start iterating.
+        spdlog::info("Great, {} was executed before. Checking whether cached behavior is still valid...",
+                     json(params).dump());
+        gpcache::State state;
+    }
+
+    while (cached && cached.next_syscall)
+    {
+        // Actually run the syscall, e.g. read some file.
+        auto const execution_result = gpcache::execute_cached_json_syscall(state, cached.next_syscall.value());
+
+        // Retrieve cache entry which matches the execution result, e.g. same file content.
+        auto const next_cache_entry = backend.retrieve_by_dependency(cached.path, execution_result);
+
+        if (next_cache_entry)
+        {
+            spdlog::info("Cached {} -> Real {} -> Cache Hit",
+                         json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
+        }
+        else
+        {
+            spdlog::warn("Cached {} -> Real {} -> Cache MISS",
+                         json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
+            for (auto const &possible_result : backend.get_all_possible_results(cached.path))
+                spdlog::warn("Cached results would have been: {}", possible_result.dump());
+        }
+
+        cached = next_cache_entry;
+    }
+
+    return cached;
+}
+
+auto startup(int argc, char **argv) -> Config
+{
+    set_terminate_handler();
+
+    Config const config = parse_command_line(argc, argv);
+
+    spdlog::set_level(config.verbose ? spdlog::level::debug : spdlog::level::info);
+
+    dump_command_line(config.params);
+
+    if (config.params.empty())
     {
         fmt::print("Pass your executable to gpcache, e.g. gpcache echo 'Hello, World!'\n");
         exit(1);
     }
 
-    // later from args:
-    std::vector<std::string> sloppiness;
-    sloppiness.push_back("time of fstat 1");
+    return config;
+}
 
+int main(int argc, char **argv)
+{
     try
     {
+        auto const config = startup(argc, argv);
+
+        // later from args:
+        std::vector<std::string> sloppiness;
+        sloppiness.push_back("time of fstat 1");
+
+        // use file based backend for now
         auto backend = gpcache::FileBasedBackend{std::filesystem::path(".gpcache")};
 
-        // ToDo: add cwd tec
-        json const params_json = {{"params", params}};
+        auto const cached = retrieve_from_cache(backend, config.params);
 
-        auto cached = backend.retrieve(backend.cache_path, params_json);
-        if (cached.ok())
+        if (!cached)
         {
-            // Program was executed before! Now start iterating.
-            spdlog::info("Great, {} is cached. Now let's check all dependencies...", json(params).dump());
-            gpcache::State state;
+            // ToDo: move/hide to where the syscalls happen
+            config.push_back(nullptr); // required for syscalls so end of array can be detected.
 
-            while (cached.next_syscall)
-            {
-                auto execution_result = gpcache::execute_cached_json_syscall(state, cached.next_syscall.value());
+            std::vector<gpcache::CachedSyscall> execution_cache = gpcache::execute_program(config);
 
-                auto new_cached = backend.retrieve(cached.path, execution_result);
-
-                auto all_results = backend.get_all_possible_results(cached.path);
-                if (new_cached.ok())
-                {
-                    spdlog::info("Cached {} -> Real {} -> Cache Hit",
-                                 json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
-                    for (auto const &possible_result : all_results)
-                        if (possible_result != execution_result)
-                            spdlog::info("other cached results: {}", possible_result.dump());
-                }
-                else
-                {
-                    spdlog::warn("Cached {} -> Real {} -> Cache MISS",
-                                 json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
-                    for (auto const &possible_result : backend.get_all_possible_results(cached.path))
-                        spdlog::warn("Cached results would have been: {}", possible_result.dump());
-                }
-
-                cached = new_cached;
-            }
+            backend.store(cache_uid, execution_cache, sloppiness);
         }
-
-        // ToDo: move/hide to where the syscalls happen
-        params.push_back(nullptr); // required for syscalls so end of array can be detected.
-
-        std::vector<gpcache::CachedSyscall> execution_cache = gpcache::execute_program(params);
-
-        backend.store(params_json, execution_cache, sloppiness);
     }
     catch (const char *error)
     {

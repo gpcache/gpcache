@@ -217,15 +217,16 @@ auto FileBasedBackend::store_to_cache(json const &executable_and_params, std::ve
     spdlog::info("Execution cached in FileBasedBackend");
 }
 
-auto FileBasedBackend::retrieve_from_cache(const std::filesystem::path &path, const json &result) -> retrieve_result
+auto FileBasedBackend::retrieve_from_cache(const std::optional<retrieve_result> &previous_result,
+                                           const json &syscall_result) -> retrieve_result
 {
-    auto const result_hash = calculate_hash_of_str(result.dump(), 3);
-    auto const result_path = path / result_hash;
+    auto const result_hash = calculate_hash_of_str(syscall_result.dump(), 3);
+    auto const result_path = previous_result->detail_path / result_hash;
 
     auto const result_file = result_path / "readable_result.txt";
     auto const action_file = result_path / "next_syscall.txt";
 
-    if (auto is = is_file_content(result_file, result.dump()); is.ok())
+    if (auto is = is_file_content(result_file, previous_result->dump()); is.ok())
     {
         auto res = read_file(action_file);
         if (std::holds_alternative<std::string>(res))
