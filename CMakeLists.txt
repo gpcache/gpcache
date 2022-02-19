@@ -105,7 +105,7 @@ add_library(gpcache_lib
   wrappers/ptrace.cpp
   wrappers/ptrace_linux_x64/SyscallMap.cpp
 
-  backend/file.cpp
+  backends/file.cpp
 
   main/cache_executed_syscall.cpp
   main/execute_cached_syscall.cpp

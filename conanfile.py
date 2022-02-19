@@ -15,6 +15,7 @@ class gpcache(ConanFile):
     def build_requirements(self):
         print(f"build_requirements(self)")
         self.settings.compiler.cppstd = 20
+        self.build_requires("cmake/3.22.0")
         self.build_requires("catch2/2.13.8")
         if self.settings.compiler == "gcc":
             self.build_requires("elfutils/0.180")

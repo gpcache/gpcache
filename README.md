@@ -47,10 +47,14 @@ Supported OS:
 
 ## Prerequisites:
 - C++: g++10 or clang-10
+- CMake: cmake (tbd: install via conan?)
 - System: tested on Ubuntu 18 and Ubuntu 20
 - Conan: `pip3 install conan`
 
 For more (and guaranteed to work) details have a look at [CI](.github/workflows/build.yaml)
+
+Note: when using conan + gcc you need to tell conan to use c++11 std lib:
+`conan profile update settings.compiler.libcxx=libstdc++11 default`
 
 ### Why Conan?
 C++ lacks a package manager. Currently/finally some have appeared.
@@ -63,32 +67,32 @@ However as I do need to get started and not using a package manager is not an op
 
 ```
 git clone https://github.com/gpcache/gpcache.git
-mkdir gpcache_build
-cd gpcache_build
+mkdir gpcache/build
+cd gpcache/build
 ```
 
 If your default compiler supports C++20:
 ```
-conan install ../gpcache --settings compiler.cppstd=20 --build=missing
+conan install .. --settings compiler.cppstd=20 --build=missing
 ```
 
 Example: switch with clang++:
 ```
-conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++
+conan install .. -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++
 ```
 
 Example: switch to clang++, build debug version:
 ```
-conan install ../gpcache -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
+conan install .. -s compiler=clang -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CXX=clang++ -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
 ```
 
 Example: switch to g++, build debug version:
 ```
-conan install ../gpcache -s compiler=gcc -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CC=gcc-10 -e CXX=g++-10 -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
+conan install .. -s compiler=gcc -s compiler.version=10 -s compiler.cppstd=20 --build=missing -e CC=gcc-10 -e CXX=g++-10 -e FORCE_COLORED_OUTPUT=ON -s build_type=Debug
 ```
 
 ### Compiling
 You'll need to run the first build via conan, afterwards you can use make/ninja.
 ```
-conan build ../gpcache
+conan build ..
 ```
