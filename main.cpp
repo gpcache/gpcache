@@ -87,30 +87,30 @@ auto retrieve_from_cache(auto backend, auto params) -> std::optional<std::string
         spdlog::info("Great, {} was executed before. Checking whether cached behavior is still valid...",
                      json(params).dump());
         gpcache::State state;
-    }
 
-    while (cached && cached.next_syscall)
-    {
-        // Actually run the syscall, e.g. read some file.
-        auto const execution_result = gpcache::execute_cached_json_syscall(state, cached.next_syscall.value());
-
-        // Retrieve cache entry which matches the execution result, e.g. same file content.
-        auto const next_cache_entry = backend.retrieve_by_dependency(cached.path, execution_result);
-
-        if (next_cache_entry)
+        while (cached && cached.next_syscall)
         {
-            spdlog::info("Cached {} -> Real {} -> Cache Hit",
-                         json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
-        }
-        else
-        {
-            spdlog::warn("Cached {} -> Real {} -> Cache MISS",
-                         json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
-            for (auto const &possible_result : backend.get_all_possible_results(cached.path))
-                spdlog::warn("Cached results would have been: {}", possible_result.dump());
-        }
+            // Actually run the syscall, e.g. read some file.
+            auto const execution_result = gpcache::execute_cached_json_syscall(state, cached.next_syscall.value());
 
-        cached = next_cache_entry;
+            // Retrieve cache entry which matches the execution result, e.g. same file content.
+            auto const next_cache_entry = backend.retrieve_by_dependency(cached.path, execution_result);
+
+            if (next_cache_entry)
+            {
+                spdlog::info("Cached {} -> Real {} -> Cache Hit",
+                             json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
+            }
+            else
+            {
+                spdlog::warn("Cached {} -> Real {} -> Cache MISS",
+                             json_cached_syscall_to_string(cached.next_syscall.value()), execution_result.dump());
+                for (auto const &possible_result : backend.get_all_possible_results(cached.path))
+                    spdlog::warn("Cached results would have been: {}", possible_result.dump());
+            }
+
+            cached = next_cache_entry;
+        }
     }
 
     return cached;
